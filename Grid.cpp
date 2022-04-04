@@ -7,10 +7,10 @@ CGrid::CGrid()
 	m_SnapGridOn = TRUE;
 	//-------------------------------
 	m_GridShowSnap = TRUE;
-	m_SnapLineStyle = FALSE;	//dots
+	m_SnapLineStyle = TRUE;	//FALSE = dots. TRUE = LINES
 	//-------------------------------
 	m_GridShowMajor = TRUE;
-	m_MajorLineStyle = TRUE;	//lines
+	m_MajorLineStyle = TRUE;	//FALSE = dots  TRUE = lines
 }
 
 CGrid::~CGrid()
@@ -147,17 +147,11 @@ void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	int i;
 	int Nx, Ny;
 	int H, W;
-	CDoublePoint Point;
-	CDoublePoint FirstMajPoint;
-	CDoublePoint FromPoint;
-	CDoublePoint ToPoint;
 	CPen Pen, * oldPen;
 	double Y,X;
 	int x, y;
 
-	Pen.CreatePen(PS_SOLID, GetMajLineWidth(), GetMajLineColor());
-	oldPen = pDC->SelectObject(&Pen);
-
+	//---------------------------------------
 	W = rectClient.Width();
 	H = rectClient.Height();
 	Nx = GETAPP.RoundDoubleToInt(double(W) / (GetPixelsPerInch().GetScaleX() * GetMajorGrid().dCX)) + 1;
@@ -165,24 +159,29 @@ void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	//----------------------------------------------------------
 	// Need to find out where the first major lines start
 	//---------------------------------------------------------
-	FirstMajPoint = ULHC;
-	
-	for (i = 0; i < Nx; ++i)
-	{
-		X = (ULHC.dX + double(i) * GetMajorGrid().dCX);
-		x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
-		pDC->MoveTo(x,0);
-		pDC->LineTo(x,H-1);
-	}
+	//------------------- Vertical Lines ---------------------
 
-	for (i = 0; i < Ny; ++i)
+	if (GetMajorGrid().dCX * Scale.GetScaleX() > 12)
 	{
-		Y = (ULHC.dY + double(i) * GetMajorGrid().dCY);
-		y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
-		pDC->MoveTo(0, y);
-		pDC->LineTo(W-1, y);
+		Pen.CreatePen(PS_SOLID, GetMajLineWidth(), GetMajLineColor());
+		oldPen = pDC->SelectObject(&Pen);
+		for (i = 0; i < Nx; ++i)
+		{
+			X = double(i + 1) * GetMajorGrid().dCX - ULHC.dX;
+			x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
+			pDC->MoveTo(x, 0);
+			pDC->LineTo(x, H - 1);
+		}
+
+		for (i = 0; i < Ny; ++i)
+		{
+			Y = double(i) * GetMajorGrid().dCY - ULHC.dY;
+			y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
+			pDC->MoveTo(0, y);
+			pDC->LineTo(W - 1, y);
+		}
+		pDC->SelectObject(oldPen);
 	}
-	pDC->SelectObject(oldPen);
 }
 
 void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect& rectClient, CDoublePoint ULHC)
@@ -203,14 +202,11 @@ void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect
 	int i;
 	int Nx, Ny;
 	int H, W;
-	CDoublePoint Point;
-	CDoublePoint FirstMajPoint;
-	CDoublePoint FromPoint;
-	CPoint ToPoint;
 	CPen Pen, * oldPen;
+	double X, Y;
+	int x, y;
 
-	Pen.CreatePen(PS_SOLID, GetSnapLineWidth(), GetSnapLineColor());
-	oldPen = pDC->SelectObject(&Pen);
+	//-----------------------------------------------------
 	W = rectClient.Width();
 	H = rectClient.Height();
 	Nx = GETAPP.RoundDoubleToInt(double(W) / (GetPixelsPerInch().GetScaleX() * GetSnapGrid().dCX));
@@ -218,30 +214,26 @@ void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect
 	//----------------------------------------------------------
 	// Need to find out where thefirst snap lines start
 	//---------------------------------------------------------
-	FirstMajPoint = ULHC;
-	FirstMajPoint.RoundUpToNearest(GetSnapGrid());
-
-	for (i = 0; i < Nx; ++i)
+	if (GetSnapGrid().dCX * Scale.GetScaleX() > 12)
 	{
-		double x;
-		x = double(i) * GetSnapGrid().dCX + FirstMajPoint.dX;
-		FromPoint = CDoublePoint(x, 0.0);
-		pDC->MoveTo(FromPoint.ToPixelPoint(Offset, Scale));
-		ToPoint = CPoint(GETAPP.RoundDoubleToInt(x * GetPixelsPerInch().GetScaleX()), H - 1);
-		pDC->LineTo(ToPoint);
+		Pen.CreatePen(PS_SOLID, GetSnapLineWidth(), GetSnapLineColor());
+		oldPen = pDC->SelectObject(&Pen);
+		for (i = 0; i < Nx; ++i)
+		{
+			X = double(i) * GetSnapGrid().dCX;
+			x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
+			pDC->MoveTo(x, 0);
+			pDC->LineTo(x, H - 1);
+		}
+		for (i = 0; i < Ny; ++i)
+		{
+			Y = double(i) * GetSnapGrid().dCY;
+			y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
+			pDC->MoveTo(0, y);
+			pDC->LineTo(W - 1, y);
+		}
+		pDC->SelectObject(oldPen);
 	}
-
-	for (i = 0; i < Ny; ++i)
-	{
-		double y;
-		y = double(i) * GetSnapGrid().dCY + FirstMajPoint.dY;
-		FromPoint = CDoublePoint(0.0, y);
-		pDC->MoveTo(FromPoint.ToPixelPoint(Offset, Scale));
-		ToPoint = CPoint(W - 1, GETAPP.RoundDoubleToInt(y * GetPixelsPerInch().GetScaleY()));
-		pDC->LineTo(ToPoint);
-	}
-
-	pDC->SelectObject(oldPen);
 }
 
 int CGrid::GetGridLineType(double LineV, Axis Type)

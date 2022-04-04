@@ -48,5 +48,5 @@ usefull, so that will have to be slowed down a bit.  And it is still
 possible to draw a few objects.
 
 April 3, 2022
-Something happened betweem me an the repo.  Couldn't fix it, so deleted it and the recreated  :(
+Something happened betweem me an the repo.  Couldn't fix it, so deleted it and then recreated  :(
 

@@ -354,14 +354,12 @@ void CRulerView::DrawCursorPos(CDC* pDC, CDoublePoint NewPos)
 	CPoint Point;
 	CPen CursorPen, * oldPen;
 
-	printf("--------\n");
 	NewPos.Print();
 	GetClientRect(&clientRect);
 	Point = (NewPos + -GetRulersInfo()->GetUpperLeft()).ToPixelPoint(
 		CSize(0,0),
 		GetRulersInfo()->GetGrid()->GetPixelsPerInch()
 	);
-	printf("Point (%d,%d)\n", Point.x, Point.y);
 	CursorPen.CreatePen(PS_SOLID, 5, GetRulersInfo()->GetCursorColor());
 	oldPen = pDC->SelectObject(&CursorPen);
 	switch (GetRulerType())
