@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{EDB9E596-B247-49D8-ADFD-471B73B3204A}</ProjectGuid>
+    <Keyword>MFCProj</Keyword>
+    <RootNamespace>FrontCad</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>.\bin\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="BaseDocument.h" />
+    <ClInclude Include="CadArc.h" />
+    <ClInclude Include="CadArcAngle.h" />
+    <ClInclude Include="CadArcCent.h" />
+    <ClInclude Include="CadArrow.h" />
+    <ClInclude Include="CadBitmap.h" />
+    <ClInclude Include="CadDimension.h" />
+    <ClInclude Include="CadElispe.h" />
+    <ClInclude Include="CadHoleRect.h" />
+    <ClInclude Include="CadHoleRnd1Flat.h" />
+    <ClInclude Include="CadHoleRnd2Flat.h" />
+    <ClInclude Include="CadHoleRound.h" />
+    <ClInclude Include="CadLine.h" />
+    <ClInclude Include="CadObject.h" />
+    <ClInclude Include="CadOrigin.h" />
+    <ClInclude Include="CadPolygon.h" />
+    <ClInclude Include="CadRect.h" />
+    <ClInclude Include="CadRndRect.h" />
+    <ClInclude Include="CadText.h" />
+    <ClInclude Include="ChildFrameBase.h" />
+    <ClInclude Include="ChildViewBase.h" />
+    <ClInclude Include="ComboBoxFontWeight.h" />
+    <ClInclude Include="DlgArcCentProperies.h" />
+    <ClInclude Include="DlgArcProperties.h" />
+    <ClInclude Include="DlgArrowProperties.h" />
+    <ClInclude Include="DlgBitmapProperties.h" />
+    <ClInclude Include="DlgDimensionPropertiex.h" />
+    <ClInclude Include="DlgEllispeProperties.h" />
+    <ClInclude Include="DlgLineAttributes.h" />
+    <ClInclude Include="DlgNewName.h" />
+    <ClInclude Include="DlgObjectEnable.h" />
+    <ClInclude Include="DlgPolygonProperties.h" />
+    <ClInclude Include="DlgRectProperties.h" />
+    <ClInclude Include="DlgRndHole1Flat.h" />
+    <ClInclude Include="DlgRndHole2FlatProp.h" />
+    <ClInclude Include="DlgRndRectProperties.h" />
+    <ClInclude Include="DlgRoundHoleProp.h" />
+    <ClInclude Include="DlgSquareHoleProp.h" />
+    <ClInclude Include="DlgTextProperties.h" />
+    <ClInclude Include="DoubleArc.h" />
+    <ClInclude Include="DoubleEllipse.h" />
+    <ClInclude Include="DoubleLine.h" />
+    <ClInclude Include="DoublePoint.h" />
+    <ClInclude Include="DoublePolygon.h" />
+    <ClInclude Include="DoubleRect.h" />
+    <ClInclude Include="DoubleRndRectangle.h" />
+    <ClInclude Include="DoubleSize.h" />
+    <ClInclude Include="EditDecimal.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="FrontCad.h" />
+    <ClInclude Include="FrontCadChildFrame.h" />
+    <ClInclude Include="FrontCadDoc.h" />
+    <ClInclude Include="FrontCadView.h" />
+    <ClInclude Include="FrontCadDefines.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="Lexer.h" />
+    <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="MoveObjects.h" />
+    <ClInclude Include="MyBitmap.h" />
+    <ClInclude Include="MyEvent.h" />
+    <ClInclude Include="ObjectAttributs.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Primitives.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="RulerCornerView.h" />
+    <ClInclude Include="RulerInfo.h" />
+    <ClInclude Include="RulerSplitterWindow.h" />
+    <ClInclude Include="RulerView.h" />
+    <ClInclude Include="Scale.h" />
+    <ClInclude Include="StaticBitmap.h" />
+    <ClInclude Include="StaticPreview.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BaseDocument.cpp" />
+    <ClCompile Include="CadArc.cpp" />
+    <ClCompile Include="CadArcAngle.cpp" />
+    <ClCompile Include="CadArcCent.cpp" />
+    <ClCompile Include="CadArrow.cpp" />
+    <ClCompile Include="CadBitmap.cpp" />
+    <ClCompile Include="CadDimension.cpp" />
+    <ClCompile Include="CadElispe.cpp" />
+    <ClCompile Include="CadHoleRect.cpp" />
+    <ClCompile Include="CadHoleRnd1Flat.cpp" />
+    <ClCompile Include="CadHoleRnd2Flat.cpp" />
+    <ClCompile Include="CadHoleRound.cpp" />
+    <ClCompile Include="CadLine.cpp" />
+    <ClCompile Include="CadObject.cpp" />
+    <ClCompile Include="CadOrigin.cpp" />
+    <ClCompile Include="CadPolygon.cpp" />
+    <ClCompile Include="CadRect.cpp" />
+    <ClCompile Include="CadRndRect.cpp" />
+    <ClCompile Include="CadText.cpp" />
+    <ClCompile Include="ChildFrameBase.cpp" />
+    <ClCompile Include="ChildViewBase.cpp" />
+    <ClCompile Include="ComboBoxFontWeight.cpp" />
+    <ClCompile Include="DlgArcCentProperies.cpp" />
+    <ClCompile Include="DlgArcProperties.cpp" />
+    <ClCompile Include="DlgArrowProperties.cpp" />
+    <ClCompile Include="DlgBitmapProperties.cpp" />
+    <ClCompile Include="DlgDimensionPropertiex.cpp" />
+    <ClCompile Include="DlgEllispeProperties.cpp" />
+    <ClCompile Include="DlgLineAttributes.cpp" />
+    <ClCompile Include="DlgNewName.cpp" />
+    <ClCompile Include="DlgObjectEnable.cpp" />
+    <ClCompile Include="DlgPolygonProperties.cpp" />
+    <ClCompile Include="DlgRectProperties.cpp" />
+    <ClCompile Include="DlgRndHole1Flat.cpp" />
+    <ClCompile Include="DlgRndHole2FlatProp.cpp" />
+    <ClCompile Include="DlgRndRectProperties.cpp" />
+    <ClCompile Include="DlgRoundHoleProp.cpp" />
+    <ClCompile Include="DlgSquareHoleProp.cpp" />
+    <ClCompile Include="DlgTextProperties.cpp" />
+    <ClCompile Include="DoubleArc.cpp" />
+    <ClCompile Include="DoubleEllipse.cpp" />
+    <ClCompile Include="DoubleLine.cpp" />
+    <ClCompile Include="DoublePoint.cpp" />
+    <ClCompile Include="DoublePolygon.cpp" />
+    <ClCompile Include="DoubleRect.cpp" />
+    <ClCompile Include="DoubleRndRectangle.cpp" />
+    <ClCompile Include="DoubleSize.cpp" />
+    <ClCompile Include="EditDecimal.cpp" />
+    <ClCompile Include="FrontCad.cpp" />
+    <ClCompile Include="FrontCadChildFrame.cpp" />
+    <ClCompile Include="FrontCadDoc.cpp" />
+    <ClCompile Include="FrontCadView.cpp" />
+    <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="MoveObjects.cpp" />
+    <ClCompile Include="MyBitmap.cpp" />
+    <ClCompile Include="MyEvent.cpp" />
+    <ClCompile Include="ObjectAttributes.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="RulerCornerView.cpp" />
+    <ClCompile Include="RulerInfo.cpp" />
+    <ClCompile Include="RulerSplitterWindow.cpp" />
+    <ClCompile Include="RulerView.cpp" />
+    <ClCompile Include="Scale.cpp" />
+    <ClCompile Include="StaticBitmap.cpp" />
+    <ClCompile Include="StaticPreview.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\FrontCad.exe">
+      <DeploymentContent>true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    </None>
+    <None Include="FrontCad.reg" />
+    <None Include="README.md" />
+    <None Include="res\FrontCad.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="FrontCad.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\FrontCad.ico" />
+    <Image Include="res\FrontCadDoc.ico" />
+    <Image Include="res\Toolbar.bmp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
