@@ -6,7 +6,7 @@ CGrid::CGrid()
 	//-------------------------------
 	m_SnapGridOn = TRUE;
 	//-------------------------------
-	m_GridShowSnap = TRUE;
+	m_GridShowSnap = FALSE;
 	m_SnapLineStyle = TRUE;	//FALSE = dots. TRUE = LINES
 	//-------------------------------
 	m_GridShowMajor = TRUE;
@@ -150,6 +150,7 @@ void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	CPen Pen, * oldPen;
 	double Y,X;
 	int x, y;
+	double IntPart;
 
 	//---------------------------------------
 	W = rectClient.Width();
@@ -165,17 +166,22 @@ void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	{
 		Pen.CreatePen(PS_SOLID, GetMajLineWidth(), GetMajLineColor());
 		oldPen = pDC->SelectObject(&Pen);
+		//-----------------------------
+		// Vertical grid lines
+		//----------------------------
 		for (i = 0; i < Nx; ++i)
 		{
-			X = double(i + 1) * GetMajorGrid().dCX - ULHC.dX;
+			X = double(i + 1) * GetMajorGrid().dCX - modf(ULHC.dX,&IntPart);
 			x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
 			pDC->MoveTo(x, 0);
 			pDC->LineTo(x, H - 1);
 		}
-
+		//---------------------------------------
+		// Horizontal Lines
+		//--------------------------------------
 		for (i = 0; i < Ny; ++i)
 		{
-			Y = double(i) * GetMajorGrid().dCY - ULHC.dY;
+			Y = double(i) * GetMajorGrid().dCY - modf(ULHC.dY, &IntPart);
 			y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
 			pDC->MoveTo(0, y);
 			pDC->LineTo(W - 1, y);

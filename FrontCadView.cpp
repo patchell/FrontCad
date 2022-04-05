@@ -1889,13 +1889,30 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	//		This method is called in response to
 	// a WM_SIZE message
 	//----------------------------------------------
-	CChildViewBase::OnSize(nType, cx, cy);
-	UpdateScrollbarInfo();
-	GetRulerInfo().SetClientSize(CSize(cx, cy));
-	GetRulerInfo().SetScrollOffset(GetScrollOffset());
-	if (GetRulerInfo().AreFulersReady())
-		PostMessageToRulers(RW_ZOOM);
-	Invalidate();
+	switch (nType)
+	{
+	case SIZE_MAXIMIZED:
+		printf("Size 1\n");
+		break;
+	case SIZE_MINIMIZED:
+		printf("Size 2\n");
+		break;
+	case SIZE_RESTORED:
+		CChildViewBase::OnSize(nType, cx, cy);
+		UpdateScrollbarInfo();
+		GetRulerInfo().SetClientSize(CSize(cx, cy));
+		GetRulerInfo().SetScrollOffset(GetScrollOffset());
+		if (GetRulerInfo().AreFulersReady())
+			PostMessageToRulers(RW_ZOOM);
+		Invalidate();
+		break;
+	case SIZE_MAXHIDE:
+		printf("Size 4\n");
+		break;
+	case SIZE_MAXSHOW:
+		printf("Size 5\n");
+		break;
+	}
 }
 
 void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -1949,8 +1966,8 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		break;
 	}
 	UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
-	if (UL.dX < 0.0)
-		UL.dX = 0.0;
+	if (UL.dY < 0.0)
+		UL.dY = 0.0;
 	GetRulerInfo().SetUpperLeft(UL);
 	DoVScroll(Delta, Update);
 	CChildViewBase::OnVScroll(nSBCode, nPos, pScrollBar);
@@ -2040,7 +2057,6 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
 	if (UL.dX < 0.0)
 		UL.dX = 0.0;
-	UL.Print();
 	GetRulerInfo().SetUpperLeft(UL);
 	DoHScroll(Delta, Update);
 	CChildViewBase::OnHScroll(nSBCode, nPos, pScrollBar);
@@ -2048,7 +2064,7 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CFrontCadView::DoHScroll(int Delta, BOOL Update)
 {
-	CFrontCadDoc* pDoc = GetDocument();;
+	CFrontCadDoc* pDoc = GetDocument();
 
 	int ScrollPos = m_HScrollPos + Delta;
 	double Hpixels = pDoc->GetDocSize().dCX * GetGrid().GetPixelsPerInch().GetScaleX();
@@ -2060,6 +2076,7 @@ void CFrontCadView::DoHScroll(int Delta, BOOL Update)
 		Delta = MaxPos - m_HScrollPos;
 	m_HScrollPos += Delta;
 	SetScrollPos(SB_HORZ, m_HScrollPos, TRUE);
+	printf("------ DoHScroll:Pos: %5d  Max=%5d\n", m_HScrollPos, MaxPos);
 	if (Update)
 	{
 		GetRulerInfo().SetScrollOffset(GetScrollOffset());
