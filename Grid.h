@@ -1,7 +1,8 @@
 #pragma once
 
-constexpr auto GRID_MAJOR = 2;
 constexpr auto GRID_SNAP = 1;
+constexpr auto GRID_HALF = 2;
+constexpr auto GRID_MAJOR = 3;
 
 constexpr auto GRID_1000PPI = 0;
 constexpr auto GRID_500PPI = 1;
@@ -13,15 +14,12 @@ constexpr auto GRID_10PPI = 6;
 
 class CGrid
 {
-	CDoubleSize m_doubleSZSnapGrid;	// Snap Grid Spacing
-	CDoubleSize m_doubleSZMajorGrid;	//Magor Grid Spacing
-
+	//-------------Flags------------------
 	BOOL m_SnapGridOn;		//snap grid is off
 	BOOL m_GridShowMajor;			//enables the grid on the scrren
 	BOOL m_MajorLineStyle;	//True = Lines, FALSE = Dots
 	BOOL m_GridShowSnap;	// Show the snap grid
 	BOOL m_SnapLineStyle;	//True = Lines, FALSE = Dots
-
 	SGridAttributes m_Attributes;
 	int m_ZoomFactor;	//screen magnification factor
 //---------------------------------
@@ -52,13 +50,13 @@ class CGrid
 		10.0		// 10 pixels per inch
 	};
 	inline static CScale InchesPerPixel[MAX_ZOOM] = {
-				0.001,	//.001 inches per pixel
-				0.002,	//.002 inches per pixel
-				0.005,	//.005 inches per pixel
-				0.01,	//.01 inches per pixel
-				0.02,	//.02 inches per pixel
-				0.05,	//.05 inches per pixel
-				0.1		//.1 inches per pixel
+		0.001,	//.001 inches per pixel
+		0.002,	//.002 inches per pixel
+		0.005,	//.005 inches per pixel
+		0.01,	//.01 inches per pixel
+		0.02,	//.02 inches per pixel
+		0.05,	//.05 inches per pixel
+		0.1		//.1 inches per pixel
 	};
 public:
 	CGrid();
@@ -96,10 +94,6 @@ public:
 		CDoublePoint ULHC
 	);
 	int GetGridLineType(double LineV, Axis Type);
-	void SetSnapGrid(CDoubleSize SnGrid) { m_doubleSZSnapGrid = SnGrid; }
-	CDoubleSize GetSnapGrid() { return m_doubleSZSnapGrid; }
-	void SetMajorGrid(CDoubleSize MajGrd) { m_doubleSZMajorGrid = MajGrd; }
-	CDoubleSize GetMajorGrid() { return m_doubleSZMajorGrid; }
 	void EnableSnap(BOOL en) { m_SnapGridOn = en; }	//Enables the Snap Grid
 	BOOL IsSnapOn() { return m_SnapGridOn; }
 	void ShowMajorGrid(BOOL en) { m_GridShowMajor = en; }	//Show major Grid
@@ -133,9 +127,15 @@ public:
 	//-------------------------------------------------
 	SGridAttributes& GetAttributes() { return m_Attributes; }
 	SGridAttributes* GetPtrToAttributes() { return &m_Attributes; }
+	void SetSnapGrid(CDoubleSize SnGrid) { GetAttributes().m_SnapGridSpacing = SnGrid; }
+	CDoubleSize GetSnapGrid() { return GetAttributes().m_SnapGridSpacing; }
+	void SetMajorGrid(CDoubleSize MajGrd) { GetAttributes().m_MajorGridSpacing = MajGrd; }
+	CDoubleSize GetMajorGrid() { return GetAttributes().m_MajorGridSpacing; }
 	void SetSnapLineColor(COLORREF c) { GetAttributes().m_colorSnapLine = c; }
 	COLORREF GetSnapLineColor() { return GetAttributes().m_colorSnapLine; }
 	void SetMajLineColor(COLORREF c) { GetAttributes().m_colorMajorLine = c; }
+	COLORREF GetHalfLineColor() { return GetAttributes().m_colorHalfGrid; }
+	void SetHalfLineColor(COLORREF c) { GetAttributes().m_colorHalfGrid = c; }
 	COLORREF GetMajLineColor() { return GetAttributes().m_colorMajorLine; }
 	void SetSnapLineWidth(int w) { GetAttributes().m_SnapLineWidth = w;}
 	int GetSnapLineWidth() { return GetAttributes().m_SnapLineWidth; }

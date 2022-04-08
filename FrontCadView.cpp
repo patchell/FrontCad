@@ -820,7 +820,6 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 void CFrontCadView::OnInitialUpdate()
 {
 	CBaseDocument *pDoc = (CBaseDocument *)GetDocument();
-	SetDocSize(CDoubleSize(11.00, 8.500));	//document size is in inches
 	SetObjectEnables(
 		OBJECT_ENABLE_ROUNDEDRECT |
 		OBJECT_ENABLE_POLYGON |
@@ -1889,6 +1888,15 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	//		This method is called in response to
 	// a WM_SIZE message
 	//----------------------------------------------
+	CMainFrame* pMainFrame;
+	CRect rectMainFrame;
+	int cxMain, cyMain;
+
+	pMainFrame = GETAPP.GetMainFrame();
+	pMainFrame->GetClientRect(&rectMainFrame);
+	cxMain = rectMainFrame.Width();
+	cyMain = rectMainFrame.Height();
+
 	switch (nType)
 	{
 	case SIZE_MAXIMIZED:
@@ -1898,7 +1906,7 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 		printf("Size 2\n");
 		break;
 	case SIZE_RESTORED:
-		CChildViewBase::OnSize(nType, cx, cy);
+//		printf("Set Window Size To (%d,%d)\n", cx, cy);
 		UpdateScrollbarInfo();
 		GetRulerInfo().SetClientSize(CSize(cx, cy));
 		GetRulerInfo().SetScrollOffset(GetScrollOffset());
@@ -1913,6 +1921,7 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 		printf("Size 5\n");
 		break;
 	}
+	CChildViewBase::OnSize(nType, cx, cy);
 }
 
 void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -1932,68 +1941,62 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	double cY = pDoc->GetDocSize().dCY;
 	int Delta = 0;
 	BOOL Update = TRUE;
-	double Ypixels = 0.0;
-	CDoublePoint UL;
 	double Yinches = 0.0;
 
 	switch (nSBCode)
 	{
 	case SB_LINEUP:
-		Yinches = -GetGrid().GetSnapGrid().dCX;
-		Ypixels = Yinches * GetGrid().GetPixelsPerInch().GetScaleY();
-		Delta = GETAPP.RoundDoubleToInt(Ypixels);
+		Yinches = -GetGrid().GetSnapGrid().dCY;
 		break;
 	case SB_PAGEUP:
 		Yinches = -GetGrid().GetMajorGrid().dCY;
-		Ypixels = Yinches * GetGrid().GetPixelsPerInch().GetScaleY();
-		Delta = GETAPP.RoundDoubleToInt(Ypixels);
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - m_VScrollPos;
+		Delta = nPos - m_VScrollPos;	//units are pixels
+		Yinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleY();
+		Yinches = GETAPP.Snap(Yinches, GetGrid().GetSnapGrid().dCY);
 		break;
 	case SB_LINEDOWN:
-		Yinches = GetGrid().GetSnapGrid().dCX;
-		Ypixels = Yinches * GetGrid().GetPixelsPerInch().GetScaleY();
-		Delta = GETAPP.RoundDoubleToInt(Ypixels);
+		Yinches = GetGrid().GetSnapGrid().dCY;
 		break;
 	case SB_PAGEDOWN:
 		Yinches = GetGrid().GetMajorGrid().dCY;
-		Ypixels = Yinches * GetGrid().GetPixelsPerInch().GetScaleY();
-		Delta = GETAPP.RoundDoubleToInt(Ypixels);
 		break;
 	case SB_ENDSCROLL:
 		Update = FALSE;
 		break;
 	}
-	UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
-	if (UL.dY < 0.0)
-		UL.dY = 0.0;
-	GetRulerInfo().SetUpperLeft(UL);
-	DoVScroll(Delta, Update);
+	DoVScroll(Yinches, Update);
 	CChildViewBase::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
-void CFrontCadView::DoVScroll(int Delta, BOOL Update)
+void CFrontCadView::DoVScroll(double Vinches, BOOL Update)
 {
 	CFrontCadDoc* pDoc = GetDocument();;
+	CDoublePoint UL;
 
-	int ScrollPos = m_VScrollPos + Delta;
-	double Vpixels = pDoc->GetDocSize().dCY * GetGrid().GetPixelsPerInch().GetScaleX();
-	int MaxPos = GETAPP.RoundDoubleToInt(Vpixels) - m_VPageSize;
-
-	if (ScrollPos < 0)
-		Delta = -m_VScrollPos;
-	else if (ScrollPos > MaxPos)
-		Delta = MaxPos - m_VScrollPos;
-	m_VScrollPos += Delta;
-	SetScrollPos(SB_VERT, m_VScrollPos, TRUE);
 	if (Update)
 	{
+		UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Vinches);
+		if (UL.dY < 0.0)
+			UL.dY = 0.0;
+		else if (UL.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
+			UL.dY = pDoc->GetDocSize().dCY - GetClientHieght();
+		GetRulerInfo().SetUpperLeft(UL);
+		double pos = UL.dY;
+		pos = pos * GetGrid().GetPixelsPerInch().GetScaleY();
+		m_VScrollPos = GETAPP.RoundDoubleToInt(pos);
+		if (m_VScrollPos < 0)
+			m_VScrollPos = 0;
+		else if (m_VScrollPos > m_VScrollInfo.nMax)
+			m_VScrollPos = m_VScrollInfo.nMax;
+		SetScrollPos(SB_VERT, m_VScrollPos, TRUE);
 		GetRulerInfo().SetScrollOffset(GetScrollOffset());
 		PostMessageToRulers(RW_VSCROLL);
 		PostMessageToRulers(RW_POSITION);
+		Invalidate();
 	}
-	Invalidate();
+
 }
 
 void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -2010,80 +2013,73 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	///		pScrollBar..pointer to the scrollbar object
 	///------------------------------------------------
 	CFrontCadDoc* pDoc = GetDocument();
-	double cX = pDoc->GetDocSize().dCX;
+	double dCX = pDoc->GetDocSize().dCX;
 	int Delta = 0;
 	BOOL Update = TRUE;
-	double Xpixels = 0.0;
-	CDoublePoint UL;
 	double Xinches = 0.0;
 
 	switch (nSBCode)
 	{
 	case SB_LINELEFT:
 		Xinches = -GetGrid().GetSnapGrid().dCX;
-		Xpixels = Xinches * GetGrid().GetPixelsPerInch().GetScaleX();
-		Delta = GETAPP.RoundDoubleToInt(Xpixels);
 		break;
 	case SB_PAGELEFT:
 		Xinches = -GetGrid().GetMajorGrid().dCX;
-		Xpixels = Xinches * GetGrid().GetPixelsPerInch().GetScaleX();
-		Delta = GETAPP.RoundDoubleToInt(Xpixels);
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - m_HScrollPos;
+		Delta = nPos - m_HScrollPos;	//units are pixels
 		Xinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleX();
 		Xinches = GETAPP.Snap(Xinches, GetGrid().GetSnapGrid().dCX);
-		Xpixels = Xinches * GetGrid().GetPixelsPerInch().GetScaleX();
-		if(Xpixels >= 0.0)
-			Xpixels = GETAPP.RoundUpToNearest(Xpixels, GetGrid().GetSnapGrid().dCX);
-		else
-			Xpixels = GETAPP.RoundDownToNearest(Xpixels, GetGrid().GetSnapGrid().dCX);
-		Delta = GETAPP.RoundDoubleToInt(Xpixels);
+		break;
+	case SB_THUMBPOSITION:
+		Update = FALSE;
+		printf("Thumb Position nPos=%d  HScrollPos=%d\n", nPos, m_HScrollPos);
 		break;
 	case SB_LINERIGHT:
 		Xinches = GetGrid().GetSnapGrid().dCX;
-		Xpixels = Xinches * GetGrid().GetPixelsPerInch().GetScaleX();
-		Delta = GETAPP.RoundDoubleToInt(Xpixels);
 		break;
 	case SB_PAGERIGHT:
 		Xinches = GetGrid().GetMajorGrid().dCX;
-		Xpixels = Xinches * GetGrid().GetPixelsPerInch().GetScaleX();
-		Delta = GETAPP.RoundDoubleToInt(Xpixels);
 		break;
 	case SB_ENDSCROLL:
 		Update = FALSE;
+		printf("SB_ENDSCROLL\n");
 		break;
 	}
-	UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
-	if (UL.dX < 0.0)
-		UL.dX = 0.0;
-	GetRulerInfo().SetUpperLeft(UL);
-	DoHScroll(Delta, Update);
+	DoHScroll(Xinches, Update);
 	CChildViewBase::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-void CFrontCadView::DoHScroll(int Delta, BOOL Update)
+void CFrontCadView::DoHScroll(double Xinches, BOOL Update)
 {
+	CDoublePoint UL;
 	CFrontCadDoc* pDoc = GetDocument();
 
-	int ScrollPos = m_HScrollPos + Delta;
-	double Hpixels = pDoc->GetDocSize().dCX * GetGrid().GetPixelsPerInch().GetScaleX();
-	int MaxPos = GETAPP.RoundDoubleToInt(Hpixels) - m_HPageSize;
-
-	if (ScrollPos < 0)
-		Delta = -m_HScrollPos;
-	else if (ScrollPos > MaxPos)
-		Delta = MaxPos - m_HScrollPos;
-	m_HScrollPos += Delta;
-	SetScrollPos(SB_HORZ, m_HScrollPos, TRUE);
-	printf("------ DoHScroll:Pos: %5d  Max=%5d\n", m_HScrollPos, MaxPos);
 	if (Update)
 	{
+		UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
+		if (UL.dX < 0.0)
+			UL.dX = 0.0;
+		else if (UL.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
+			UL.dX = pDoc->GetDocSize().dCX - GetClientWidth();
+		GetRulerInfo().SetUpperLeft(UL);
+
+		double pos = UL.dX;
+		pos = pos * GetGrid().GetPixelsPerInch().GetScaleX();
+		m_HScrollPos = GETAPP.RoundDoubleToInt(pos);;
+		if (m_HScrollPos < 0)
+			m_HScrollPos = 0;
+		else if (m_HScrollPos > m_HScrollInfo.nMax)
+			m_HScrollPos = m_HScrollInfo.nMax;
+		SetScrollPos(SB_HORZ, m_HScrollPos, TRUE);
+		//----------------------------------------------------------
+		// Update Rulers
+		//---------------------------------------------------------
 		GetRulerInfo().SetScrollOffset(GetScrollOffset());
 		PostMessageToRulers(RW_HSCROLL);
 		PostMessageToRulers(RW_POSITION);
+		Invalidate();
 	}
-	Invalidate();
 }
 
 void CFrontCadView::UpdateScrollbarInfo()

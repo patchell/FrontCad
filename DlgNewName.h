@@ -20,7 +20,9 @@ public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedOk();
 	void SetDialogTitle(CString& tit) { m_csDialogTitle = tit; }
-	void SetNameString(CString& csName) { m_csNewName = csName; }
+	void SetNameString(CString& csName) { 
+		m_csNewName = csName; 
+	}
 	CString& GetNameString() {return m_csNewName;}
 	// Dialog Data
 #ifdef AFX_DESIGN_TIME

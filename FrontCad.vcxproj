@@ -214,6 +214,7 @@
     <ClInclude Include="DlgDimensionPropertiex.h" />
     <ClInclude Include="DlgEllispeProperties.h" />
     <ClInclude Include="DlgLineAttributes.h" />
+    <ClInclude Include="DlgNewDrawing.h" />
     <ClInclude Include="DlgNewName.h" />
     <ClInclude Include="DlgObjectEnable.h" />
     <ClInclude Include="DlgPolygonProperties.h" />
@@ -288,6 +289,7 @@
     <ClCompile Include="DlgDimensionPropertiex.cpp" />
     <ClCompile Include="DlgEllispeProperties.cpp" />
     <ClCompile Include="DlgLineAttributes.cpp" />
+    <ClCompile Include="DlgNewDrawing.cpp" />
     <ClCompile Include="DlgNewName.cpp" />
     <ClCompile Include="DlgObjectEnable.cpp" />
     <ClCompile Include="DlgPolygonProperties.cpp" />

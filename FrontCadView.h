@@ -113,6 +113,27 @@ public:
 		return point;
 	}
 	MouseIsHere WhereIsMouse();
+	double GetClientWidth() {
+		//--------------------------------------
+		// returns the width of the client
+		// rectangle in inches
+		//-------------------------------------
+		double rV = 0.0;
+		CRect clientRect;
+		GetClientRect(&clientRect);
+		rV = double(clientRect.Width()) * GetGrid().GetInchesPerPixel().GetScaleX();
+		rV = GETAPP.RoundUpToNearest(rV, GetGrid().GetSnapGrid().dCX);
+		return rV;
+	}
+	double GetClientHieght() {
+		double rV = 0.0;
+		CRect clientRect;
+		GetClientRect(&clientRect);
+		rV = double(clientRect.Height()) * GetGrid().GetInchesPerPixel().GetScaleY();
+		rV = GETAPP.RoundUpToNearest(rV, GetGrid().GetSnapGrid().dCY);
+		return rV;
+	}
+
 	//---------------------------------------------
 	// Manage objects in document
 	//---------------------------------------------
@@ -241,9 +262,9 @@ public:
 	CSize GetScrollOffset() { return CSize(m_HScrollPos, m_VScrollPos); }
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	void DoVScroll(int Amount, BOOL Update = TRUE);
+	void DoVScroll(double Vinches, BOOL Update = TRUE);
 	void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	void DoHScroll(int Amount, BOOL Update = TRUE);
+	void DoHScroll(double change, BOOL Update = TRUE);
 	void UpdateScrollbarInfo();
 	void GetDeviceScrollSizes(CSize& sizePage, CSize& sizeLine);
 	void DrawCursor(CDC* pDC, CDoublePoint pos, CRect* pRect, CSize Offset, CScale Scale, COLORREF color);

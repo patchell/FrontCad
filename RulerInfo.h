@@ -44,15 +44,10 @@ class CRulerInfo
 	BOOL m_Show;
 	SRullerAttributes m_Attributes;
 	//--------------------------------
-	// Ruler Syncronization
-	//--------------------------------
-	CMyEvent m_RulersDone;
-	//--------------------------------
 	BOOL m_RulersReady;
 public:
 	CRulerInfo();
 	~CRulerInfo();
-	CMyEvent& GetRulersDone() { return m_RulersDone; }
 	void SetScrollOffset(CSize offset) { m_ScrollOffset = offset; }
 	CSize GetScrollOffset() { return m_ScrollOffset; }
 	void SetUpperLeft(CDoublePoint uL) { m_UpperLeft = uL; }
@@ -70,21 +65,33 @@ public:
 	//-------------------------------
 	SRullerAttributes& GetAttributes() { return m_Attributes; }
 	SRullerAttributes* GetPtrToAttributes() { return &m_Attributes; }
+	//----------------- Tick Marks ------------------------------
 	void SetTickLength(int TL) { GetAttributes().m_TickLength = TL; }
 	int GetTickeLength() { return GetAttributes().m_TickLength; }
-	void SetMajorTickLength(int MTL) { GetAttributes().m_MajTickLength = MTL; }
-	int GetMajorTickLength() { return GetAttributes().m_MajTickLength; }
-	void SetBackGroundColor(COLORREF c) { GetAttributes().m_colorBk = c; }
-	COLORREF GetBackGroundColor() { return GetAttributes().m_colorBk; }
 	void SetTickMarkColor(COLORREF c) { GetAttributes().m_colorTickMark = c; }
 	COLORREF GetTickMarkColor() { return GetAttributes().m_colorTickMark; }
+	//----------------- Major Ticks -----------------------------
+	void SetMajorTickLength(int MTL) { GetAttributes().m_MajTickLength = MTL; }
+	int GetMajorTickLength() { return GetAttributes().m_MajTickLength; }
+	void SetMajorTickColor(COLORREF c) { GetAttributes().m_colorMajorTick = c; }
+	COLORREF GetMajorTickColor() { return GetAttributes().m_colorMajorTick; }
+	//---------------------- Half Ticks ---------------------------
+	void SetHalfTickColor(COLORREF c) { GetAttributes().m_colorHalfTick = c; }
+	COLORREF GetHalfTickColor() { return GetAttributes().m_colorHalfTick; }
+	void SetHalfTickLength(int l) { GetAttributes().m_HalfTickLength = l; }
+	int GetHalfTickLength() { return GetAttributes().m_HalfTickLength; }
+	//--------------------- Background ----------------------------
+	void SetBackGroundColor(COLORREF c) { GetAttributes().m_colorBk = c; }
+	COLORREF GetBackGroundColor() { return GetAttributes().m_colorBk; }
+	//------------------=-- Position Cursor --------------------------
 	void SetCursorColor(COLORREF c) { GetAttributes().m_colorCursor = c; }
 	COLORREF GetCursorColor() { return GetAttributes().m_colorCursor;}
+	//-------------------- Text -----------------------------------
 	void SetTextColor(COLORREF c) { GetAttributes().m_colorText = c; }
 	COLORREF GetTextColor() { return GetAttributes().m_colorText; }
+	//------------------- Corner Color -------------------------
 	void SetCornerColor(COLORREF c) { GetAttributes().m_colorCorner = c; }
 	COLORREF GetCornerColor() { return GetAttributes().m_colorCorner; }
-	COLORREF GetMajorTickColor() { return GetAttributes().m_colorMajorTick; }
 	//------------------------------------------------------
 	// Grid
 	// The Grid and the Ruler markings sort of overlap.

@@ -9,7 +9,8 @@ IMPLEMENT_DYNCREATE(CFrontCadDoc, CBaseDocument)
 
 CFrontCadDoc::CFrontCadDoc()
 {
-	m_DocSize = CDoubleSize(11.0, 8.5);
+	m_DocSize = CDoubleSize(22.0, 17.0);
+	m_PaperSize = CDoubleSize(11.0, 8.5);
 }
 
 CFrontCadDoc::~CFrontCadDoc()
@@ -21,15 +22,29 @@ BOOL CFrontCadDoc::OnNewDocument()
 	static int NewFileCount = 0;
 	CString csName;
 	CString csTitle;
-	CDlgNewName Dlg;
+	CDlgNewDrawing Dlg;
+	int Id;
+	BOOL rV = FALSE;
 
 	csName.Format(_T("FrontCadDoc%d"), ++NewFileCount);
-	csTitle.Format(_T("New FrontCad Doc"));
+	csTitle.Format(_T("New FrontCad Drawuing"));
 	Dlg.SetDialogTitle(csTitle);
-	Dlg.SetNameString(csName);
-	Dlg.DoModal();
-	SetTitle(Dlg.GetNameString());
-	return TRUE;
+	Dlg.SetDocumentName(csName);
+	Dlg.SetPaperSizeX(m_PaperSize.dCX);
+	Dlg.SetPaperSizeY(m_PaperSize.dCY);
+	Dlg.SetDrawingSizeX(m_DocSize.dCX);
+	Dlg.SetDrawingSizeY(m_DocSize.dCY);
+
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		rV = TRUE;
+		SetPaperSize(CDoubleSize(Dlg.GetPaperSizeX(), Dlg.GetPaperSizeY()));
+		SetDocSize(CDoubleSize(Dlg.GetDrawingSizeX(), Dlg.GetDrawingSizeY()));
+		SetDocName(Dlg.GetDocumentName());
+		SetTitle(GetDocName());
+	}
+	return rV;
 }
 
 

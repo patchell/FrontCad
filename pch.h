@@ -82,6 +82,7 @@
 #include "DlgBitmapProperties.h"
 #include "DlgNewName.h"
 #include "DlgObjectEnable.h"
+#include "DlgNewDrawing.h"
 //------------ Views -----------------------
 #include "Grid.h"
 #include "RulerInfo.h"

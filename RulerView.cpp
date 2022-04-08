@@ -135,7 +135,7 @@ void CRulerView::DrawTicker(
 	CString csLabel;	//format the label in here
 	double Inches;		//Total number of inches long
 	int nSize;			// long dimension of the ruler
-	CPen* pOldPen,snapPen, majPen;
+	CPen* pOldPen,snapPen, majPen, halfPen;
 	CFont* pOldFont;
 	COLORREF OldBkColor;
 	COLORREF OldTextColor;
@@ -168,14 +168,15 @@ void CRulerView::DrawTicker(
 		Inches = double(nSize) / PixPerInch;
 		SnapSpace = GetRulersInfo()->GetGrid()->GetSnapGrid().dCX;
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCX;
-		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)		break;
+		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)
 		FirstTick = GETAPP.RoundUpToNearest(
 			GetRulersInfo()->GetUpperLeft().dX,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCX
 		);
 		AxisType = Axis::X;
 		SnapSpacing = GETAPP.RoundDoubleToInt(
-			SnapSpace * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX());
+			SnapSpace * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX()
+		);
 		MajorSpacing = GETAPP.RoundDoubleToInt(
 			MajorSpace * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX()
 		);
@@ -233,8 +234,13 @@ void CRulerView::DrawTicker(
 		);
 		snapPen.CreatePen(
 			PS_SOLID, 
-			GetRulersInfo()->GetGridMajLineWidth(), 
+			GetRulersInfo()->GetGridSnapLineWidth(),
 			GetRulersInfo()->GetTickMarkColor()
+		);
+		halfPen.CreatePen(
+			PS_SOLID,
+			GetRulersInfo()->GetGridSnapLineWidth(),
+			GetRulersInfo()->GetHalfTickColor()
 		);
 		pOldPen = pDC->SelectObject(&snapPen);
 		oldTextAlign = pDC->SetTextAlign(
@@ -246,28 +252,23 @@ void CRulerView::DrawTicker(
 		// the major ticks
 		//------------------------------------
 		for (int i = 0; i <= nTotalTicks; i++)
-	{
+		{
 			//----------------------------
 			// Are we at a Major Tick?
 			//----------------------------
 			double tick;
 			int tickType;
 			int x, y;
-			CPoint p;
+			double X, Y;
 
 			tick = FirstTick + SnapSpace * double(i);
 			tickType = GetRulersInfo()->GetGrid()->GetGridLineType(tick, AxisType);
 			switch (GetRulerType())
 			{
 			case RT_HORIZONTAL:
-				p = CDoublePoint(
-					tick,
-					0.0
-				).ToPixelPoint(
-					-GetRulersInfo()->GetScrollOffset(),
-					GetRulersInfo()->GetGrid()->GetPixelsPerInch()
-				);
-				pDC->MoveTo(p);
+				X = tick - FirstTick;
+				x = GETAPP.RoundDoubleToInt(X * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX());
+				pDC->MoveTo(x,0);
 				switch (tickType)
 				{
 				case GRID_MAJOR:
@@ -275,12 +276,12 @@ void CRulerView::DrawTicker(
 					{
 						pDC->SelectObject(&majPen);
 						y = GetRulersInfo()->GetMajorTickLength();
-						pDC->LineTo(p.x, y);
+						pDC->LineTo(x, y);
 						if (i > 0)
 						{
 							csLabel.Format(_T("%6.2lf"), tick);
 							TextSize = pDC->GetTextExtent(csLabel);
-							pDC->TextOutW(p.x + TextSize.cx / 2, y, csLabel);
+							pDC->TextOutW(x + TextSize.cx / 2, y, csLabel);
 						}
 						LabelCount = AddLableEvery;
 					}
@@ -290,20 +291,23 @@ void CRulerView::DrawTicker(
 					{
 						pDC->SelectObject(&snapPen);
 						y = GetRulersInfo()->GetTickeLength();
-						pDC->LineTo(p.x, y);
+						pDC->LineTo(x, y);
+					}
+					break;
+				case GRID_HALF:
+					if (SnapSpacing > 12)
+					{
+						pDC->SelectObject(&halfPen);
+						y = GetRulersInfo()->GetHalfTickLength();
+						pDC->LineTo(x, y);
 					}
 					break;
 				}  // end of "switch (tickType)"
 				break;
 			case RT_VERTICAL:
-				p = CDoublePoint(
-					0.0,
-					tick
-				).ToPixelPoint(
-					-GetRulersInfo()->GetScrollOffset(),
-					GetRulersInfo()->GetGrid()->GetPixelsPerInch()
-				);
-				pDC->MoveTo(p);
+				Y = tick - FirstTick;
+				y = GETAPP.RoundDoubleToInt(Y * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY());
+				pDC->MoveTo(0,y);
 				switch (tickType)
 				{
 				case GRID_MAJOR:
@@ -311,12 +315,12 @@ void CRulerView::DrawTicker(
 					{
 						pDC->SelectObject(&majPen);
 						x = GetRulersInfo()->GetMajorTickLength();
-						pDC->LineTo(x, p.y);
+						pDC->LineTo(x, y);
 						if (i != 0)
 						{
 							csLabel.Format(_T("%6.2lf"), tick);
 							TextSize = pDC->GetTextExtent(csLabel);
-							pDC->TextOutW(x, p.y + TextSize.cx / 2, csLabel);
+							pDC->TextOutW(x, y + TextSize.cx / 2, csLabel);
 						}
 						LabelCount = AddLableEvery;
 					}
@@ -326,11 +330,20 @@ void CRulerView::DrawTicker(
 					{
 						pDC->SelectObject(&snapPen);
 						x = GetRulersInfo()->GetTickeLength();
-						pDC->LineTo(x, p.y);
-					}						break;
+						pDC->LineTo(x, y);
+					}
+					break;
+				case GRID_HALF:
+					if (SnapSpacing > 12.0)
+					{
+						pDC->SelectObject(&halfPen);
+						x = GetRulersInfo()->GetHalfTickLength();
+						pDC->LineTo(x, y);
+					}
+					break;
 				}	// end of "switch (tickType)"
 				break;
-			} // end of "switch (GetRulerType())"
+			}	// end of "switch (tickType)"
 		}	// end of for loop
 		// restore DC objects
 		pDC->SetMapMode(oldMapMode);

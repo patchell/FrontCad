@@ -239,6 +239,9 @@
     <ClInclude Include="ChildViewBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DlgNewDrawing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
@@ -440,6 +443,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ChildFrameBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgNewDrawing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,8 +6,8 @@ CGrid::CGrid()
 	//-------------------------------
 	m_SnapGridOn = TRUE;
 	//-------------------------------
-	m_GridShowSnap = FALSE;
-	m_SnapLineStyle = TRUE;	//FALSE = dots. TRUE = LINES
+	m_GridShowSnap = TRUE;
+	m_SnapLineStyle = FALSE;	//FALSE = dots. TRUE = LINES
 	//-------------------------------
 	m_GridShowMajor = TRUE;
 	m_MajorLineStyle = TRUE;	//FALSE = dots  TRUE = lines
@@ -33,7 +33,7 @@ void CGrid::Draw(
 	// parameters:
 	//		pDC.......pointer to device context
 	//-------------------------------------------------
-	if ((IsSnapGridShowing() && !IsSnapALine()) || (IsMajorGridShowing() && ! IsMajorALine()))
+	if ((IsSnapGridShowing() && !IsSnapALine()) || (IsMajorGridShowing() && !IsMajorALine()))
 	{
 		DrawSnapDots(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
 		if (IsMajorGridShowing() && IsMajorALine())
@@ -44,7 +44,7 @@ void CGrid::Draw(
 		DrawSnapLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
 		DrawMajLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
 	}
-	else if(IsMajorGridShowing())
+	else if (IsMajorGridShowing())
 		DrawMajLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
 }
 
@@ -71,7 +71,7 @@ void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	CDoubleSize SnapGrdSz;
 	CDoublePoint DotPoint;
 	double X, Y, dTemp;
-	int GridLineTypeX, GridLineTypeY;
+	int GLT_X, GLT_Y;	// Grid line types
 	CSize PixelSpacing;
 
 	SnapGrdSz = GetSnapGrid() * Scale;
@@ -84,16 +84,21 @@ void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	for (i = 0; i < Nx; ++i)
 	{
 		X = double(i) * GetSnapGrid().dCX + ULHC.dX;
-		GridLineTypeX = GetGridLineType(X, Axis::X);
+		GLT_X = GetGridLineType(X, Axis::X);
 		dTemp = GETAPP.RoundToNearset((X - ULHC.dX) * Scale.GetScaleX(), 1.0);
 		x = GETAPP.RoundDoubleToInt(dTemp);
 		for (j = 0; j < Ny; ++j)
 		{
 			Y = double(j) * GetSnapGrid().dCY + ULHC.dY;
-			GridLineTypeY = GetGridLineType(Y, Axis::Y);
+			GLT_Y = GetGridLineType(Y, Axis::Y);
 			dTemp = GETAPP.RoundToNearset((Y - ULHC.dY) * Scale.GetScaleY(), 1.0);
 			y = GETAPP.RoundDoubleToInt(dTemp);
-			if (
+
+			if ((GLT_X == GRID_SNAP || GLT_X == GRID_HALF) &&
+				(GLT_Y == GRID_SNAP || GLT_Y == GRID_HALF) &&
+				!(GLT_X == GRID_MAJOR || GLT_Y == GRID_MAJOR)
+			)
+			{
 				//---------------------------------
 				// If both grid lines (HORZ and
 				// VERT) are Snap lines And if the
@@ -102,16 +107,20 @@ void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 				// disabled and Snap lines are
 				// enabled then draw a dot
 				//---------------------------------
-				PixelSpacing.cx > 12.0 &&
-				IsSnapGridShowing() &&
-				((GridLineTypeX == GRID_SNAP &&
-				GridLineTypeY == GRID_SNAP) ||
-				!IsMajorGridShowing())
-			)
-			{
-				pDC->SetPixel(x,y,GetSnapLineColor());
+				if (PixelSpacing.cx > 12.0 && IsSnapGridShowing())
+				{
+					if (GLT_Y == GRID_HALF || GLT_X == GRID_HALF)
+					{
+						pDC->SetPixel(x, y, GetHalfLineColor());
+					}
+					else
+					{
+						pDC->SetPixel(x, y, GetSnapLineColor());
+					}
+				}
 			}
-			else if (
+			else if (GLT_X == GRID_MAJOR || GLT_Y == GRID_MAJOR)
+			{
 				//---------------------------------
 				// If either grid line (HORZ or
 				// VERT) are Major lines And if 
@@ -119,13 +128,10 @@ void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 				// dots  and Major lines are
 				// enabled then draw a dot
 				//---------------------------------
-				!IsMajorALine() &&				//dots or lines
-				IsMajorGridShowing() &&			//major grid showing?
-				(GridLineTypeX == GRID_MAJOR ||
-				GridLineTypeY == GRID_MAJOR)
-			)
-			{
-				pDC->SetPixel(x, y, GetMajLineColor());
+				if (!IsMajorALine() && IsMajorGridShowing())
+					pDC->SetPixel(x, y, GetMajLineColor());
+				else
+					pDC->SetPixel(x, y, GetMajLineColor());
 			}
 		}
 	}
@@ -271,6 +277,15 @@ int CGrid::GetGridLineType(double LineV, Axis Type)
 		break;
 	}
 	double ModPart;
+
+	ModPart = modf(LineV / MajSpacing, &intpart);
+	if (GETAPP.IsEqToZero(ModPart, 0.0001))
+		GridLineType = GRID_MAJOR;
+	else if (GETAPP.IsEqToZero(ModPart - 0.50, 0.0001))
+		GridLineType = GRID_HALF;
+	else
+		GridLineType = GRID_SNAP;
+	/*
 	ModPart = modf(LineV / SnapSpacing, &intpart);
 	if (GETAPP.IsEqToZero(ModPart, 0.0001))
 	{
@@ -280,7 +295,10 @@ int CGrid::GetGridLineType(double LineV, Axis Type)
 		if (GETAPP.IsEqToZero(M, 0.001))
 		{
 			GridLineType = GRID_MAJOR;
+			if (ModPart == 0.500)
+				GridLineType = GRID_HALF;
 		}
 	}
+	*/
 	return GridLineType;
 }

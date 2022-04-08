@@ -980,12 +980,28 @@ void SGridAttributes::LoadSettings(SGridAttributes* pAttrib)
 	*	pAttrib......pointer to attribute structure
 	*				to load settings into
 	************************************************/
+	CString csValue;
+	double cx, cy;
+
 	pAttrib->m_colorMajorLine = GETAPP.GetProfileInt(_T("GRID"), _T("MAJORCOLOR"),RGB(0,0,255 ));
+	pAttrib->m_colorHalfGrid = GETAPP.GetProfileIntW(_T("GRID"), _T("HALFCOLOR"), RGB(0, 255, 0));
 	pAttrib->m_colorSnapLine = GETAPP.GetProfileInt(_T("GRID"), _T("SNAPCOLOR"), RGB(255,0,0) );
 	pAttrib->m_MajorLineWidth = GETAPP.GetProfileInt(_T("GRID"), _T("MAJORLINEWIDTH"),1);
 	pAttrib->m_SnapLineWidth = GETAPP.GetProfileInt(_T("GRID"), _T("SNAPLINECOLOR"), 1);
 	pAttrib->m_Snap_Lines_Dots = GETAPP.GetProfileIntW(_T("GRID"), _T("SNAP_LINES_DOTS"), FALSE);
 	pAttrib->m_Major_Lines_Dots = GETAPP.GetProfileIntW(_T("GRID"), _T("MAJOR_LINES_DOTS"), TRUE);
+
+	csValue = GETAPP.GetProfileStringW(_T("GRID"), _T("MAJOR_GRID_SPACING_CX"), _T("1.0"));
+	cx = GETAPP.StringToDouble(csValue);
+	csValue = GETAPP.GetProfileStringW(_T("GRID"), _T("MAJOR_GRID_SPACING_CY"), _T("1.0"));
+	cy = GETAPP.StringToDouble(csValue);
+	pAttrib->m_MajorGridSpacing = CDoubleSize(cx, cy);
+
+	csValue = GETAPP.GetProfileStringW(_T("GRID"), _T("SNAP_GRID_SPACING_CX"), _T("0.125"));
+	cx = GETAPP.StringToDouble(csValue);
+	csValue = GETAPP.GetProfileStringW(_T("GRID"), _T("SNAP_GRID_SPACING_CY"), _T("0.125"));
+	cy = GETAPP.StringToDouble(csValue);
+	pAttrib->m_SnapGridSpacing = CDoubleSize(cx, cy);
 }
 
 void SGridAttributes::SaveSettings(SGridAttributes* pAttrib)
@@ -999,12 +1015,25 @@ void SGridAttributes::SaveSettings(SGridAttributes* pAttrib)
 	*	pAttrib......pointer to attribute structure
 	*				to save settings from
 	************************************************/
+	CString csValue;
+
 	GETAPP.WriteProfileInt(_T("GRID"), _T("MAJORCOLOR"), pAttrib->m_colorMajorLine);
+	GETAPP.WriteProfileInt(_T("GRID"), _T("HALFCOLOR"), pAttrib->m_colorHalfGrid);
 	GETAPP.WriteProfileInt(_T("GRID"), _T("SNAPCOLOR"), pAttrib->m_colorSnapLine);
 	GETAPP.WriteProfileInt(_T("GRID"), _T("MAJORLINEWIDTH"), pAttrib->m_MajorLineWidth);
 	GETAPP.WriteProfileInt(_T("GRID"), _T("SNAPLINECOLOR"), pAttrib->m_SnapLineWidth);
 	GETAPP.WriteProfileInt(_T("GRID"), _T("SNAP_LINES_DOTS"), pAttrib->m_Snap_Lines_Dots);
 	GETAPP.WriteProfileInt(_T("GRID"), _T("MAJOR_LINES_DOTS"), pAttrib->m_Major_Lines_Dots);
+
+	csValue.Format(_T("%8.4lf"), pAttrib->m_MajorGridSpacing.dCX);
+	GETAPP.WriteProfileStringW(_T("GRID"), _T("MAJOR_GRID_SPACING_CX"), csValue);
+	csValue.Format(_T("%8.4lf"), pAttrib->m_MajorGridSpacing.dCY);
+	GETAPP.WriteProfileStringW(_T("GRID"), _T("MAJOR_GRID_SPACING_CY"), csValue);
+
+	csValue.Format(_T("%8.4lf"), pAttrib->m_SnapGridSpacing.dCX);
+	GETAPP.WriteProfileStringW(_T("GRID"), _T("SNAP_GRID_SPACING_CX"), csValue);
+	csValue.Format(_T("%8.4lf"), pAttrib->m_SnapGridSpacing.dCY);
+	GETAPP.WriteProfileStringW(_T("GRID"), _T("SNAP_GRID_SPACING_CY"), csValue);
 }
 
 //------------------- Rulers -----------------------------
@@ -1037,6 +1066,9 @@ void SRullerAttributes::LoadSettings(SRullerAttributes* pAttrib)
 	//--------------- Major Tick -------------------------------------
 	pAttrib->m_MajTickLength = GETAPP.GetProfileIntW(_T("RULERS"), _T("MAJORTICKLEN"), 16);
 	pAttrib->m_colorMajorTick = GETAPP.GetProfileIntW(_T("RULERS"), _T("MAJORTICKCOLOR"), RGB(32, 192, 255));
+	//------------Half Tick Mark --------------------------------------------
+	pAttrib->m_HalfTickLength = GETAPP.GetProfileIntW(_T("RULERS"), _T("HALFTICKLEN"), 12);
+	pAttrib->m_colorHalfTick = GETAPP.GetProfileIntW(_T("RULERS"), _T("HALFTICKCOLOR"), RGB(0, 255, 0));
 	//--------------Snap Tick --------------------------
 	pAttrib->m_colorTickMark = GETAPP.GetProfileIntW(_T("RULERS"), _T("TICKMARKCOLOR"), RGB(255, 0, 0));
 	pAttrib->m_TickLength = GETAPP.GetProfileIntW(_T("RULERS"), _T("SNAPTICKLEN"), 8);
@@ -1068,5 +1100,8 @@ void SRullerAttributes::SaveSettings(SRullerAttributes* pAttrib)
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("MAJORTICKLEN"), pAttrib->m_MajTickLength);
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("RULERSIZE"), pAttrib->m_RulerSize);
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("SNAPTICKLEN"), pAttrib->m_TickLength);
+	//------------Half Tick Mark --------------------------------------------
+	GETAPP.WriteProfileInt(_T("RULERS"), _T("HALFTICKLEN"), pAttrib->m_HalfTickLength);
+	GETAPP.WriteProfileInt(_T("RULERS"), _T("HALFTICKCOLOR"), pAttrib->m_colorHalfTick);
 }
 

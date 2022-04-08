@@ -9,6 +9,7 @@
 #define IDD_DIALOG_RENDER_ENABLE        144
 #define IDD_CDlgRoundHoleProp           311
 #define IDD_DIALOG_DIMENSION_PROPERTIES 312
+#define IDD_DLG_NEW_DRAWING             314
 #define IDD_DIALOG_TEXT_PROPERTIES      326
 #define IDD_DIALOG_LINE_ATTRB           328
 #define IDD_DIALOG_RECTPROPERTIES       330
@@ -29,7 +30,14 @@
 #define IDC_EDIT4                       1005
 #define IDC_EDIT_EXTENSION_LENGTH       1005
 #define IDC_CHECK_LINEPROP_LOCKLEN      1008
+#define IDC_EDIT_NEWDRAWON_NAME         1009
+#define IDC_EDIT_NEWDRAWING_pAPERSIZE_h 1010
+#define IDC_EDIT_NEWDRAWING_PAPERSIZE_W 1011
+#define IDC_EDIT_DRAWINGSIZE_H          1012
+#define IDC_EDIT_DRAWOMGSOZE_W          1013
 #define IDC_EDIT_TEXT_STRING            1014
+#define IDC_BUTTON1                     1014
+#define IDC_BUTTON_OPEN_EXISTING        1014
 #define IDC_CHECK_TRANSPARENT           1015
 #define IDC_STATIC_TEXT_COLOR           1016
 #define IDC_STATIC_BACKGROUND_COLOR     1017
@@ -126,9 +134,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        314
+#define _APS_NEXT_RESOURCE_VALUE        316
 #define _APS_NEXT_COMMAND_VALUE         32804
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

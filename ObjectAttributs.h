@@ -545,34 +545,46 @@ struct SRndHole2FlatAttributes
 
 struct SGridAttributes {
 	COLORREF m_colorSnapLine;
+	COLORREF m_colorHalfGrid;
 	COLORREF m_colorMajorLine;
 	int m_SnapLineWidth;
 	int m_MajorLineWidth;
 	BOOL m_Snap_Lines_Dots;	//TRUE => Lines  FALSE => Dots
 	BOOL m_Major_Lines_Dots; //TRUE => Lines  FALSE => Dots
+	CDoubleSize m_SnapGridSpacing;
+	CDoubleSize m_MajorGridSpacing;
 	SGridAttributes() {
 		m_colorSnapLine = RGB(255, 0, 0);
+		m_colorHalfGrid = RGB(0, 255, 0);
 		m_colorMajorLine = RGB(0, 128, 255);
 		m_SnapLineWidth = 1;
 		m_MajorLineWidth = 3;
 		m_Snap_Lines_Dots = FALSE;	//dots
 		m_Major_Lines_Dots = TRUE;	//lines
+		m_SnapGridSpacing = { 0.125,0.125 };
+		m_MajorGridSpacing = { 1.0,1.0 };
 	}
 	void CopyFrom(SGridAttributes* pAttributes) {
 		m_colorSnapLine = pAttributes->m_colorSnapLine;
+		m_colorHalfGrid = pAttributes->m_colorHalfGrid;
 		m_colorMajorLine = pAttributes->m_colorMajorLine;
 		m_SnapLineWidth = pAttributes->m_SnapLineWidth;
 		m_MajorLineWidth = pAttributes->m_MajorLineWidth;
 		m_Snap_Lines_Dots = pAttributes->m_Snap_Lines_Dots;
 		m_Major_Lines_Dots = pAttributes->m_Major_Lines_Dots;
+		m_SnapGridSpacing = pAttributes->m_SnapGridSpacing;
+		m_MajorGridSpacing = pAttributes->m_MajorGridSpacing;
 	}
 	void CopyTo(SGridAttributes* pAttributes) {
 		pAttributes->m_colorSnapLine = m_colorSnapLine;
+		pAttributes->m_colorHalfGrid = m_colorHalfGrid;
 		pAttributes->m_colorMajorLine = m_colorMajorLine;
 		pAttributes->m_SnapLineWidth = m_SnapLineWidth;
 		pAttributes->m_MajorLineWidth = m_MajorLineWidth;
 		pAttributes->m_Snap_Lines_Dots = m_Snap_Lines_Dots;
 		pAttributes->m_Major_Lines_Dots = m_Major_Lines_Dots;
+		pAttributes->m_SnapGridSpacing = m_SnapGridSpacing;
+		pAttributes->m_MajorGridSpacing = m_MajorGridSpacing;
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, int Indent, int flags) {
@@ -598,6 +610,11 @@ struct SRullerAttributes {
 	int m_MajTickLength;//length of the major ticks
 	COLORREF m_colorMajorTick;
 	//---------------------------
+	// Half Tick
+	//---------------------------
+	int m_HalfTickLength;
+	COLORREF m_colorHalfTick;
+	//---------------------------
 	// Snap Tick
 	//---------------------------
 	COLORREF m_colorTickMark;
@@ -611,10 +628,12 @@ struct SRullerAttributes {
 		m_RulerSize = RULER_SIZE;
 		m_TickLength = RULER_SNAP_TICK_LEN;
 		m_MajTickLength = RULER_MAJOR_TICK_LEN;
+		m_HalfTickLength = RULER_HALF_TICK_LEN;
 		m_csFontName = _T("ARIAL");
 		m_FontSize = RULER_FONT_HEIGHT;
 		m_colorBk = RGB(0,16,32);		// Ruler Background color
 		m_colorMajorTick = RGB(32, 192, 255);
+		m_colorHalfTick = RGB(0, 255, 0);
 		m_colorTickMark = RGB(255, 192, 32);
 		m_colorCursor = RGB(255, 255, 32);
 		m_colorText = RGB(255, 255, 255);
@@ -623,11 +642,13 @@ struct SRullerAttributes {
 	void CopyFrom(SRullerAttributes* pAttributes) {
 		m_RulerSize = pAttributes->m_RulerSize;
 		m_TickLength = pAttributes->m_TickLength;
+		m_HalfTickLength = pAttributes->m_HalfTickLength;
 		m_MajTickLength = pAttributes->m_MajTickLength;
 		m_csFontName = pAttributes->m_csFontName;
 		m_FontSize = pAttributes->m_FontSize;
 		m_colorBk = pAttributes->m_colorBk;
 		m_colorTickMark = pAttributes->m_colorTickMark;
+		m_colorHalfTick = pAttributes->m_colorHalfTick;
 		m_colorCursor = pAttributes->m_colorCursor;
 		m_colorText = pAttributes->m_colorText;
 		m_colorCorner = pAttributes->m_colorCorner;
@@ -635,11 +656,13 @@ struct SRullerAttributes {
 	void CopyTo(SRullerAttributes* pAttributes) {
 		pAttributes->m_RulerSize = m_RulerSize;
 		pAttributes->m_TickLength = m_TickLength;
+		pAttributes->m_HalfTickLength = m_HalfTickLength;
 		pAttributes->m_MajTickLength = m_MajTickLength;
 		pAttributes->m_csFontName = m_csFontName;
 		pAttributes->m_FontSize = m_FontSize;
 		pAttributes->m_colorBk = m_colorBk;
 		pAttributes->m_colorTickMark = m_colorTickMark;
+		pAttributes->m_colorHalfTick = m_colorHalfTick;
 		pAttributes->m_colorCursor = m_colorCursor;
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorCorner = m_colorCorner;

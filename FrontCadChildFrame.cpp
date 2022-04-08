@@ -34,6 +34,7 @@ BOOL CFrontCadChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CFrontCadChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
+	SetWindowPos(this,0, 0, 1024, 512, 0);
 	if (!m_RulerSplitter.CreateRulers(this, pContext)) 
 	{
 		TRACE("Error creation of rulers\n");

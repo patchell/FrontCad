@@ -313,6 +313,7 @@ enum class ObjectDrawState {
 
 constexpr auto RULER_SIZE = (32);
 constexpr auto RULER_SNAP_TICK_LEN = 8;
+constexpr auto RULER_HALF_TICK_LEN = 12;
 constexpr auto RULER_MAJOR_TICK_LEN = 16;
 constexpr auto RULER_FONT_HEIGHT = 16;
 
