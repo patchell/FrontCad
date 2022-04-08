@@ -2463,15 +2463,19 @@ void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 		{
 		case MouseIsHere::UPPER:
 			printf("UPPER\n");
+			DoVScroll(-GetGrid().GetSnapGrid().dCY, TRUE);
 			break;
 		case MouseIsHere::LOWER:
 			printf("LOWER\n");
+			DoVScroll(GetGrid().GetSnapGrid().dCY, TRUE);
 			break;
 		case MouseIsHere::LEFT:
 			printf("LEFT\n");
+			DoHScroll(-GetGrid().GetSnapGrid().dCX, TRUE);
 			break;
 		case MouseIsHere::RIGHT:
 			printf("RIGHT\n");
+			DoHScroll(GetGrid().GetSnapGrid().dCX, TRUE);
 			break;
 		case MouseIsHere::UPPERLEFT:
 			printf("UPPERLEFT\n");

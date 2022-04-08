@@ -7,7 +7,7 @@ CGrid::CGrid()
 	m_SnapGridOn = TRUE;
 	//-------------------------------
 	m_GridShowSnap = TRUE;
-	m_SnapLineStyle = FALSE;	//FALSE = dots. TRUE = LINES
+	m_SnapLineStyle = TRUE;	//FALSE = dots. TRUE = LINES
 	//-------------------------------
 	m_GridShowMajor = TRUE;
 	m_MajorLineStyle = TRUE;	//FALSE = dots  TRUE = lines
@@ -214,26 +214,37 @@ void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect
 	int i;
 	int Nx, Ny;
 	int H, W;
-	CPen Pen, * oldPen;
+	CPen snapPen, halfPen, * oldPen;
 	double X, Y;
 	int x, y;
-
+	int GridLineType;
 	//-----------------------------------------------------
 	W = rectClient.Width();
 	H = rectClient.Height();
 	Nx = GETAPP.RoundDoubleToInt(double(W) / (GetPixelsPerInch().GetScaleX() * GetSnapGrid().dCX));
 	Ny = GETAPP.RoundDoubleToInt(double(H) / (GetPixelsPerInch().GetScaleY() * GetSnapGrid().dCY));
 	//----------------------------------------------------------
-	// Need to find out where thefirst snap lines start
+	// Need to find out where the first snap lines start
 	//---------------------------------------------------------
 	if (GetSnapGrid().dCX * Scale.GetScaleX() > 12)
 	{
-		Pen.CreatePen(PS_SOLID, GetSnapLineWidth(), GetSnapLineColor());
-		oldPen = pDC->SelectObject(&Pen);
+		snapPen.CreatePen(PS_SOLID, GetSnapLineWidth(), GetSnapLineColor());
+		halfPen.CreatePen(PS_SOLID, GetSnapLineWidth(), GetHalfLineColor());
+		oldPen = pDC->SelectObject(&snapPen);
 		for (i = 0; i < Nx; ++i)
 		{
 			X = double(i) * GetSnapGrid().dCX;
 			x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
+			GridLineType = GetGridLineType(X, Axis::X);
+			switch (GridLineType)
+			{
+			case GRID_SNAP:
+				pDC->SelectObject(&snapPen);
+				break;
+			case GRID_HALF:
+				pDC->SelectObject(&halfPen);
+				break;
+			}
 			pDC->MoveTo(x, 0);
 			pDC->LineTo(x, H - 1);
 		}
@@ -241,6 +252,16 @@ void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect
 		{
 			Y = double(i) * GetSnapGrid().dCY;
 			y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
+			GridLineType = GetGridLineType(Y, Axis::Y);
+			switch (GridLineType)
+			{
+			case GRID_SNAP:
+				pDC->SelectObject(&snapPen);
+				break;
+			case GRID_HALF:
+				pDC->SelectObject(&halfPen);
+				break;
+			}
 			pDC->MoveTo(0, y);
 			pDC->LineTo(W - 1, y);
 		}

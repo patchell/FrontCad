@@ -50,3 +50,5 @@ possible to draw a few objects.
 April 3, 2022
 Something happened betweem me an the repo.  Couldn't fix it, so deleted it and then recreated  :(
 
+April 8, 2022
+Auto Scrolling Is working!  Something I thought would be real hard is actually very easy.  On to the meat of the program.

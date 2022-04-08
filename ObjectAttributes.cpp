@@ -983,9 +983,9 @@ void SGridAttributes::LoadSettings(SGridAttributes* pAttrib)
 	CString csValue;
 	double cx, cy;
 
-	pAttrib->m_colorMajorLine = GETAPP.GetProfileInt(_T("GRID"), _T("MAJORCOLOR"),RGB(0,0,255 ));
-	pAttrib->m_colorHalfGrid = GETAPP.GetProfileIntW(_T("GRID"), _T("HALFCOLOR"), RGB(0, 255, 0));
-	pAttrib->m_colorSnapLine = GETAPP.GetProfileInt(_T("GRID"), _T("SNAPCOLOR"), RGB(255,0,0) );
+	pAttrib->m_colorMajorLine = GETAPP.GetProfileInt(_T("GRID"), _T("MAJORCOLOR"),RGB(0,0,63 ));
+	pAttrib->m_colorHalfGrid = GETAPP.GetProfileIntW(_T("GRID"), _T("HALFCOLOR"), RGB(0, 31, 0));
+	pAttrib->m_colorSnapLine = GETAPP.GetProfileInt(_T("GRID"), _T("SNAPCOLOR"), RGB(63,0,0) );
 	pAttrib->m_MajorLineWidth = GETAPP.GetProfileInt(_T("GRID"), _T("MAJORLINEWIDTH"),1);
 	pAttrib->m_SnapLineWidth = GETAPP.GetProfileInt(_T("GRID"), _T("SNAPLINECOLOR"), 1);
 	pAttrib->m_Snap_Lines_Dots = GETAPP.GetProfileIntW(_T("GRID"), _T("SNAP_LINES_DOTS"), FALSE);
