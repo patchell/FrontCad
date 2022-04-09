@@ -498,7 +498,6 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		break;
@@ -508,7 +507,6 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -518,6 +516,7 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		m_ArrowTip = m_DefineAngle = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
@@ -526,29 +525,15 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
 		break;
-	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::PLACE_LBUTTON_UP:
-		break;
-	case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::ARCSTART_LBUTTON_UP:
-		break;
-	case ObjectDrawState::ARCEND_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::ARCEND_LBUTTON_UP:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
-		break;
 	case ObjectDrawState::ROTATE_LBUTTON_DOWN:
 		m_DefineAngle = MousePos;
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ROTATE_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		SetDefineAnglePoint(MousePos);
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
+		GETVIEW()->SetObjectTypes(new CCadArrow);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		GETVIEW()->Invalidate();

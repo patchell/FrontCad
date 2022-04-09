@@ -507,7 +507,6 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
 		break;
@@ -517,7 +516,6 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -527,12 +525,13 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		m_Rect.SetPoints(MousePos, MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		m_Rect.SetPoints(MousePos, MousePos);
-		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
+		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
@@ -540,6 +539,7 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		m_Rect.SetSecondPoint(MousePos);
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
 		GETVIEW()->SetObjectTypes(new CCadRect);
@@ -571,13 +571,12 @@ ObjectDrawState CCadRect::MouseMove(ObjectDrawState DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		m_Rect.SetPoints(MousePos, MousePos);
-		GETVIEW()->Invalidate();
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		m_Rect.SetSecondPoint(MousePos);
-		GETVIEW()->Invalidate();
-		break;
+	break;
 	}
+	GETVIEW()->Invalidate();
 	return DrawState;
 }
 

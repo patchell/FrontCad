@@ -9,8 +9,7 @@ class CDoublePoint :public DOUBLEPOINT
 	//--------------- Private Methods ---------------
 	double m_RadAngle;	//angle in radians
 	CDoublePoint* m_pPivot;
-public:
-	CDoublePoint() {
+public:	CDoublePoint() {
 		dX = 0.0;
 		dY = 0.0;
 		m_RadAngle = 0.0;

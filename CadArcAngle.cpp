@@ -47,7 +47,6 @@ ObjectDrawState CCadArcAngle::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		break;
 	case ObjectDrawState::END_DRAWING:
 		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
@@ -55,11 +54,11 @@ ObjectDrawState CCadArcAngle::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		break;
@@ -74,10 +73,7 @@ ObjectDrawState CCadArcAngle::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::ARCEND_LBUTTON_DOWN:
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_UP:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	}
 	return DrawState;

@@ -313,6 +313,40 @@ void SCadDimAttributes::LoadSettings(SCadDimAttributes* pAttrib)
 	*	pAttrib......pointer to attribute structure
 	*				to load settings into
 	************************************************/
+	int i;
+	CString csValue;
+	CString csType;
+	CString csDefult;
+
+	csValue = GETAPP.GetProfileStringW(_T("DIM"), _T("LINE_WIDTH"), _T("0.020"));
+	pAttrib->m_LineWidth = GETAPP.StringToDouble(csValue);;
+
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("DIM"),_T("LINE_COLOR"),RGB(128, 128, 128));
+	pAttrib->m_colorText = GETAPP.GetProfileIntW(_T("DIM"), _T("TEXT_COLOR"), RGB(128, 128, 128));
+
+	csValue = GETAPP.GetProfileStringW(_T("DIM"), _T("TEXT_HIEGHT"), _T("0.300"));
+	pAttrib->m_TextHeight = GETAPP.StringToDouble(csValue);
+
+	pAttrib->m_colorBKG = GETAPP.GetProfileIntW(_T("DIM"), _T("BACKGROUND_COLOR"), RGB(0, 0, 0));
+
+	csValue = GETAPP.GetProfileStringW(_T("DIM"), _T("EXT_LINE_GAP"), _T("0.125"));
+	pAttrib->m_ExtLineGap = GETAPP.StringToDouble(csValue);
+
+	csValue = GETAPP.GetProfileStringW(_T("DIM"), _T("DIM_LINE_INSET"), _T("0.250"));
+	pAttrib->m_DimLineInset = GETAPP.StringToDouble(csValue);
+
+	for (i = 0; i < 4; ++i)
+	{
+		csDefult.Format(_T("%6.3lf"), m_aDefaultArrow[i].dX);
+		csType.Format(_T("ARROW_X_%d"),i);
+		csValue = GETAPP.GetProfileStringW(_T("DIM"), csType, csDefult);
+		pAttrib->m_aArrowShape[i].dX = GETAPP.StringToDouble(csValue);
+
+		csDefult.Format(_T("%6.3lf"), m_aDefaultArrow[i].dY);
+		csType.Format(_T("ARROW_Y_%d"), i);
+		csValue = GETAPP.GetProfileStringW(_T("DIM"), csType, csDefult);
+		pAttrib->m_aArrowShape[i].dX = GETAPP.StringToDouble(csValue);
+	}
 }
 
 void SCadDimAttributes::SaveSettings(SCadDimAttributes* pAttrib)
@@ -326,6 +360,37 @@ void SCadDimAttributes::SaveSettings(SCadDimAttributes* pAttrib)
 	*	pAttrib......pointer to attribute structure
 	*				to save settings from
 	************************************************/
+	int i;
+	CString csValue;
+	CString csType;
+
+	csValue.Format(_T("%6.3lf"), pAttrib->m_LineWidth);
+	GETAPP.WriteProfileStringW(_T("DIM"), _T("LINE_WIDTH"), csValue);
+
+	GETAPP.WriteProfileInt(_T("DIM"), _T("LINE_COLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("DIM"), _T("TEXT_COLOR"), pAttrib->m_colorText);
+
+	csValue.Format(_T("%6.3lf"), pAttrib->m_TextHeight);
+	GETAPP.WriteProfileStringW(_T("DIM"), _T("TEXT_HIEGHT"), csValue);
+
+	GETAPP.WriteProfileInt(_T("DIM"), _T("BACKGROUND_COLOR"), pAttrib->m_colorBKG);
+
+	csValue = GETAPP.GetProfileStringW(_T("DIM"), _T("EXT_LINE_GAP"), _T("0.125"));
+	pAttrib->m_ExtLineGap = GETAPP.StringToDouble(csValue);
+
+	csValue.Format(_T("%6.3lf"), pAttrib->m_DimLineInset);
+	GETAPP.WriteProfileStringW(_T("DIM"), _T("DIM_LINE_INSET"), csValue);
+
+	for (i = 0; i < 4; ++i)
+	{
+		csType.Format(_T("ARROW_X_%d"), i);
+		csValue.Format(_T("%6.3lf"), pAttrib->m_aArrowShape[i].dX);
+		GETAPP.WriteProfileStringW(_T("DIM"), csType, csValue);
+
+		csType.Format(_T("ARROW_Y_%d"), i);
+		csValue.Format(_T("%6.3lf"), pAttrib->m_aArrowShape[i].dY);
+		GETAPP.WriteProfileStringW(_T("DIM"), csType, csValue);
+	}
 }
 
 DocFileParseToken SCadDimAttributes::Parse(DocFileParseToken Token, CLexer* pLex)

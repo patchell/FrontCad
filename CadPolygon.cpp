@@ -512,7 +512,6 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
 		break;
@@ -522,7 +521,6 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -532,6 +530,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		SetCurrentVertex(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
@@ -550,6 +549,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//------
 			//done
 			//-----
+			GETVIEW()->EnableAutoScroll(FALSE);
 			GETVIEW()->AddObjectAtFrontIntoDoc(this);
 			GETVIEW()->SetObjectTypes(new CCadPolygon);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;

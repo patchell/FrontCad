@@ -593,7 +593,6 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place First Point"));
 		break;
@@ -603,7 +602,6 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -613,6 +611,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		m_P1 = m_P2 = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		GETVIEW()->Invalidate();
@@ -627,6 +626,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		m_P2 = MousePos;
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
 		GETVIEW()->SetObjectTypes(new CCadRndRect);

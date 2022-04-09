@@ -121,6 +121,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_ZOOMOUT, &CFrontCadView::OnUpdateViewZoomout)
 	ON_COMMAND(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnDrawPlaceBitmap)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnUpdateDrawPlacebitmap)
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
 END_MESSAGE_MAP()
 
 
@@ -2462,37 +2464,41 @@ void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 		switch (MouseLocation)
 		{
 		case MouseIsHere::UPPER:
-			printf("UPPER\n");
 			DoVScroll(-GetGrid().GetSnapGrid().dCY, TRUE);
 			break;
 		case MouseIsHere::LOWER:
-			printf("LOWER\n");
 			DoVScroll(GetGrid().GetSnapGrid().dCY, TRUE);
 			break;
 		case MouseIsHere::LEFT:
-			printf("LEFT\n");
 			DoHScroll(-GetGrid().GetSnapGrid().dCX, TRUE);
 			break;
 		case MouseIsHere::RIGHT:
-			printf("RIGHT\n");
 			DoHScroll(GetGrid().GetSnapGrid().dCX, TRUE);
 			break;
 		case MouseIsHere::UPPERLEFT:
-			printf("UPPERLEFT\n");
 			break;
 		case MouseIsHere::UPPERRIGHT:
-			printf("UPPERRIGHT\n");
 			break;
 		case MouseIsHere::LOWERLEFT:
-			printf("LOWERLEFT\n");
 			break;
 		case MouseIsHere::LOWERRIGHT:
-			printf("LOWERRIGHT\n");
 			break;
 		case MouseIsHere::NOWHERE:
-			printf("NOWHERE\n");
+			break;
 		}
-//		SetTimer(m_AutoScrollTimerId, 10, NULL);
 	}
 	CChildViewBase::OnTimer(nIDEvent);
+}
+
+void CFrontCadView::OnMButtonDown(UINT nFlags, CPoint point)
+{
+
+	EnableAutoScroll(TRUE);
+	CChildViewBase::OnMButtonDown(nFlags, point);
+}
+
+void CFrontCadView::OnMButtonUp(UINT nFlags, CPoint point)
+{
+	EnableAutoScroll(FALSE);
+	CChildViewBase::OnMButtonUp(nFlags, point);
 }

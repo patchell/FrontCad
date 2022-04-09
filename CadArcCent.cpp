@@ -574,7 +574,6 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC CENTER:Place Center Point of Circle Shape"));
 		break;
@@ -584,7 +583,6 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -595,6 +593,7 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		SetCenter(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
@@ -625,16 +624,13 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::ARCEND_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		SetEndPoint(MousePos);
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
 		GETVIEW()->SetObjectTypes(new CCadArcCent);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC CENTERED:Locate Center Point of Arc"));
 		GETVIEW()->Invalidate();
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
 		break;
 	}
 	return DrawState;

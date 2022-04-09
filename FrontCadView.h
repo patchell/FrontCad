@@ -296,5 +296,7 @@ public:
 	CRulerInfo& GetRulerInfo() { return m_RulerInfo; }
 	CRulerInfo* GetPtrToRulerInfo() { return &m_RulerInfo; }
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
 };
 

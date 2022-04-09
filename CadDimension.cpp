@@ -10,6 +10,7 @@ CCadDimension::CCadDimension():CCadObject()
 		m_LastAttributes.CopyFrom(GETAPP.GetDimensionAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
+	m_nTotalObjects = 0;
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
@@ -97,7 +98,15 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	//--------------------------------------------------
 	if (IsRenderDimensionEnabled())
 	{
-
+		if (GetHead())
+		{
+			CCadObject* pObj = GetHead();
+			while (pObj)
+			{
+				pObj->Draw( pDC, mode, Offset, Scale);
+				pObj = pObj->GetNext();
+			}
+		}
 	}
 }
 
@@ -134,49 +143,6 @@ CDoublePoint CCadDimension::GetReference()
 	// return value:reference point
 	//--------------------------------------------------
 	return CDoublePoint();
-}
-
-void CCadDimension::AddObject(CCadObject *pO)
-{
-	//***************************************************
-	// AddObject
-	//	Adds a child object to an object.  This Method
-	// is not supported by all objects, because they just
-	// can have children.  A good example of an object
-	// that has children would be a library object
-	//
-	// parameters:
-	//	pO.....pointer to object to add.
-	//
-	// return value:none
-	//--------------------------------------------------
-}
-
-void CCadDimension::RemoveObject(CCadObject *pO)
-{
-	//***************************************************
-	// RemoveObject
-	//	Removes a child object from an object
-	//
-	// parameters:
-	//	pO.....pointer to object to remove
-	//
-	// return value:none
-	//--------------------------------------------------
-
-}
-
-CCadObject *CCadDimension::GetHead(void)
-{
-	//***************************************************
-	// GetHead
-	//	Retrieves the head pointer to a list of children
-	// in the object
-	// parameters:
-	//
-	// return value: Head pointer to children
-	//--------------------------------------------------
-	return 0;
 }
 
 int CCadDimension::IsDirty(void)
@@ -449,7 +415,6 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
@@ -458,7 +423,6 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -469,20 +433,27 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 
+		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
+		DrawState = ObjectDrawState::SECOND_POINT_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
 		break;
-	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-
-		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
+	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
+		DrawState = ObjectDrawState::SECOND_POINT_LBUTTON_UP;
 		break;
-	case ObjectDrawState::PLACE_LBUTTON_UP:
-
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
+	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
+		DrawState = ObjectDrawState::EXTENSION_LINES_LBUTTON_DOWN;
+		break;
+	case ObjectDrawState::EXTENSION_LINES_LBUTTON_DOWN:
+		DrawState = ObjectDrawState::EXTENSION_LINES_LBUTTON_UP;
+		break;
+	case ObjectDrawState::EXTENSION_LINES_LBUTTON_UP:
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		GETVIEW()->EnableAutoScroll(FALSE);
+		GETVIEW()->AddObjectAtFrontIntoDoc(this);
+		GETVIEW()->SetObjectTypes(new CCadDimension);
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		GETVIEW()->Invalidate();
 		break;
@@ -517,4 +488,101 @@ ObjectDrawState CCadDimension::MouseMove(ObjectDrawState DrawState)
 		break;
 	}
 	return DrawState;
+}
+
+void CCadDimension::AddDimObject(CCadObject* pObj)
+{
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);;
+	}
+	else
+	{
+		pObj->SetNext(GetHead());
+		GetHead()->SetPrev(pObj);
+		SetHead(pObj);
+	}
+	++m_nTotalObjects;
+}
+
+void CCadDimension::RemoveDimObject(CCadObject* pObj)
+{
+	if (pObj == GetHead())
+	{
+		SetHead(pObj->GetNext());
+		if (GetHead())
+			GetHead()->SetPrev(0);
+		else
+			SetTail(0);
+	}
+	else if (pObj == GetTail())
+	{
+		SetTail(pObj->GetPrev());
+		if (GetTail())
+			GetTail()->SetNext(0);
+		else
+			SetHead(0);
+	}
+	else
+	{
+		pObj->GetNext()->SetPrev(pObj->GetPrev());
+		pObj->GetPrev()->SetNext(pObj->GetNext());
+	}
+}
+
+double CCadDimension::Slope()
+{
+	//-----------------------------------
+	// Get the slope of the line defined
+	// by m_P1, m_P2
+	//-----------------------------------
+	double m;
+	if (m_P1.dX != m_P2.dX)
+		m = (m_P1.dY - m_P2.dY) / (m_P1.dX - m_P2.dX);
+	return m;
+}
+
+double CCadDimension::OrthogonalSlope()
+{
+	//-----------------------------------
+	// Get the slope of the line defined
+	// by m_P1, m_P2 that is perpendicular
+	//-----------------------------------
+	double m;
+	if (m_P1.dY != m_P2.dY)
+		m = (m_P1.dX - m_P2.dX)/ (m_P1.dY - m_P2.dY);
+	return m;
+}
+
+UINT CCadDimension::LineIs()
+{
+	UINT rV = 0;	//line is whatever
+
+	if (m_P1.dY == m_P2.dY)
+		rV = DIMLINE_HORIZONTAL;
+	else if (m_P1.dX == m_P2.dX)
+		rV = DIMLINE_VERTICAL;
+	return rV;
+}
+
+double CCadDimension::YIntercept(double m, CDoublePoint p)
+{
+	//-----------------------------
+	// finds the Y intercept fopr
+	// a line that goes through
+	// point p with slope m
+	//
+	// y = mx + b or
+	// b = y - mx
+	// parameters:
+	//	m.......slope of the line
+	//	p.......point the line
+	//          goes through
+	// Return Vaule: the Y intercept
+	//-----------------------------
+	double b;
+
+	b = p.dY - m * p.dX;
+	return b;
 }

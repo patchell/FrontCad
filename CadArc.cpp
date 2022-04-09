@@ -528,7 +528,6 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		GETVIEW()->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place First Corner of Circle Shape"));
 		break;
@@ -538,7 +537,6 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
-		GETVIEW()->EnableAutoScroll(FALSE);
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -549,6 +547,7 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		GETVIEW()->EnableAutoScroll(TRUE);
 		m_rectShape.SetPoints(MousePos, MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
@@ -582,6 +581,7 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::ARCEND_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_UP:
+		GETVIEW()->EnableAutoScroll(FALSE);
 		SetEndPoint(MousePos);
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
 		GETVIEW()->SetObjectTypes(new CCadArc);

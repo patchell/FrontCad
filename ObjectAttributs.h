@@ -142,17 +142,32 @@ struct SBitmapAttributes {
 };
 //----------- Dimension Attributes -----------------------
 struct SCadDimAttributes {
+	inline static CDoublePoint m_aDefaultArrow[4] = {
+		{0.0,0.0},
+		{0.20,0.05},
+		{0.175,0.0},
+		{0.20,-0.05},
+	};
 	COLORREF m_colorLine;
 	COLORREF m_colorText;
-	double m_TextHeight;
 	COLORREF m_colorBKG;	//text backhround color
+	double m_TextHeight;
 	double m_LineWidth;
+	double m_ExtLineGap;
+	double m_DimLineInset;
+	CDoublePoint m_aArrowShape[4];
 	SCadDimAttributes() {
 		m_colorLine = RGB(0,0,0);
 		m_colorText = RGB(0,0,0);
 		m_TextHeight = 0.06;
 		m_colorBKG = RGB(255,255,255);
 		m_LineWidth = 0.010;
+		m_ExtLineGap = 0.075;
+		m_DimLineInset = 0.125;
+		m_aArrowShape[0] = m_aDefaultArrow[0];
+		m_aArrowShape[1] = m_aDefaultArrow[1];
+		m_aArrowShape[2] = m_aDefaultArrow[2];
+		m_aArrowShape[3] = m_aDefaultArrow[3];
 	}
 	void CopyFrom(SCadDimAttributes* pAttributes) {
 		m_LineWidth = pAttributes->m_LineWidth;
@@ -160,6 +175,14 @@ struct SCadDimAttributes {
 		m_colorText = pAttributes->m_colorText;
 		m_TextHeight = pAttributes->m_TextHeight;
 		m_colorBKG = pAttributes->m_colorBKG;
+		m_ExtLineGap = pAttributes->m_ExtLineGap;
+		m_DimLineInset = pAttributes->m_DimLineInset;
+		memcpy_s(
+			m_aArrowShape, 
+			sizeof(CDoublePoint) * 4, 
+			pAttributes->m_aArrowShape, 
+			sizeof(CDoublePoint) * 4
+		);
 	}
 	void CopyTo(SCadDimAttributes* pAttributes) {
 		pAttributes->m_LineWidth = m_LineWidth;
@@ -167,6 +190,14 @@ struct SCadDimAttributes {
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_TextHeight = m_TextHeight;
 		pAttributes->m_colorBKG = m_colorBKG;
+		pAttributes->m_ExtLineGap = m_ExtLineGap;
+		pAttributes->m_DimLineInset = m_DimLineInset;
+		memcpy_s(
+			pAttributes->m_aArrowShape,
+			sizeof(CDoublePoint) * 4,
+			m_aArrowShape,
+			sizeof(CDoublePoint) * 4
+		);
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, DocFileParseToken TypeToken, int Indent, int flags) {

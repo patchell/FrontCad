@@ -1,4 +1,6 @@
 #pragma once
+constexpr auto DIMLINE_HORIZONTAL = 1;
+constexpr auto DIMLINE_VERTICAL = 2;
 
 class CCadDimension:public CCadObject
 {
@@ -7,13 +9,10 @@ class CCadDimension:public CCadObject
 	inline static SCadDimAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CString m_csText;
-	CDoubleLine m_ExtLine1;		// extension line
-	CDoubleLine m_ExtLine2;		// extension line
-	CDoubleLine m_DimLine1;		// Dimension line
-	CDoubleLine m_DimLine2;		// Dimension line
-	CDoublePoint m_P1, m_P2;	//points that are being dimensioned
-	CDoublePolygon m_Arrow1, m_Arrow2;	//arrows (really?)
+	CCadObject* m_pHead;
+	CCadObject* m_pTail;
+	UINT m_nTotalObjects;
+	CDoublePoint m_P1, m_P2;
 	SCadDimAttributes m_DimensionAttributes;
 public:
 	CCadDimension();
@@ -26,9 +25,6 @@ public:
 	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
 	virtual BOOL PointInObjectAndSelect(CPoint p, CSize Offest = CSize(0, 0), CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
 	virtual CDoublePoint GetReference();
-	virtual void AddObject(CCadObject *pO);
-	virtual void RemoveObject(CCadObject *pO);
-	virtual CCadObject *GetHead(void);
 	virtual int IsDirty(void);
 	virtual int IsSelected(void);
 	virtual void SetDirty(int d);
@@ -55,6 +51,16 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
+	void AddDimObject(CCadObject* pObj);
+	void RemoveDimObject(CCadObject* pObj);
+	double Slope();
+	double OrthogonalSlope();
+	UINT LineIs();
+	double YIntercept(double m, CDoublePoint p);
+	CCadObject* GetHead() { return m_pHead; }
+	void SetHead(CCadObject* pObj) { m_pHead = pObj; }
+	CCadObject* GetTail() { return m_pTail; }
+	void SetTail(CCadObject* pObj) { m_pTail = pObj; }
 	//----------------------------------------------------
 	void RenderEnable(int e) { CCadDimension::m_RenderEnable = e; }
 	BOOL IsRenderDimensionEnabled() { return CCadDimension::m_RenderEnable; }
