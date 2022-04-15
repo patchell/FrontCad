@@ -200,6 +200,7 @@
     <ClInclude Include="CadLine.h" />
     <ClInclude Include="CadObject.h" />
     <ClInclude Include="CadOrigin.h" />
+    <ClInclude Include="CadPoint.h" />
     <ClInclude Include="CadPolygon.h" />
     <ClInclude Include="CadRect.h" />
     <ClInclude Include="CadRndRect.h" />
@@ -275,6 +276,7 @@
     <ClCompile Include="CadLine.cpp" />
     <ClCompile Include="CadObject.cpp" />
     <ClCompile Include="CadOrigin.cpp" />
+    <ClCompile Include="CadPoint.cpp" />
     <ClCompile Include="CadPolygon.cpp" />
     <ClCompile Include="CadRect.cpp" />
     <ClCompile Include="CadRndRect.cpp" />

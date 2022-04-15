@@ -21,15 +21,35 @@ CCadObject::CCadObject()
 	//	none
 	//--------------------------------------------------
 	m_Type = ObjectType::BASE;
-	m_Dirty = 0;
-	m_Selected = 0;
+	m_Dirty = FALSE;	// Dirty flag
+	m_Selected = FALSE;	//selected flag
+	//----------- Main Drawing Links --------------
 	m_pNext = 0;
 	m_pPrev = 0;
+	//--------- Selected object Links -------------
 	m_pNextSel = 0;
 	m_pPrevSel = 0;
+	//---------- Drawing Object Child List -------
+	m_pHead = 0;
+	m_pTail = 0;
+	m_nTotalChildObjects = 0;
+	//--------Dependent Child list --------------
+	m_pHeadDependentChildren = 0;
+	m_pTailDependentChildren = 0;
+	m_pNextDependentChild = 0;
+	m_pPrevDependentChild = 0;
+	m_nTotalDependentChildren = 0;
+	// -------Dependent Parent List -------------
+	m_pHeadDependentParents = 0;
+	m_pTailDependentParents = 0;
+	m_pNextDependentParent = 0;
+	m_pPrevDependentParent = 0;
+	m_nTotalDependentParents = 0;
+	//---------------------------
+	// Generate Unique ID
+	//---------------------------
+	m_Id = GETAPP.GetUniqueID();
 }
-
-
 
 CCadObject::~CCadObject()
 {
@@ -44,68 +64,6 @@ CCadObject::~CCadObject()
 	//--------------------------------------------------
 }
 
-void CCadObject::Move(CDoubleSize Diff)
-{
-	//***************************************************
-	//	Move
-	//		This Method is used to move the object
-	// by the amount that is passed.
-	//
-	// parameters:
-	//	p.......amount to move the object by
-	//
-	// return value: none
-	//--------------------------------------------------
-}
-
-void CCadObject::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
-{
-	//***************************************************
-	// Save
-	//		This Method save the document
-	// parameters:
-	//	pO......pointer to output stream to save file to
-	//	Indent..Number of spaces to indent from left margin
-	//	flags...Various flags to control output
-	//
-	// return value:none
-	//--------------------------------------------------
-}
-
-void CCadObject::SetVertex(int v, CDoubleSize sz)
-{
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-}
-
-
-int CCadObject::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//	scale....scale factor
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return -1;
-}
-
-
 void CCadObject::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 {
 	//***************************************************
@@ -119,72 +77,6 @@ void CCadObject::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-}
-
-int CCadObject::IsDirty(void)
-{
-	//***************************************************
-	// IsDirty
-	//	returns the status of the Dirty State of the
-	// object
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-	return m_Dirty;
-}
-
-void CCadObject::SetDirty(int d)
-{
-	//***************************************************
-	// SetDirty
-	// Changes the state of the dirty flag
-	// parameters:
-	//	d.......new state of dirty flag.
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Dirty = d;
-}
-
-int CCadObject::IsSelected()
-{
-	//***************************************************
-	// IsSelected
-	//	returns the state of the selected flag
-	// parameters:
-	//
-	// return value:State of the selected flag
-	//--------------------------------------------------
-	return m_Selected;
-}
-
-void CCadObject::SetSelected(int Flag)
-{
-	//***************************************************
-	// SetSelected
-	//	Changes the state of the selcted flag.
-	// parameters:
-	// Flag......New state of the selected flag
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Selected = Flag;
-}
-
-void CCadObject::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-
 }
 
 
@@ -229,66 +121,187 @@ CCadObject * CCadObject::CopyObject(void)
 	return new CCadObject;
 }
 
-void CCadObject::SetRect(CDoubleRect & rect, CDoublePoint P1, CDoublePoint P2, CDoubleSize Lw)
+//-------------------------------------------------
+// Child Object List
+//-------------------------------------------------
+
+void CCadObject::AddObjectAtHead(CCadObject* pObj)
 {
-	//--------------------------------------------------
-	// SetRect
-	//	Just what is the method supposed to do?
-	// parameters:
-	//	rect.........reference to destination rect
-	//	P1
-	//	P2
-	// Lw........... Size of Rectangle
-	// return value:
-	//--------------------------------------------------
-	if (((P1.dX > P2.dX) && (P1.dY > P2.dY)))
+	if (GetHead() == 0)
 	{
-		CDoublePoint temp;
-		temp = P2;
-		P2 = P1;
-		P1 = temp;
+		SetHead(pObj);
+		SetTail(pObj);;
 	}
-	else if (((P1.dX > P2.dX) && (P1.dY < P2.dY)))
+	else
 	{
-		CDoublePoint t1, t2;
-		t1 = P1;
-		t2 = P2;
-		P1.dX = t2.dX;
-		P2.dX = t1.dX;
+		pObj->SetNext(GetHead());
+		GetHead()->SetPrev(pObj);
+		SetHead(pObj);
 	}
-	else if ((P1.dX < P2.dX) && (P1.dY > P2.dY))
-	{
-		CDoublePoint t1, t2;
-		t1 = P1;
-		t2 = P2;
-		P1.dY = t2.dY;
-		P2.dY = t1.dY;
-	}
-	rect = CDoubleRect(
-		P1 + Lw, 
-		P2 - Lw + CDoubleSize(1.0, 1.0)
-	);
+	++m_nTotalChildObjects;
 }
 
-ObjectDrawState CCadObject::MouseMove(ObjectDrawState DrawState)
+void CCadObject::AddObjectAtTail(CCadObject* pObj)
 {
-	//-------------------------------------------------------
-	// MouseMove
-	//		This is the state machine for creating this
-	//	object on the screen.  This Method is for when
-	//	the left mouse is moved.
-	//
-	//	parameters:
-	//		pASV......pointer to view that is creating object
-	//		DrawState.Current state of drawing process
-	//
-	//	Returns:
-	//		Next Draw State
-	//-------------------------------------------------------
-	return DrawState;
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);
+	}
+	else
+	{
+		pObj->SetPrev(GetTail());
+		GetTail()->SetNext(pObj);
+		SetTail(pObj);
+	}
+	++m_nTotalChildObjects;
 }
 
-int CCadObject::EditProperties(void)
+void CCadObject::RemoveObject(CCadObject* pObj)
 {
-	return 0;
+	if (pObj == GetHead())
+	{
+		SetHead(pObj->GetNext());
+		if (GetHead())
+			GetHead()->SetPrev(0);
+		else
+			SetTail(0);
+	}
+	else if (pObj == GetTail())
+	{
+		SetTail(pObj->GetPrev());
+		if (GetTail())
+			GetTail()->SetNext(0);
+		else
+			SetHead(0);
+	}
+	else
+	{
+		pObj->GetNext()->SetPrev(pObj->GetPrev());
+		pObj->GetPrev()->SetNext(pObj->GetNext());
+	}
+	--m_nTotalChildObjects;
+}
+
+//-----------------------------------------
+// Dependent Children lists
+//-----------------------------------------
+
+void CCadObject::AddDepChildObjectAtHead(CCadObject* pObj)
+{
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);;
+	}
+	else
+	{
+		pObj->SetNext(GetHead());
+		GetHead()->SetPrev(pObj);
+		SetHead(pObj);
+	}
+	++m_nTotalDependentChildren;
+}
+
+void CCadObject::AddDepChildObjectAtTail(CCadObject* pObj)
+{
+	if (GetDependentChildrenHead() == 0)
+	{
+		SetDependentChildrenHead(pObj);
+		SetDependentChildrenTail(pObj);
+	}
+	else
+	{
+		pObj->SetPrevDependentChild(GetDependentChildrenTail());
+		GetDependentChildrenTail()->SetNextDependentChild(pObj);
+		SetDependentChildrenTail(pObj);
+	}
+	++m_nTotalDependentChildren;
+}
+
+void CCadObject::RemoveDepChildObject(CCadObject* pObj)
+{
+	if (pObj == GetHead())
+	{
+		SetHead(pObj->GetNext());
+		if (GetHead())
+			GetHead()->SetPrev(0);
+		else
+			SetTail(0);
+	}
+	else if (pObj == GetTail())
+	{
+		SetTail(pObj->GetPrev());
+		if (GetTail())
+			GetTail()->SetNext(0);
+		else
+			SetHead(0);
+	}
+	else
+	{
+		pObj->GetNext()->SetPrev(pObj->GetPrev());
+		pObj->GetPrev()->SetNext(pObj->GetNext());
+	}
+	--m_nTotalDependentChildren;
+}
+
+//-----------------------------------------
+// Dependent parent list management
+//-----------------------------------------
+void CCadObject::AddDepParentObjectAtHead(CCadObject* pObj)
+{
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);;
+	}
+	else
+	{
+		pObj->SetNext(GetHead());
+		GetHead()->SetPrev(pObj);
+		SetHead(pObj);
+	}
+	++m_nTotalDependentParents;
+}
+
+void CCadObject::AddDepParentObjectAtTail(CCadObject* pObj)
+{
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);
+	}
+	else
+	{
+		pObj->SetPrev(GetTail());
+		GetTail()->SetNext(pObj);
+		SetTail(pObj);
+	}
+	++m_nTotalDependentParents;
+}
+
+void CCadObject::RemoveDepParentObject(CCadObject* pObj)
+{
+	if (pObj == GetHead())
+	{
+		SetHead(pObj->GetNext());
+		if (GetHead())
+			GetHead()->SetPrev(0);
+		else
+			SetTail(0);
+	}
+	else if (pObj == GetTail())
+	{
+		SetTail(pObj->GetPrev());
+		if (GetTail())
+			GetTail()->SetNext(0);
+		else
+			SetHead(0);
+	}
+	else
+	{
+		pObj->GetNext()->SetPrev(pObj->GetPrev());
+		pObj->GetPrev()->SetNext(pObj->GetNext());
+	}
+	--m_nTotalDependentParents;
 }

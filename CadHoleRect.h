@@ -2,7 +2,7 @@
 
 class CCadHoleRect:public CCadObject
 {
-	inline static int m_DocCount;
+	inline static int m_RectHoleCount;
 	inline static SRectHoleAttributes m_LastAttributes;
 	inline static SRectHoleAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -13,7 +13,6 @@ class CCadHoleRect:public CCadObject
 	CDoublePoint m_Center;
 public:
 	CCadHoleRect();
-	virtual void OnCreate();
 	virtual ~CCadHoleRect();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -31,7 +30,6 @@ public:
 	virtual void AddObject(CCadObject *pO);
 	virtual void RemoveObject(CCadObject *pO);
 	virtual CCadObject *GetHead(void);
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadHoleRect operator=(CCadHoleRect &v);
@@ -40,9 +38,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual CDoublePoint GetCenter();
 	virtual void SetCenter(CDoublePoint Center) { m_Center = Center; }
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------------
 	// Draw Object Methodes

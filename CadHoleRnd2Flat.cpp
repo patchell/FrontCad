@@ -4,6 +4,7 @@ CCadHoleRnd2Flat::CCadHoleRnd2Flat():CCadObject()
 {
 	m_pPenLine = 0;
 	SetType(ObjectType::HOLE_RND2FLAT);
+	GetName().Format(_T("RoundHole2Flat_%d"), ++m_RoundHole2FlatCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -11,11 +12,6 @@ CCadHoleRnd2Flat::CCadHoleRnd2Flat():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-}
-
-void CCadHoleRnd2Flat::OnCreate()
-{
-	GetName().Format(_T("RndHo2e1F%d"), ++m_DocCount);
 }
 
 CCadHoleRnd2Flat::~CCadHoleRnd2Flat()
@@ -139,7 +135,7 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pPenLine = new CPen(PS_SOLID, 1, GetAttributes().m_colorLine);
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		CenterPoint = m_Center.ToPixelPoint(Offset, Scale);
 		switch (mode.DrawMode)
@@ -269,20 +265,6 @@ CDoublePoint CCadHoleRnd2Flat::GetReference()
 	return m_Center;
 }
 
-void CCadHoleRnd2Flat::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Center -= Ref;
-}
 
 CDoubleRect& CCadHoleRnd2Flat::GetRect(CDoubleRect& rect)
 {
@@ -398,19 +380,6 @@ CDoublePoint CCadHoleRnd2Flat::GetCenter()
 	return m_Center;
 }
 
-void CCadHoleRnd2Flat::ChangeCenter(CDoubleSize Amount)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Center -= Amount;
-}
-
 CDoubleSize CCadHoleRnd2Flat::GetSize()
 {
 	//***************************************************
@@ -423,17 +392,6 @@ CDoubleSize CCadHoleRnd2Flat::GetSize()
 	//--------------------------------------------------
 	double Radius = GetHoleRadius();
 	return CDoubleSize(Radius,Radius);
-}
-
-void CCadHoleRnd2Flat::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadHoleRnd2Flat::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

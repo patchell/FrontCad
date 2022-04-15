@@ -1,4 +1,5 @@
 #pragma once
+#include "CadLine.h"
 constexpr auto DIMLINE_HORIZONTAL = 1;
 constexpr auto DIMLINE_VERTICAL = 2;
 
@@ -25,11 +26,6 @@ public:
 	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
 	virtual BOOL PointInObjectAndSelect(CPoint p, CSize Offest = CSize(0, 0), CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
 	virtual CDoublePoint GetReference();
-	virtual int IsDirty(void);
-	virtual int IsSelected(void);
-	virtual void SetDirty(int d);
-	virtual void SetSelected(int Flag = 0);
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadDimension operator=(CCadDimension &v);
@@ -37,9 +33,7 @@ public:
 	virtual CCadObject * CopyObject(void);
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	CDoublePoint GetCenter();
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesFrom(SCadDimAttributes *pAttrib);
 	void CopyAttributesTo(SCadDimAttributes* pAttrib);
@@ -51,12 +45,8 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-	void AddDimObject(CCadObject* pObj);
+	void AddDimObjectToTail(CCadObject* pObj);
 	void RemoveDimObject(CCadObject* pObj);
-	double Slope();
-	double OrthogonalSlope();
-	UINT LineIs();
-	double YIntercept(double m, CDoublePoint p);
 	CCadObject* GetHead() { return m_pHead; }
 	void SetHead(CCadObject* pObj) { m_pHead = pObj; }
 	CCadObject* GetTail() { return m_pTail; }
@@ -77,5 +67,31 @@ public:
 	SCadDimAttributes* GetLastAttributes() const {
 		return &m_LastAttributes;
 	}
+};
+
+class CDimLine :public CCadLine
+{
+	double m_Slope;
+	double m_yIntercept;
+	UINT m_LineType;
+public:
+	CDimLine() {
+		m_Slope = 0.0;
+		m_yIntercept = 0;
+		m_LineType = 0;
+	};
+	void Create(CDoublePoint P1, CDoublePoint P2, UINT LineType);
+	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(100.0, 100.0));
+	double Slope(CDoublePoint P1, CDoublePoint P2);
+	double OrthogonalSlope(CDoublePoint P1, CDoublePoint P2);
+	UINT LineIs(CDoublePoint P1, CDoublePoint P2);
+	double YIntercept(double m, CDoublePoint p);
+	//---------------------------------------------
+	void SetSlope(double m) { m_Slope = m; }
+	double GetSlope() { return m_Slope; }
+	void SetYIntercept(double b) { m_yIntercept = b; }
+	double GetYIntercept() { return m_yIntercept; }
+	void SetLineType(UINT lt) { m_LineType = lt; }
+	UINT GetLineType() { return m_LineType; }
 };
 

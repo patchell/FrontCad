@@ -5,6 +5,7 @@ CCadArcAngle::CCadArcAngle(): CCadObject()
 	m_Radius = 0;
 	m_StartAngle = 0.0;
 	m_EndAngle = 0.0;
+	GetName().Format(_T("ARCANGLE_%d"), ++m_ArcCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;

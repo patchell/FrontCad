@@ -123,7 +123,6 @@ public:
 	void SetSize(CDoubleSize szNewSize) {}
 	CDoublePoint GetReference() { return m_dptPoints[3]; }
 	void AdjustReference(CDoubleSize DeltaRef);
-	void ChangeSize(CDoubleSize Size);
 	DocFileParseToken Parse(
 		DocFileParseToken Token, 
 		CLexer* pLex,

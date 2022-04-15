@@ -5,6 +5,7 @@ CCadLine::CCadLine():CCadObject()
 	m_Length = 0.0;
 	m_pLinePen = 0;
 	SetType(ObjectType::LINE);
+	GetName().Format(_T("Line_%d"), ++m_LineCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -25,11 +26,6 @@ CCadLine::CCadLine(CCadLine &line) :CCadObject()
 CCadLine::~CCadLine()
 {
 	if (m_pLinePen) delete m_pLinePen;
-}
-
-void CCadLine::OnCreate()
-{
-	GetName().Format(_T("Line_%d"), ++m_DocCount);
 }
 
 void CCadLine::Move(CDoubleSize Diff)
@@ -172,7 +168,7 @@ void CCadLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 					break;
 			}
 			SetLastMode(mode);
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		switch (mode.DrawMode)
 		{
@@ -291,21 +287,6 @@ int CCadLine::PointInObjectAndSelect(
 	return index;
 }
 
-void CCadLine::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Line.dP1 -= Ref;
-	m_Line.dP2 -= Ref;
-}
 
 CString& CCadLine::GetTypeString(void)
 {
@@ -384,20 +365,6 @@ CDoublePoint CCadLine::GetCenter()
 	return CDoublePoint(x,y);
 }
 
-void CCadLine::ChangeCenter(CDoubleSize sz)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	sz......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Line.dP1 -= sz;
-	m_Line.dP2 -= sz;
-}
-
 CDoubleSize CCadLine::GetSize()
 {
 	//***************************************************
@@ -409,18 +376,6 @@ CDoubleSize CCadLine::GetSize()
 	// return value:returns size of the object
 	//--------------------------------------------------
 	return CDoubleSize(abs(m_Line.dP1.dX - m_Line.dP2.dX), abs(m_Line.dP1.dY - m_Line.dP2.dY));
-}
-
-void CCadLine::ChangeSize(CDoubleSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	m_Line.dP2 += Sz;
 }
 
 DocFileParseToken CCadLine::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

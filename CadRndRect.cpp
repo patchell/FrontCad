@@ -5,6 +5,7 @@ CCadRndRect::CCadRndRect():CCadObject()
 	m_pPenLine = 0;
 	m_pBrush = 0;
 	SetType(ObjectType::ROUNDEDRECT);
+	GetName().Format(_T("RoundedRect_%d"), ++m_RoundedRectCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -24,11 +25,6 @@ CCadRndRect::CCadRndRect(CCadRndRect &r) :CCadObject()
 	m_P2 = r.m_P2;
 	m_P3 = r.m_P3;
 	SetType(ObjectType::ROUNDEDRECT);
-}
-
-void CCadRndRect::OnCreate()
-{
-	GetName().Format(_T( "RndRect%d"), ++m_RndRectCount);
 }
 
 CCadRndRect::~CCadRndRect()
@@ -199,9 +195,9 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			}
 			else
 				m_pBrush = new CBrush(GetFillColor());
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
-		SetRect(rect, m_P1, m_P2, rectLWcomp);
+//		SetRect(rect, m_P1, m_P2, rectLWcomp);
 
 		switch (mode.DrawMode)
 		{
@@ -334,21 +330,6 @@ CDoublePoint CCadRndRect::GetReference()
 	return m_P1;
 }
 
-void CCadRndRect::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= Ref;
-	m_P2 -= Ref;
-}
 
 CDoubleRect& CCadRndRect::GetRect(CDoubleRect& rect)
 {
@@ -442,20 +423,6 @@ CDoublePoint& CCadRndRect::GetCenter(CDoublePoint& Center)
 	return Center;
 }
 
-void CCadRndRect::ChangeCenter(CDoubleSize sz)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= sz;
-	m_P2 -= sz;
-}
-
 CDoubleSize& CCadRndRect::GetSize(CDoubleSize& size)
 {
 	//***************************************************
@@ -469,18 +436,6 @@ CDoubleSize& CCadRndRect::GetSize(CDoubleSize& size)
 	CDoubleRect rect;
 	size = GetRect(rect).GetSize(size);
 	return size;
-}
-
-void CCadRndRect::ChangeSize(CDoubleSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	m_P2 += Sz;
 }
 
 DocFileParseToken CCadRndRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

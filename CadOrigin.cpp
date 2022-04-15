@@ -3,6 +3,7 @@
 CCadOrigin::CCadOrigin():CCadObject()
 {
 	SetType(ObjectType::ORIGIN);
+	GetName().Format(_T("Origin_%d"), ++m_OriginCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -10,11 +11,6 @@ CCadOrigin::CCadOrigin():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-}
-
-void CCadOrigin::OnCreate()
-{
-	GetName().Format(_T("Origin%d"), ++CCadOrigin::m_DocCount);
 }
 
 CCadOrigin::~CCadOrigin()
@@ -174,20 +170,6 @@ CCadObject *CCadOrigin::GetHead(void)
 }
 
 
-void CCadOrigin::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
 
 CDoubleRect& CCadOrigin::GetRect(CDoubleRect& rect)
 {
@@ -299,18 +281,6 @@ CDoublePoint CCadOrigin::GetCenter()
 	return m_Origin;
 }
 
-void CCadOrigin::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
 
 CDoubleSize CCadOrigin::GetSize()
 {
@@ -323,17 +293,6 @@ CDoubleSize CCadOrigin::GetSize()
 	// return value:returns size of the object
 	//--------------------------------------------------
 	return CSize();
-}
-
-void CCadOrigin::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadOrigin::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

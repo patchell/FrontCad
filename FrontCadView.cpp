@@ -626,7 +626,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 			pObj = m_pMoveObjects->RemoveFromHead();
 			while (pObj)
 			{
-				pObj->AdjustReference(-GetCurrentMousePosition());
+				pObj->Move(-GetCurrentMousePosition());
 				pObj->SetSelected(0);
 				pDoc->AddObjectAtEnd(pObj);
 				pObj = m_pMoveObjects->RemoveFromHead();
@@ -681,7 +681,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				while (pO)
 				{
 					pO->SetSelected(0);
-					pO->AdjustReference(-GetCurrentMousePosition());
+					pO->Move(-GetCurrentMousePosition());
 					pDoc->AddObjectAtEnd(pO);
 					pO = m_pMoveObjects->RemoveFromHead();
 				}
@@ -2294,7 +2294,7 @@ void CFrontCadView::ZoomIn(CPoint point)
 	PostMessageToRulers(RW_ZOOM);
 	PostMessageToRulers(RW_POSITION);
 	if (pDoc)
-		pDoc->SetDirty(1);
+		pDoc->SetDirty(0);
 	Invalidate();
 }
 
@@ -2328,7 +2328,7 @@ void CFrontCadView::ZoomOut(CPoint point)
 	PostMessageToRulers(RW_ZOOM);
 	PostMessageToRulers(RW_POSITION);
 	if (pDoc)
-		pDoc->SetDirty(1);
+		pDoc->SetDirty(0);
 	Invalidate();
 }
 

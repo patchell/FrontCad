@@ -5,6 +5,7 @@ CCadText::CCadText():CCadObject()
 	m_pFont = 0;
 	m_pSelPen = 0;
 	m_LastScaleX = 0.0;
+	GetName().Format(_T("Text_%d"), ++m_TextCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -178,7 +179,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, CSize Offset, CScale Scale)
 
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 			SetLastMode( mode);
 			m_LastScaleX = Scale.GetScaleX();
 		}
@@ -282,21 +283,6 @@ CDoublePoint CCadText::GetReference()
 	// return value:reference point
 	//--------------------------------------------------
 	return m_P1;
-}
-
-void CCadText::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= Ref;
 }
 
 CDoubleRect& CCadText::GetRect(CDoubleRect& rect)
@@ -403,18 +389,6 @@ CDoublePoint& CCadText::GetCenter(CDoublePoint& Center)
 	return Center;
 }
 
-void CCadText::ChangeCenter(CDoubleSize sz)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= sz;
-}
 
 CDoubleSize& CCadText::GetSize(CDoubleSize& size)
 {
@@ -431,17 +405,6 @@ CDoubleSize& CCadText::GetSize(CDoubleSize& size)
 	rect = GetRect(rect);
 	size = rect.GetSize(size);
 	return size;
-}
-
-void CCadText::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:None
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

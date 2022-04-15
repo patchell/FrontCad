@@ -5,6 +5,7 @@ CCadHoleRect::CCadHoleRect():CCadObject()
 {
 	m_pPenLine = 0;
 	SetType(ObjectType::HOLE_RECTANGLE);
+	GetName().Format(_T("RectangleHole_%d"), ++m_RectHoleCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -14,11 +15,6 @@ CCadHoleRect::CCadHoleRect():CCadObject()
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 		
-
-void CCadHoleRect::OnCreate()
-{
-	GetName().Format(_T("RectHole%d"), ++m_DocCount);
-}
 CCadHoleRect::~CCadHoleRect()
 {
 }
@@ -131,7 +127,7 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pPenLine = new CPen(PS_SOLID, 1, GetAttributes().m_colorLine);
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		CRect RegularRect;
 		switch (mode.DrawMode)
@@ -236,20 +232,6 @@ CCadObject *CCadHoleRect::GetHead(void)
 	return 0;
 }
 
-void CCadHoleRect::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
 
 CDoubleRect& CCadHoleRect::GetRect(CDoubleRect& rect)
 {
@@ -348,19 +330,6 @@ CDoublePoint CCadHoleRect::GetCenter()
 	return m_Center;
 }
 
-void CCadHoleRect::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
 CDoubleSize CCadHoleRect::GetSize()
 {
 	//***************************************************
@@ -372,17 +341,6 @@ CDoubleSize CCadHoleRect::GetSize()
 	// return value:returns size of the object
 	//--------------------------------------------------
 	return CSize();
-}
-
-void CCadHoleRect::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadHoleRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

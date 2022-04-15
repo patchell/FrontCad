@@ -2,7 +2,7 @@
 
 class CCadElispe:public CCadObject
 {
-	inline static int m_DocCount;
+	inline static int m_ElipseCount;
 	inline static SEllipseAttributes m_LastAttributes;
 	inline static SEllipseAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -15,7 +15,6 @@ class CCadElispe:public CCadObject
 public:
 	CCadElispe();
 	CCadElispe(CCadElispe &e);
-	virtual void OnCreate();
 	virtual ~CCadElispe();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -30,15 +29,12 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadElispe operator=(CCadElispe &v);
 	virtual CCadObject * CopyObject(void);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CDoubleSize Sz);
 	virtual DocFileParseToken Parse(
 		DocFileParseToken Token, 
 		CLexer *pLex, 

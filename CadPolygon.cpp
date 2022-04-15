@@ -17,7 +17,7 @@ CCadPolygon::CCadPolygon():CCadObject()
 	SetSelected(0);	//initial not selected
 	m_pPenLine = 0;
 	SetType(ObjectType::POLYGON);
-	++m_PolygonCount;
+	GetName().Format(_T("Polygon_%d"), ++m_PolygonCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -192,7 +192,7 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 
 		switch (mode.DrawMode)
@@ -300,22 +300,6 @@ CDoublePoint CCadPolygon::GetReference()
 }
 
 
-void CCadPolygon::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	UINT i;
-	for (i = 0; i<m_Poly.GetSize(); ++i)
-		m_Poly.SetPoint(i, m_Poly.GetPoint(i) - Ref);
-}
 
 using namespace std;
 
@@ -432,17 +416,6 @@ CDoublePoint CCadPolygon::GetCenter()
 	return GetPoly()->GetCenter();
 }
 
-void CCadPolygon::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-}
 
 CDoubleSize& CCadPolygon::GetSize(CDoubleSize& size)
 {
@@ -457,18 +430,6 @@ CDoubleSize& CCadPolygon::GetSize(CDoubleSize& size)
 	CDoubleRect rect = GetRect(rect);
 	size = rect.GetSize(size);
 	return size;
-}
-
-void CCadPolygon::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object Not Implemented
-	// for Polygons
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadPolygon::Parse(

@@ -128,7 +128,7 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	{
 		if ((!IsLastModeSame(mode)) || IsDirty())
 		{
-			SetDirty(0);
+			SetDirty(FALSE);
 			switch (mode.DrawMode)
 			{
 			case ObjectDrawMode::FINAL:
@@ -267,21 +267,7 @@ CDoublePoint CCadArrow::GetReference()
 	return m_ArrowTip;
 }
 
-void CCadArrow::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:none
-	//--------------------------------------------------
-	m_ArrowTip -= Ref;
-	m_DefineAngle -= Ref;
-}
+
 
 CDoubleRect& CCadArrow::GetRect(CDoubleRect& rect)
 {
@@ -384,19 +370,6 @@ CDoublePoint& CCadArrow::GetCenter(CDoublePoint& point)
 	return point;
 }
 
-void CCadArrow::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_ArrowTip -= p;
-	m_DefineAngle -= p;
-}
 
 CDoubleSize& CCadArrow::GetSize(CDoubleSize& size)
 {
@@ -411,17 +384,6 @@ CDoubleSize& CCadArrow::GetSize(CDoubleSize& size)
 	CDoubleRect rect;
 	size = GetRect(rect).GetSize(size);
 	return size;
-}
-
-void CCadArrow::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadArrow::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

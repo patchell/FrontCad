@@ -23,16 +23,13 @@ public:
 	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
 	virtual int PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadRect operator=(CCadRect &v);
 	virtual CCadObject * CopyObject(void);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CDoublePoint p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRectAttributes *pAttrb);
 	void CopyAttributesFrom(SRectAttributes *pAttrb);

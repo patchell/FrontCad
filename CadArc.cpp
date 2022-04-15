@@ -12,7 +12,6 @@ CCadArc::CCadArc():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-	m_ArcCount++;
 }
 
 CCadArc::~CCadArc()
@@ -152,7 +151,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pPenLine = new CPen(PS_DOT, 1, GetLineColor());
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		switch (mode.DrawMode)
 		{
@@ -311,22 +310,6 @@ CDoublePoint CCadArc::GetReference()
 	return m_rectShape.GetReference();
 }
 
-void CCadArc::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_rectShape.AdjustReference(Ref);
-	m_pointStart -= Ref;
-	m_pointEnd -= Ref;
-}
 
 CDoubleRect& CCadArc::GetRect(CDoubleRect& rect)
 {
@@ -403,19 +386,6 @@ CDoublePoint& CCadArc::GetCenter(CDoublePoint& Center)
 	return Center;
 }
 
-void CCadArc::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
 CDoubleSize& CCadArc::GetSize(CDoubleSize& size)
 {
 	//***************************************************
@@ -428,19 +398,6 @@ CDoubleSize& CCadArc::GetSize(CDoubleSize& size)
 	//--------------------------------------------------
 	size = m_rectShape.GetSize(size);
 	return size;
-}
-
-void CCadArc::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	//Cannot rotate an arc
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadArc::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

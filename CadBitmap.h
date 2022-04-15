@@ -2,7 +2,7 @@
 
 class CCadBitmap :public CCadObject
 {
-	inline static int m_ArcCount;
+	inline static int m_BitmapCount;
 	inline static SBitmapAttributes m_LastAttributes;
 	inline static SBitmapAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -28,15 +28,12 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadBitmap operator=(CCadBitmap &v);
 	virtual CCadObject * CopyObject(void);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CDoubleSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//----------- Attribute Methodes ------------------
 	SBitmapAttributes& GetAttributes() { return m_Attributes; }

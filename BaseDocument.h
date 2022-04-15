@@ -9,6 +9,9 @@ class CBaseDocument : public CDocument
 	CCadObject* m_pHead;
 	CCadObject* m_pTail;
 	UINT m_nTotalObjects;
+	CCadObject* m_pCurrentReference;
+	CCadObject* m_pReferenceHead;
+	CCadObject* m_pReferenceTail;
 	DECLARE_DYNCREATE(CBaseDocument)
 public:
 	CBaseDocument();
@@ -28,7 +31,7 @@ public:
 	virtual void DrawReference(CDC* pDC, CSize Offset, CScale Scale, CRect& clientrect) {};
 	virtual void UpdateReference(CPoint newRef) {};
 	virtual void SetAllDirty(void);
-	virtual void SetDirty(UINT f) {}
+	virtual void SetDirty(BOOL f) {}
 	CCadObject* GetHead() { return m_pHead; }
 	void SetHead(CCadObject* pObj) { m_pHead = pObj; }
 	CCadObject* GetTail() { return m_pTail; }

@@ -52,3 +52,8 @@ Something happened betweem me an the repo.  Couldn't fix it, so deleted it and t
 
 April 8, 2022
 Auto Scrolling Is working!  Something I thought would be real hard is actually very easy.  On to the meat of the program.
+
+April 14, 2022
+The commits may be very sparse for a bit.  Making another radical change to the code.  I really should have planned 
+this out from the start, although, probably the same thing might have happened.  I just seem to always have one
+of those moments when I say "oo-oo doing this will be really cool!"

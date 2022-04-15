@@ -304,23 +304,6 @@ void CDoubleRect::AdjustReference(CDoubleSize DeltaRef)
 	}
 }
 
-void CDoubleRect::ChangeSize(CDoubleSize Size)
-{
-	int i;
-
-	for (i = 0; i < 4; ++i)
-	{
-		if (m_RotationAngle == 0.0)
-		{
-
-		}
-		else
-		{
-
-		}
-	}
-}
-
 void CDoubleRect::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
 {
 	char* s = new char[256];

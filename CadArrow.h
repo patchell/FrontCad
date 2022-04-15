@@ -38,16 +38,13 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadArrow operator=(CCadArrow& v);
 	virtual CCadObject* CopyObject(void);
 	virtual void SetRect(CRect& rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(
 		DocFileParseToken Token,
 		CLexer* pLex,

@@ -2,7 +2,7 @@
 
 class CCadOrigin:public CCadObject
 {
-	inline static int m_DocCount;
+	inline static int m_OriginCount;
 	inline static SOriginAttributes m_LastAttributes;
 	inline static SOriginAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -11,7 +11,6 @@ class CCadOrigin:public CCadObject
 	SOriginAttributes m_Attrib;
 public:
 	CCadOrigin();
-	virtual void OnCreate();
 	virtual ~CCadOrigin();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -23,7 +22,6 @@ public:
 	virtual void AddObject(CCadObject *pO);
 	virtual void RemoveObject(CCadObject *pO);
 	virtual CCadObject *GetHead(void);
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadOrigin operator=(CCadOrigin &v);
@@ -32,9 +30,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint GetCenter();
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------------
 	// Draw Object Methodes

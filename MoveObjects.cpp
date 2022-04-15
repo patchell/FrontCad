@@ -94,7 +94,7 @@ void CMoveObjects::SetRef(CDoublePoint Ref)
 	CCadObject *pCO = m_pHead;
 	while(pCO)
 	{
-		pCO->AdjustReference(Ref);
+		pCO->Move(Ref);
 		pCO = pCO->GetNext();
 	}
 	m_Ref = Ref;

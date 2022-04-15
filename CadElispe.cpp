@@ -6,6 +6,7 @@ CCadElispe::CCadElispe():CCadObject()
 	m_pPenLine = 0;
 	m_pBrFill = 0;
 	SetType(ObjectType::ELIPSE);
+	GetName().Format(_T("Elipse_%d"), ++m_ElipseCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -29,11 +30,6 @@ CCadElispe::~CCadElispe()
 {
 	if (m_pPenLine) delete m_pPenLine;
 	if (m_pBrFill) delete m_pBrFill;
-}
-
-void CCadElispe::OnCreate()
-{
-	GetName().Format(_T("Ellipse%d"), ++m_DocCount);
 }
 
 void CCadElispe::Move(CDoubleSize Diff)
@@ -189,7 +185,7 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			}
 			else
 				m_pBrFill = new CBrush(GetFillColor());
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		rect = CDoubleRect(m_P1, m_P2).ToCRect(Offset, Scale);
 		switch (mode.DrawMode)
@@ -350,22 +346,6 @@ CDoublePoint CCadElispe::GetReference()
 	return m_P1;
 }
 
-void CCadElispe::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= Ref;
-	m_P2 -= Ref;
-
-}
 
 CDoubleRect& CCadElispe::GetRect(CDoubleRect& rect)
 {
@@ -442,20 +422,6 @@ CDoublePoint& CCadElispe::GetCenter(CDoublePoint& Center)
 	return CDoubleRect(m_P1,m_P2).GetCenter(Center);
 }
 
-void CCadElispe::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= p;
-	m_P2 -= p;
-}
-
 CDoubleSize& CCadElispe::GetSize(CDoubleSize& size)
 {
 	//***************************************************
@@ -468,18 +434,6 @@ CDoubleSize& CCadElispe::GetSize(CDoubleSize& size)
 	//--------------------------------------------------
 	CDoubleRect rect;
 	return GetRect(rect).GetSize(size);
-}
-
-void CCadElispe::ChangeSize(CDoubleSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	m_P2 += Sz;
 }
 
 DocFileParseToken CCadElispe::Parse(

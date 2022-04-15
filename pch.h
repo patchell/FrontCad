@@ -50,7 +50,6 @@
 #include "CadArcAngle.h"
 #include "CadArrow.h"
 #include "CadBitmap.h"
-#include "CadDimension.h"
 #include "CadElispe.h"
 #include "CadHoleRect.h"
 #include "CadHoleRnd1Flat.h"
@@ -58,10 +57,12 @@
 #include "CadHoleRound.h"
 #include "CadLine.h"
 #include "CadOrigin.h"
+#include "CadPoint.h"
 #include "CadPolygon.h"
 #include "CadRect.h"
 #include "CadRndRect.h"
 #include "CadText.h"
+#include "CadDimension.h"
 //------------------------------------------
 #include "StaticPreview.h"
 //------------ Dialog Boxes ----------------

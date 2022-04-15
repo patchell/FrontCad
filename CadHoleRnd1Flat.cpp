@@ -5,6 +5,7 @@ CCadHoleRnd1Flat::CCadHoleRnd1Flat():CCadObject()
 {
 	m_pPenLine = 0;
 	SetType(ObjectType::HOLE_RND1FLAT);
+	GetName().Format(_T("RoundHole1Flat_%d"), ++m_RndHole1FlatCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -12,11 +13,6 @@ CCadHoleRnd1Flat::CCadHoleRnd1Flat():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-}
-
-void CCadHoleRnd1Flat::OnCreate()
-{
-	GetName().Format(_T("Round Hole With One Flat %d"), ++m_DocCount);
 }
 
 CCadHoleRnd1Flat::~CCadHoleRnd1Flat()
@@ -131,7 +127,7 @@ void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pPenLine = new CPen(PS_SOLID, 1, GetAttributes().m_colorLine);
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		StartAngle = CalculateAngle(Fd, Rad);
 		switch (mode.DrawMode)
@@ -228,20 +224,6 @@ CDoublePoint CCadHoleRnd1Flat::GetReference()
 	return m_Center;
 }
 
-void CCadHoleRnd1Flat::AdjustReference(CDoubleSize DeltaRef)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Center -= DeltaRef;
-}
 
 CDoubleRect& CCadHoleRnd1Flat::GetRect(CDoubleRect& rect)
 {
@@ -347,19 +329,6 @@ CDoublePoint CCadHoleRnd1Flat::GetCenter()
 	return m_Center;
 }
 
-void CCadHoleRnd1Flat::ChangeCenter(CDoubleSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Center -= p;
-}
-
 CDoubleSize CCadHoleRnd1Flat::GetSize()
 {
 	//***************************************************
@@ -371,17 +340,6 @@ CDoubleSize CCadHoleRnd1Flat::GetSize()
 	// return value:returns size of the object
 	//--------------------------------------------------
 	return CSize();
-}
-
-void CCadHoleRnd1Flat::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadHoleRnd1Flat::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

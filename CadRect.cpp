@@ -159,7 +159,7 @@ void CCadRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			}
 			else
 				m_pBrFill = new CBrush(GetFillColor());
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		//SetRect(rect, P1, P2, rectLWcomp);
 		switch (mode.DrawMode)
@@ -285,21 +285,6 @@ CDoublePoint CCadRect::GetReference()
 }
 
 
-void CCadRect::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_Rect.AdjustReference(Ref);
-}
-
 CDoubleRect& CCadRect::GetRect(CDoubleRect& rect)
 {
 	//***************************************************
@@ -393,21 +378,6 @@ CDoublePoint& CCadRect::GetCenter(CDoublePoint& Center)
 	return Center;
 }
 
-void CCadRect::ChangeCenter(CDoublePoint p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......point to change center to
-	//
-	// return value:
-	//--------------------------------------------------
-	CDoublePoint Center;
-	CDoubleSize Diff = p - m_Rect.GetCenter(Center);
-	m_Rect.AdjustReference(Diff);
-}
-
 CDoubleSize& CCadRect::GetSize(CDoubleSize& size)
 {
 	//***************************************************
@@ -420,19 +390,6 @@ CDoubleSize& CCadRect::GetSize(CDoubleSize& size)
 	//--------------------------------------------------
 	size = m_Rect.GetSize(size);
 	return size;
-}
-
-void CCadRect::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-//	m_P2.x += Sz.cx;
-//	m_P2.y += Sz.cy;
 }
 
 DocFileParseToken CCadRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

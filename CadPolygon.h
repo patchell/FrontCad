@@ -29,7 +29,6 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadPolygon operator=(CCadPolygon &v);
@@ -43,9 +42,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint GetCenter();
-	virtual void ChangeCenter(CSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------
 	// Other methodes

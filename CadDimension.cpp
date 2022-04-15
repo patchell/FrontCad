@@ -1,16 +1,18 @@
 #include "pch.h"
+#include "CadDimension.h"
 
 
 CCadDimension::CCadDimension():CCadObject()
 {
+	m_nTotalObjects = 0;
 	SetType(ObjectType::DIMENSION);
+	GetName().Format(_T("Dimension_%d"), ++m_DimensionCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
 		m_LastAttributes.CopyFrom(GETAPP.GetDimensionAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
-	m_nTotalObjects = 0;
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
@@ -145,72 +147,6 @@ CDoublePoint CCadDimension::GetReference()
 	return CDoublePoint();
 }
 
-int CCadDimension::IsDirty(void)
-{
-	//***************************************************
-	// IsDirty
-	//	returns the status of the Dirty State of the
-	// object
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-	return CCadObject::IsDirty();
-}
-
-void CCadDimension::SetDirty(int d)
-{
-	//***************************************************
-	// SetDirty
-	// Changes the state of the dirty flag
-	// parameters:
-	//	d.......new state of dirty flag.
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadObject::SetDirty(d);
-}
-
-int CCadDimension::IsSelected()
-{
-	//***************************************************
-	// IsSelected
-	//	returns the state of the selected flag
-	// parameters:
-	//
-	// return value:State of the selected flag
-	//--------------------------------------------------
-	return CCadObject::IsSelected();
-}
-
-void CCadDimension::SetSelected(int Flag)
-{
-	//***************************************************
-	// SetSelected
-	//	Changes the state of the selcted flag.
-	// parameters:
-	// Flag......New state of the selected flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadObject::SetSelected(Flag);
-}
-
-void CCadDimension::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
 CDoubleRect& CCadDimension::GetRect(CDoubleRect& rect)
 {
 	//***************************************************
@@ -301,18 +237,6 @@ CDoublePoint CCadDimension::GetCenter()
 	return CDoublePoint();
 }
 
-void CCadDimension::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
 
 CDoubleSize CCadDimension::GetSize()
 {
@@ -325,17 +249,6 @@ CDoubleSize CCadDimension::GetSize()
 	// return value:returns size of the object
 	//--------------------------------------------------
 	return CSize();
-}
-
-void CCadDimension::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadDimension::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
@@ -415,7 +328,7 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
 		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
@@ -431,30 +344,25 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 			CopyAttributesTo(&m_CurrentAttributes);
 		}
 		break;
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+	case ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN:
 
 		GETVIEW()->EnableAutoScroll(TRUE);
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
+		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_UP;
+		GETAPP.UpdateStatusBar(_T("DRAG to Extend"));
 		break;
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		DrawState = ObjectDrawState::SECOND_POINT_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
-		DrawState = ObjectDrawState::SECOND_POINT_LBUTTON_UP;
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
+	case ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_UP:
 		DrawState = ObjectDrawState::EXTENSION_LINES_LBUTTON_DOWN;
+		GETAPP.UpdateStatusBar(_T("DRAG to Extend"));
 		break;
 	case ObjectDrawState::EXTENSION_LINES_LBUTTON_DOWN:
 		DrawState = ObjectDrawState::EXTENSION_LINES_LBUTTON_UP;
 		break;
 	case ObjectDrawState::EXTENSION_LINES_LBUTTON_UP:
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
 		GETVIEW()->EnableAutoScroll(FALSE);
 		GETVIEW()->AddObjectAtFrontIntoDoc(this);
 		GETVIEW()->SetObjectTypes(new CCadDimension);
-		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
+		GETAPP.UpdateStatusBar(_T("Dimension:Select Line To Dimension"));
 		GETVIEW()->Invalidate();
 		break;
 	}
@@ -480,9 +388,7 @@ ObjectDrawState CCadDimension::MouseMove(ObjectDrawState DrawState)
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
+	case ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN:
 		break;
 	case ObjectDrawState::EXTENSION_LINES_LBUTTON_DOWN:
 		break;
@@ -490,7 +396,7 @@ ObjectDrawState CCadDimension::MouseMove(ObjectDrawState DrawState)
 	return DrawState;
 }
 
-void CCadDimension::AddDimObject(CCadObject* pObj)
+void CCadDimension::AddDimObjectToTail(CCadObject* pObj)
 {
 	if (GetHead() == 0)
 	{
@@ -531,42 +437,127 @@ void CCadDimension::RemoveDimObject(CCadObject* pObj)
 	}
 }
 
-double CCadDimension::Slope()
+void CDimLine::Create(CDoublePoint P1, CDoublePoint P2, UINT LineType)
+{
+}
+
+/*****************************************************************
+* CDimLine, Derived from CCadLine
+*****************************************************************/
+void CDimLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+{
+	//***************************************************
+	// Draw
+	//	This Method draws the document to the device
+	// parameters:
+	//	pDC.....pointer to the device context
+	//	mode....drawing mode
+	//	Offset..Offset to draw objects at
+	//	Scale..Scale factor to draw objects at
+	//
+	// return value:none
+	//--------------------------------------------------
+	CPen* pOld;
+	CPoint P1, P2, Diff;
+	int Lw;
+	CRect rect;
+
+	if (CCadLine::m_RenderEnable)
+	{
+		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(Offset, Scale);
+		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(Offset, Scale);
+		Lw = int(Scale.m_ScaleX * GetLineWidth());
+		if (Lw < 1) Lw = 1;
+		if (!IsLastModeSame(mode) || IsDirty())
+		{
+			//----------------------------------
+			// If mode changed, get rid of pen
+			// and make a new one
+			//----------------------------------
+			if (m_pLinePen) delete m_pLinePen;
+			switch (mode.DrawMode)
+			{
+			case ObjectDrawMode::FINAL:
+				m_pLinePen = new CPen(PS_SOLID, Lw, GetLineColor());
+				break;
+			case ObjectDrawMode::SELECTED:
+				m_pLinePen = new CPen(PS_SOLID, 1, GetLineColor() ^ 0x00f0f0f0);
+				break;
+			case ObjectDrawMode::SKETCH:
+				m_pLinePen = new CPen(PS_DOT, 1, GetLineColor());
+				break;
+			}
+			SetLastMode(mode);
+			SetDirty(FALSE);
+		}
+		switch (mode.DrawMode)
+		{
+		case ObjectDrawMode::FINAL:
+			pOld = pDC->SelectObject(m_pLinePen);
+			pDC->MoveTo(P1);
+			pDC->LineTo(P2);
+			pDC->SelectObject(pOld);
+			break;
+		case ObjectDrawMode::SELECTED:
+			pOld = pDC->SelectObject(m_pLinePen);
+			Diff = CPoint(4, 4);
+
+			rect.SetRect(P1 + (-Diff), P1 + Diff);
+			pDC->Rectangle(&rect);
+			rect.SetRect(P2 + (-Diff), P2 + Diff);
+			pDC->Rectangle(&rect);
+			pDC->SelectObject(m_pLinePen);
+			pDC->MoveTo(P1);
+			pDC->LineTo(P2);
+			pDC->SelectObject(pOld);
+			break;
+		case ObjectDrawMode::SKETCH:
+			Diff = CPoint(4, 4);
+			pOld = pDC->SelectObject(m_pLinePen);
+			pDC->MoveTo(P1);
+			pDC->LineTo(P2);
+			pDC->SelectObject(pOld);
+			break;
+		}	//end of switch(mode)
+	}	//end of if(rederEnabled)
+}
+
+double CDimLine::Slope(CDoublePoint P1, CDoublePoint P2)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
 	double m;
-	if (m_P1.dX != m_P2.dX)
-		m = (m_P1.dY - m_P2.dY) / (m_P1.dX - m_P2.dX);
+	if (P1.dX != P2.dX)
+		m = (P1.dY - P2.dY) / (P1.dX - P2.dX);
 	return m;
 }
 
-double CCadDimension::OrthogonalSlope()
+double CDimLine::OrthogonalSlope(CDoublePoint P1, CDoublePoint P2)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2 that is perpendicular
 	//-----------------------------------
 	double m;
-	if (m_P1.dY != m_P2.dY)
-		m = (m_P1.dX - m_P2.dX)/ (m_P1.dY - m_P2.dY);
+	if (P1.dY != P2.dY)
+		m = (P1.dX - P2.dX) / (P1.dY - P2.dY);
 	return m;
 }
 
-UINT CCadDimension::LineIs()
+UINT CDimLine::LineIs(CDoublePoint P1, CDoublePoint P2)
 {
 	UINT rV = 0;	//line is whatever
 
-	if (m_P1.dY == m_P2.dY)
+	if (P1.dY == P2.dY)
 		rV = DIMLINE_HORIZONTAL;
-	else if (m_P1.dX == m_P2.dX)
+	else if (P1.dX == P2.dX)
 		rV = DIMLINE_VERTICAL;
 	return rV;
 }
 
-double CCadDimension::YIntercept(double m, CDoublePoint p)
+double CDimLine::YIntercept(double m, CDoublePoint p)
 {
 	//-----------------------------
 	// finds the Y intercept fopr

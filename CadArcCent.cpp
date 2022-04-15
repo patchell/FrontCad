@@ -6,6 +6,7 @@ CCadArcCent::CCadArcCent():CCadObject()
 	m_pPenLine = 0;
 	m_pointStart = { 0.0,0.0 };
 	m_pointEnd = { 0.0,0.0 };
+	GetName().Format(_T("ARCCENTER_%d"), ++m_ArcCentCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -13,7 +14,6 @@ CCadArcCent::CCadArcCent():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-	CCadArcCent::m_ArcCentCount++;
 }
 
 CCadArcCent::CCadArcCent(CCadArcCent &arc) : CCadObject()
@@ -161,7 +161,7 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pPenLine = new CPen(PS_DOT, 1, GetLineColor());
 				break;
 			}
-			SetDirty(0);
+			SetDirty(FALSE);
 		}
 		switch (mode.DrawMode)
 		{
@@ -356,23 +356,6 @@ CDoublePoint CCadArcCent::GetReference()
 	return GetCenter();
 }
 
-void CCadArcCent::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_pointCenter -= Ref;
-	m_rectShape.AdjustReference(Ref);
-	SetStartPoint(GetStartPoint() - Ref);
-	SetEndPoint(GetEndPoint() - Ref);
-}
 
 CDoubleRect& CCadArcCent::GetRect(CDoubleRect& rect)
 {
@@ -449,18 +432,6 @@ void CCadArcCent::Copy(CCadObject* pObj)
 	}
 }
 	
-void CCadArcCent::ChangeCenter(CSize p)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
 
 CDoubleSize& CCadArcCent::GetSize(CDoubleSize& size)
 {
@@ -474,19 +445,6 @@ CDoubleSize& CCadArcCent::GetSize(CDoubleSize& size)
 	//--------------------------------------------------
 	size = m_rectShape.GetSize(size);
 	return size;
-}
-
-void CCadArcCent::ChangeSize(CSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	// Not Implemented
-	//--------------------------------------------------
 }
 
 DocFileParseToken CCadArcCent::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

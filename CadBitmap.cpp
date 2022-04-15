@@ -4,6 +4,7 @@ CCadBitmap::CCadBitmap():CCadObject()
 {
 	m_pBM = 0;
 	SetType(ObjectType::BITMAP);
+	GetName().Format(_T("Bitmap_%d"), ++m_BitmapCount);
 	if (!m_AttributesGood)
 	{
 		m_AttributesGood = TRUE;
@@ -313,21 +314,6 @@ CDoublePoint CCadBitmap::GetReference()
 	return m_P1;
 }
 
-void CCadBitmap::AdjustReference(CDoubleSize Ref)
-{
-	//***************************************************
-	// AdjustReference
-	//	Change the reference point for an object.  This
-	// operation needs to change everything else that
-	// is referenced to this ppoint as well.
-	// parameters:
-	//	Ref.......How much to change reference by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= Ref;
-	m_P2 -= Ref;
-}
 
 CDoubleRect& CCadBitmap::GetRect(CDoubleRect& rect)
 {
@@ -409,19 +395,6 @@ CDoublePoint& CCadBitmap::GetCenter(CDoublePoint& Center)
 	return Center;
 }
 
-void CCadBitmap::ChangeCenter(CDoubleSize sz)
-{
-	//***************************************************
-	// ChangeCenter
-	//	Change the center position of the object
-	// parameters:
-	//	p......amount to change center by
-	//
-	// return value:
-	//--------------------------------------------------
-	m_P1 -= sz;
-	m_P2 -= sz;
-}
 
 CDoubleSize& CCadBitmap::GetSize(CDoubleSize& size)
 {
@@ -435,19 +408,6 @@ CDoubleSize& CCadBitmap::GetSize(CDoubleSize& size)
 	//--------------------------------------------------
 	size = CDoubleRect(m_P1, m_P2).GetSize(size);
 	return size;
-}
-
-void CCadBitmap::ChangeSize(CDoubleSize Sz)
-{
-	//***************************************************
-	// ChangeSize
-	//	Change the size of the object
-	// parameters:
-	//	sz.....size to change object by (not change to)
-	// return value:
-	//--------------------------------------------------
-	m_P2.dX += Sz.dCX;
-	m_P2.dY += Sz.dCY;
 }
 
 DocFileParseToken CCadBitmap::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)

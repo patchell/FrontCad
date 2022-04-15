@@ -2,7 +2,7 @@
 
 class CCadHoleRound:public CCadObject
 {
-	inline static int m_DocCount;
+	inline static int m_RoundHoleCount;
 	inline static SRoundHoleAttributes m_LastAttributes;
 	inline static SRoundHoleAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -12,7 +12,6 @@ class CCadHoleRound:public CCadObject
 	CDoublePoint m_Center;
 public:
 	CCadHoleRound();
-	virtual void OnCreate();
 	virtual ~CCadHoleRound();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -27,7 +26,6 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadHoleRound operator=(CCadHoleRound &v);
@@ -35,9 +33,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint GetCenter();
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRoundHoleAttributes *pAttrb);
 	void CopyAttributesFrom(SRoundHoleAttributes *pAttrb);

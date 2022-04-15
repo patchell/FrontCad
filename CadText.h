@@ -7,7 +7,7 @@ enum {
 
 class CCadText:public CCadObject
 {
-	inline static int m_RndRectCount;
+	inline static int m_TextCount;
 	inline static STextAttributes m_LastAttributes;
 	inline static STextAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -35,7 +35,6 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadText operator=(CCadText &v);
@@ -43,9 +42,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesFrom(STextAttributes *pAttrb);
 	void CopyAttributesTo(STextAttributes *pAttrb);

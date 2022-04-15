@@ -2,7 +2,7 @@
 
 class CCadRndRect:public CCadObject
 {
-	inline static int m_RndRectCount;
+	inline static int m_RoundedRectCount;
 	inline static SRoundedRectAttributes m_LastAttributes;
 	inline static SRoundedRectAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -14,7 +14,6 @@ class CCadRndRect:public CCadObject
 public:
 	CCadRndRect();
 	CCadRndRect(CCadRndRect &r);
-	virtual void OnCreate();
 	virtual ~CCadRndRect();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -29,16 +28,13 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadRndRect operator=(CCadRndRect &v);
 	virtual CCadObject * CopyObject(void);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual void ChangeSize(CDoubleSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRoundedRectAttributes *pAttrb);
 	void CopyAttributesFrom(SRoundedRectAttributes*pAttrb);

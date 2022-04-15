@@ -2,7 +2,8 @@
 
 class CCadLine :public CCadObject
 {
-	inline static int m_DocCount;
+protected:
+	inline static int m_LineCount;
 	inline static SLineAttributes m_LastAttributes;
 	inline static SLineAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -16,7 +17,6 @@ class CCadLine :public CCadObject
 public: public://public methodes
 	CCadLine();
 	CCadLine(CCadLine &line);
-	virtual void OnCreate();
 	virtual ~CCadLine();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -30,16 +30,13 @@ public: public://public methodes
 		int n = 0, 
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
-	virtual void AdjustReference(CDoubleSize Ref);
 	virtual CString& GetTypeString(void);
 	CCadLine operator=(CCadLine &v);
 	virtual CCadObject * CopyObject(void);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint GetCenter();
 	virtual CDoubleRect& GetRect(CDoubleRect& rect) { return EncloseLineInRectangle(rect, 10); };
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CDoubleSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------------
 	// Draw Object Methodes

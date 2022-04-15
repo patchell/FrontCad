@@ -2,7 +2,7 @@
 
 class CCadHoleRnd1Flat:public CCadObject
 {
-	inline static int m_DocCount;
+	inline static int m_RndHole1FlatCount;
 	inline static SRndHole1FlatAttributes m_LastAttributes;
 	inline static SRndHole1FlatAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
@@ -12,7 +12,6 @@ class CCadHoleRnd1Flat:public CCadObject
 	CDoublePoint m_Center;
 public:
 	CCadHoleRnd1Flat();
-	virtual void OnCreate();
 	virtual ~CCadHoleRnd1Flat();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -34,7 +33,6 @@ public:
 		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
 	);
 	virtual CDoublePoint GetReference();
-	virtual void AdjustReference(CDoubleSize DeltaRef);
 	CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
 	CCadHoleRnd1Flat operator=(CCadHoleRnd1Flat &v);
@@ -42,9 +40,7 @@ public:
 	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
 	virtual void RenderEnable(int e);
 	virtual CDoublePoint GetCenter();
-	virtual void ChangeCenter(CDoubleSize p);
 	virtual CDoubleSize GetSize();
-	virtual void ChangeSize(CSize Sz);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRndHole1FlatAttributes *pAttrb);
 	void CopyAttributesFrom(SRndHole1FlatAttributes *pAttrb);

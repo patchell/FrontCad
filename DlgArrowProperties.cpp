@@ -99,7 +99,7 @@ void CDlgArrowProperties::OnStnClickedStaticColor()
 	{
 		m_Static_Color.SetColor(Dlg.GetColor());
 		m_pArrow->SetFillColor(Dlg.GetColor());
-		m_pArrow->SetDirty(1);
+		m_pArrow->SetDirty(0);
 		m_Static_Preview.Invalidate();
 	}
 }
@@ -145,7 +145,7 @@ void CDlgArrowProperties::OnStnClickedStaticLineColor()
 	{
 		m_Static_Color.SetColor(Dlg.GetColor());
 		m_pArrow->SetLineColor(Dlg.GetColor());
-		m_pArrow->SetDirty(1);
+		m_pArrow->SetDirty(0);
 		m_Static_Preview.Invalidate();
 	}
 }
