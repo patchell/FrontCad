@@ -42,13 +42,22 @@ class CCadObject
 	//---------------------------------
 	CCadObject* m_pNextRef;
 	CCadObject* m_pPrevRef;
-	//---------------------------------
-	// Object Creation Methods
-	//---------------------------------
+	//------------------------------------
+	// reference object
+	//------------------------------------
+	CCadObject* m_pReferenceObj;
 public:
+	//-------------------------------------
+	// Object Creation/Destruction Methods
+	//-------------------------------------
 	CCadObject();
 	virtual ~CCadObject();
-	virtual BOOL Destroy(CCadObject* pDependentObject) {}
+	virtual BOOL OnCreate(CCadObject* pRefObj) {
+		m_pReferenceObj = pRefObj;
+		return TRUE;
+	}
+	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
+	CCadObject* GetReferenceObject() { return m_pReferenceObj; }
 	CString& GetName() { return m_csName; }
 	UINT GetId() { return m_Id; }
 	ObjectType GetType(void) { return m_Type; }

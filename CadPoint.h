@@ -8,6 +8,7 @@ public:
 	CCadPoint();
 	CCadPoint(double x, double y);
 	~CCadPoint();
+	BOOL Create(CCadObject* pRefObj);
 	virtual BOOL Destroy(CCadObject* pDependentObject);
 	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
 	void SetX(double x) { dX = x; }
@@ -32,7 +33,7 @@ public:
 		result.dY = dY + a.dY;
 		return result;
 	}
-	CCadPoint operator+(CCadPoint a) {
+	CCadPoint operator+(CDoubleSize a) {
 		CCadPoint result;
 
 		result.dX = dX + a.dCX;
@@ -53,12 +54,12 @@ public:
 		result.dY = dY - a.dCY;
 		return result;
 	}
-	CCadPoint operator-=(CDouCCadPointblePoint a) {
+	CCadPoint operator-=(CCadPoint a) {
 		dX = dX - a.dX;
 		dY = dY - a.dY;
 		return *this;
 	}
-	CCadPoint operator-=(CCadPoint a) {
+	CCadPoint operator-=(CDoubleSize a) {
 		dX = dX - a.dCX;
 		dY = dY - a.dCY;
 		return *this;

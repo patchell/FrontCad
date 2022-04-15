@@ -28,6 +28,20 @@ CCadLine::~CCadLine()
 	if (m_pLinePen) delete m_pLinePen;
 }
 
+BOOL CCadLine::Create(CCadObject* pObjRef)
+{
+	CCadPoint* pPoint;
+	int i;
+	
+	for (i = 0; i < 2; ++i)
+	{
+		pPoint = new CCadPoint;
+		pPoint->Create(pObjRef);
+		this->AddObjectAtTail(pPoint);
+	}
+	return OnCreate(pObjRef);
+}
+
 void CCadLine::Move(CDoubleSize Diff)
 {
 	//***************************************************

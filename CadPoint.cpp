@@ -14,9 +14,16 @@ CCadPoint::~CCadPoint()
 {
 }
 
+BOOL CCadPoint::Create(CCadObject* pRefObj)
+{
+	OnCreate(pRefObj);
+	return TRUE;
+}
+
 BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
 {
 	CCadObject* pObj;
+	BOOL rV = TRUE;
 
 	if (GetDependentChildrenHead())
 	{
@@ -31,6 +38,7 @@ BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
 			
 		}
 	}
+	return rV;
 }
 
 void CCadPoint::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)

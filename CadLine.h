@@ -18,6 +18,7 @@ public: public://public methodes
 	CCadLine();
 	CCadLine(CCadLine &line);
 	virtual ~CCadLine();
+	BOOL Create(CCadObject* pObjRef);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
