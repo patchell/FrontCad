@@ -104,13 +104,15 @@ public:
 	BOOL DidMouseLeaveWindow() { return m_MouseLeftWindow; }
 	void SetMouseLeftWindow(BOOL flag) { m_MouseLeftWindow = flag; }
 	afx_msg void OnMouseLeave();
-	CPoint GetMouseScreenCoordinate(CPoint& point) {
-		GetCursorPos(&point);
-		return point;
+	BOOL GetCursorPosition(CPoint* pMP) {
+		BOOL rV;
+		rV = ::GetCursorPos(pMP);
+		return rV;
 	}
-	CPoint ConvertScreenToClientCoordinates(CPoint& point) {
-		ScreenToClient(&point);
-		return point;
+	BOOL SetCursorPosition(CPoint MP) {
+		BOOL rV;
+		rV = ::SetCursorPos(MP.x, MP.y);
+		return rV;
 	}
 	MouseIsHere WhereIsMouse();
 	double GetClientWidth() {

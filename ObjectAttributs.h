@@ -274,18 +274,26 @@ struct SLineAttributes {
 
 struct SOriginAttributes {
 	COLORREF m_colorLine;
+	COLORREF m_colorSelected;
 	double m_LineWidth;
+	double m_Radius;
 	SOriginAttributes() {
-		m_colorLine = RGB(0, 0, 0);
+		m_colorLine = RGB(192, 192, 192);
+		m_colorSelected = RGB(255, 0, 0);
 		m_LineWidth = 0.01;
+		m_Radius = 0.250;
 	}
 	void CopyFrom(SOriginAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorSelected = pAttributes->m_colorSelected;
 		m_LineWidth = pAttributes->m_LineWidth;
+		m_Radius = pAttributes->m_Radius;
 	}
 	void CopyTo(SOriginAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
+		pAttributes->m_Radius = m_Radius;
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, int Indent, int flags) {

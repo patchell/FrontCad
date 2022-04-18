@@ -84,6 +84,8 @@
 #include "DlgNewName.h"
 #include "DlgObjectEnable.h"
 #include "DlgNewDrawing.h"
+#include "DlgSelectOrigin.h"
+#include "DlgOriginAttributes.h"
 //------------ Views -----------------------
 #include "Grid.h"
 #include "RulerInfo.h"

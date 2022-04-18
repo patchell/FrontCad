@@ -38,10 +38,10 @@ class CCadObject
 	CCadObject* m_pPrevDependentParent;
 	UINT m_nTotalDependentParents;
 	//---------------------------------
-	// List of Referece Objects Links
+	// List of Origin Objects Links
 	//---------------------------------
-	CCadObject* m_pNextRef;
-	CCadObject* m_pPrevRef;
+	CCadObject* m_pNextOrigin;
+	CCadObject* m_pPrevOrigin;
 	//------------------------------------
 	// reference object
 	//------------------------------------
@@ -196,4 +196,9 @@ public:
 	void AddDepParentObjectAtHead(CCadObject* pObj);
 	void AddDepParentObjectAtTail(CCadObject* pObj);
 	void RemoveDepParentObject(CCadObject* pObj);
+	//---------------- Origin List Links -----------------------
+	void SetNextOrigin(CCadObject* pObj) { m_pNextOrigin = pObj; }
+	CCadObject* GetNextOrigin() { return m_pNextOrigin; }
+	void SetPrevOrigin(CCadObject* pObj) { m_pPrevOrigin = pObj; }
+	CCadObject* GetPrevOrigin() { return m_pPrevOrigin; }
 };

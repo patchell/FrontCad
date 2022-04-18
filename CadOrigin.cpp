@@ -89,6 +89,77 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
+	CCadObject* pObj = GetHead(); 
+	CPen LinePen, * OldPen = 0;
+	CBrush fillBrush, * oldBrush = 0;
+	int LineWidth;
+	CRect rect;
+	int rectHalfWidth, CrossHairLen;
+	CPoint pointUL, pointLR, pointCenter;;
+	double Radius;
+	COLORREF colorLine;
+	//---------------------------------------
+	// Draw this Origin Object
+	//---------------------------------------
+
+	if (m_RenderEnable)
+	{
+		LineWidth = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
+		if (LineWidth < 1)
+			LineWidth = 1;
+		Radius = GetAttributes().m_Radius * Scale.GetScaleX();
+		CrossHairLen = GETAPP.RoundDoubleToInt(GetAttributes().m_Radius * 1.50 * Scale.GetScaleX());
+		if (CrossHairLen < 15)
+			CrossHairLen = 15;
+		rectHalfWidth = GETAPP.RoundDoubleToInt(Radius);
+		if (rectHalfWidth < 10)
+		{
+			rectHalfWidth = 10;
+			Radius = double(rectHalfWidth);
+		}
+		
+		pointLR = m_Origin.ToPixelPoint(Offset,Scale) + CSize(rectHalfWidth, rectHalfWidth);
+		pointUL = m_Origin.ToPixelPoint(Offset, Scale) - CSize(rectHalfWidth, rectHalfWidth);
+		rect.SetRect(pointUL, pointLR);
+		rect.NormalizeRect();
+		switch (mode.DrawMode)
+		{
+		case ObjectDrawMode::FINAL:
+			colorLine = GetAttributes().m_colorLine;
+			LinePen.CreatePen(PS_SOLID, LineWidth, colorLine);
+			OldPen = pDC->SelectObject(&LinePen);
+			break;
+		case ObjectDrawMode::SELECTED:
+			colorLine = GetAttributes().m_colorSelected;
+			LinePen.CreatePen(PS_SOLID, LineWidth, colorLine);
+			OldPen = pDC->SelectObject(&LinePen);
+			break;
+		case ObjectDrawMode::SKETCH:
+			colorLine = GetAttributes().m_colorLine;
+			LinePen.CreatePen(PS_DOT, LineWidth, colorLine);
+			OldPen = pDC->SelectObject(&LinePen);
+			break;
+		}
+		fillBrush.CreateStockObject(NULL_BRUSH);
+		oldBrush = pDC->SelectObject(&fillBrush);
+		pDC->Ellipse(&rect);
+		pointCenter = m_Origin.ToPixelPoint(Offset, Scale);
+		pDC->MoveTo(pointCenter.x + CrossHairLen,pointCenter.y);
+		pDC->LineTo(pointCenter.x - CrossHairLen, pointCenter.y);
+		pDC->MoveTo(pointCenter.x,pointCenter.y + CrossHairLen);
+		pDC->LineTo(pointCenter.x, pointCenter.y - CrossHairLen);
+		pDC->SelectObject(oldBrush);
+		if (OldPen)
+			pDC->SelectObject(OldPen);
+	}
+	//---------------------------------------
+	// Draw the child objects of this origin
+	//---------------------------------------
+	while (pObj)
+	{
+		pObj->Draw(pDC, mode, Offset, Scale);
+		pObj = pObj->GetNext();
+	}
 }
 
 BOOL CCadOrigin::PointInObjectAndSelect(CPoint p, CSize Offset, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
@@ -357,6 +428,14 @@ ObjectDrawState CCadOrigin::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
+	CDoublePoint MousePosition = GETVIEW()->GetCurrentMousePosition();
+
+	switch (DrawState)
+	{
+	case ObjectDrawState::SET_ATTRIBUTES:
+	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		m_Origin = MousePosition;
+	}
 	GETVIEW()->Invalidate();
 	return DrawState;
 }
@@ -376,11 +455,13 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	CFrontCadDoc* pDoc = 0;
+	CPoint MouseScreenCoordinate;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		DrawState = ObjectDrawState::SET_ATTRIBUTES;
 		GETAPP.UpdateStatusBar(_T("Origin:Place Origin Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
@@ -389,13 +470,22 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			m_CurrentAttributes.CopyTo(&m_LastAttributes);
 		}
+		DrawState = ObjectDrawState::SELECT_NOTHING;
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
+		GETVIEW()->GetCursorPosition(&MouseScreenCoordinate);
 		Id = EditProperties();
+		printf("Id = %d\n", Id);
 		if (IDOK == Id)
 		{
+			printf("IDOK\n");
 			CopyAttributesTo(&m_CurrentAttributes);
+			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+			GETVIEW()->EnableAutoScroll(1);
 		}
+		else
+			DrawState = ObjectDrawState::END_DRAWING;
+		GETVIEW()->SetCursorPosition(MouseScreenCoordinate);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		m_Origin = MousePos;
@@ -403,8 +493,12 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		m_Origin = MousePos;
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Origin:Place Origin Point"));
+		DrawState = ObjectDrawState::SET_ATTRIBUTES;
+		pDoc = GETVIEW()->GetDocument();
+		pDoc->AddOriginAtTail(this);
+		GETVIEW()->EnableAutoScroll(0);
+		GETVIEW()->SetObjectTypes(new CCadOrigin);
+		GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
 		break;
 	}
 	return DrawState;
@@ -412,7 +506,12 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 
 int CCadOrigin::EditProperties()
 {
-	return 0;
+	int Id;
+	CDlgOriginAttributes Dlg;
+
+	Dlg.SetOrigin(this);
+	Id = Dlg.DoModal();
+	return Id;
 }
 
 BOOL CCadOrigin::NeedsAttributes()

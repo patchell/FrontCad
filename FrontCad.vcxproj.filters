@@ -245,6 +245,12 @@
     <ClInclude Include="CadPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DlgSelectOrigin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgOriginAttributes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
@@ -452,6 +458,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CadPoint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgSelectOrigin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgOriginAttributes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

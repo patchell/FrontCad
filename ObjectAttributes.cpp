@@ -525,9 +525,12 @@ void SOriginAttributes::LoadSettings(SOriginAttributes* pAttrib)
 	************************************************/
 	CString csVal;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ORIGIN"), _T("LINECOLOR"), RGB(128,128,128));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ORIGIN"), _T("LINECOLOR"), RGB(192,192,192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ORIGIN"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	csVal = GETAPP.GetProfileStringW(_T("ORIGIN"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
+	csVal = GETAPP.GetProfileStringW(_T("ORIGIN"), _T("RADIUS"), _T("0.25"));
+	pAttrib->m_Radius = GETAPP.StringToDouble(csVal);
 }
 
 void SOriginAttributes::SaveSettings(SOriginAttributes* pAttrib)
@@ -544,8 +547,11 @@ void SOriginAttributes::SaveSettings(SOriginAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ORIGIN"), _T("LINECOLOR"), pAttrib->m_colorLine);
-	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
-	GETAPP.WriteProfileStringW(_T("ORIGIN"), _T("WIDTH"), csString);
+	GETAPP.WriteProfileInt(_T("ORIGIN"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
+	csString.Format(_T("%6.3lf"), pAttrib->m_LineWidth);
+	GETAPP.WriteProfileStringW(_T("ORIGIN"), _T("LINEWIDTH"), csString);
+	csString.Format(_T("%6.3lf"), pAttrib->m_Radius);
+	GETAPP.WriteProfileStringW(_T("ORIGIN"), _T("RADIUS"), csString);
 }
 
 DocFileParseToken SOriginAttributes::Parse(DocFileParseToken Token, CLexer* pLex)

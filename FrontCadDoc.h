@@ -37,4 +37,6 @@ protected:
 	virtual BOOL OnNewDocument();
 
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnModifySwitchreference();
 };

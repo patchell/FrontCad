@@ -10,6 +10,8 @@
 #define IDD_CDlgRoundHoleProp           311
 #define IDD_DIALOG_DIMENSION_PROPERTIES 312
 #define IDD_DLG_NEW_DRAWING             314
+#define IDD_DIALOG_CHANGE_REFERENCE_ORIGIN 316
+#define IDD_DIALOG_ORIGIN_ATTRIBUTES    318
 #define IDD_DIALOG_TEXT_PROPERTIES      326
 #define IDD_DIALOG_LINE_ATTRB           328
 #define IDD_DIALOG_RECTPROPERTIES       330
@@ -36,14 +38,19 @@
 #define IDC_EDIT_DRAWINGSIZE_H          1012
 #define IDC_EDIT_DRAWOMGSOZE_W          1013
 #define IDC_EDIT_TEXT_STRING            1014
-#define IDC_BUTTON1                     1014
 #define IDC_BUTTON_OPEN_EXISTING        1014
 #define IDC_CHECK_TRANSPARENT           1015
+#define IDC_COMBO_SELECT_ORIGIN         1015
 #define IDC_STATIC_TEXT_COLOR           1016
+#define IDC_STATIC_ORIGIN_LINE_COLOR    1016
 #define IDC_STATIC_BACKGROUND_COLOR     1017
+#define IDC_STATIC_ORIGIN_SELECTED_COLOR 1017
 #define IDC_EDIT_TEXT_HEIGHT            1018
+#define IDC_EDIT_ORIGIN_LINE_WIDTH      1018
 #define IDC_EDIT_TEXT_WIDTH             1019
+#define IDC_EDIT_ORIGIN_RADIUS          1019
 #define IDC_BUTTON_FONT                 1020
+#define IDC_EDIT_ORIGIN_NAME            1020
 #define IDC_COMBO_FONTWEIGHT            1021
 #define IDC_EDIT_ANGLE                  1022
 #define IDC_EDIT_LINE_WIDTH             1023
@@ -129,14 +136,15 @@
 #define ID_VIEW_ZOOMOUT                 32801
 #define ID_DRAW_PLACEBITMAP             32802
 #define ID_DRAW_ARROW                   32803
+#define ID_MODIFY_SWITCHREFERENCE       32804
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        316
-#define _APS_NEXT_COMMAND_VALUE         32804
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_RESOURCE_VALUE        320
+#define _APS_NEXT_COMMAND_VALUE         32805
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

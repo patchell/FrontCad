@@ -136,6 +136,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBitmap memDCbitmap;
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
+	CCadObject* pDrawingObjectList, * pOriginList;
 	CSize Offset = -GetScrollOffset();
 	CBrush br;
 	MODE mode;
@@ -144,7 +145,8 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	memDC.CreateCompatibleDC(pDC);
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
 	pOldbm = memDC.SelectObject(&memDCbitmap);
-	CCadObject *pDrawingObjectList = pDoc->GetHead();
+	pDrawingObjectList = pDoc->GetHead();
+	pOriginList = pDoc->GetOriginHead();
 	CScale Scale = GetGrid().GetPixelsPerInch();
 	mode.DrawMode = ObjectDrawMode::FINAL;
 
@@ -157,6 +159,11 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	{
 		pDrawingObjectList->Draw(&memDC, mode, Offset, Scale);
 		pDrawingObjectList = pDrawingObjectList->GetNext();
+	}
+	while (pOriginList)
+	{
+		pOriginList->Draw(&memDC, mode, Offset, Scale);
+		pOriginList = pOriginList->GetNextOrigin();
 	}
 	if (GetObjectTypes().pCadObject)	//is an object being draw?
 	{
@@ -502,8 +509,16 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	case DrawingMode::SELECTREGION:
 		break;
 	default:	//it must be something we are going to draw.
-		if (m_CadObj.pCadObject) 
+		if (m_CadObj.pCadObject)
+		{
 			m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
+			if (m_DrawState == ObjectDrawState::END_DRAWING)
+			{
+				m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
+				delete m_CadObj.pCadObject;
+				m_CadObj.pCadObject = 0;
+			}
+		}
 		break;
 	}
 	CChildViewBase::OnLButtonDown(nFlags, point);
@@ -1027,7 +1042,15 @@ void CFrontCadView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawOrigin()
 {
-	//ToDo
+	if (GetObjectTypes().pCadObject)
+	{
+		delete GetObjectTypes().pCadObject;
+		GetObjectTypes().pCadObject = 0;
+	}
+	SetDrawMode(DrawingMode::ORIGIN);
+	SetObjectTypes(new CCadOrigin);
+	GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
 
 
@@ -1555,7 +1578,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	case ID_CM_ENDDRAWMODE:
 		if (GetObjectTypes().pCadObject)
 		{
-			GetObjectTypes().pCadObject->ProcessDrawMode(m_DrawState);
+			GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::END_DRAWING);
 			delete GetObjectTypes().pCadObject;
 			SetObjectTypes(0);
 		}
@@ -2415,7 +2438,7 @@ MouseIsHere CFrontCadView::WhereIsMouse()
 	int L,R,T,B;
 	int X, Y;
 
-	GetMouseScreenCoordinate(MousePos);
+	GetCursorPosition(&MousePos);
 	GetClientRect(&ClientScreneRect);
 	ClientToScreen(&ClientScreneRect);
 	L = ClientScreneRect.left;

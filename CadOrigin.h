@@ -40,10 +40,10 @@ public:
 	//-------------------------------------
 	//attribute Methods
 	//-------------------------------------
-	void CopyAttributesTo(SOriginAttributes* pAttrb);
-	void CopyAttributesFrom(SOriginAttributes* pAttrb);
 	SOriginAttributes& GetAttributes() { return m_Attrib; }
 	SOriginAttributes* GetPtrToAttributes() { return &m_Attrib; }
+	void CopyAttributesTo(SOriginAttributes* pAttrb);
+	void CopyAttributesFrom(SOriginAttributes* pAttrb);
 	virtual int EditProperties();
 	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }

@@ -49,6 +49,7 @@ BOOL CFrontCadDoc::OnNewDocument()
 
 
 BEGIN_MESSAGE_MAP(CFrontCadDoc, CBaseDocument)
+	ON_COMMAND(ID_MODIFY_SWITCHREFERENCE, &CFrontCadDoc::OnModifySwitchreference)
 END_MESSAGE_MAP()
 
 
@@ -212,4 +213,10 @@ UINT CFrontCadDoc::PointInObjectAndSelect(
 
 void CFrontCadDoc::SetDirty(UINT flag)
 {
+}
+
+
+void CFrontCadDoc::OnModifySwitchreference()
+{
+	// TODO: Add your command handler code here
 }

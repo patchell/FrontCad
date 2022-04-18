@@ -65,59 +65,143 @@ void CBaseDocument::Serialize(CArchive& ar)
 
 void CBaseDocument::AddObjectAtFront(CCadObject * pObj)
 {
-	if (GetHead() == 0)
+	if (GetCurrentOrigin())
 	{
-		SetHead(pObj);
-		SetTail(pObj);;
+		GetCurrentOrigin()->AddObjectAtHead(pObj);
 	}
 	else
 	{
-		pObj->SetNext(GetHead());
-		GetHead()->SetPrev(pObj);
-		SetHead(pObj); 
+		if (GetHead() == 0)
+		{
+			SetHead(pObj);
+			SetTail(pObj);;
+		}
+		else
+		{
+			pObj->SetNext(GetHead());
+			GetHead()->SetPrev(pObj);
+			SetHead(pObj);
+		}
+		++m_nTotalObjects;
 	}
-	++m_nTotalObjects;
 }
 
 void CBaseDocument::AddObjectAtEnd(CCadObject* pObj)
 {
-	if (GetHead() == 0)
+	if (GetCurrentOrigin())
 	{
-		SetHead(pObj);
-		SetTail(pObj);
+		GetCurrentOrigin()->AddObjectAtTail(pObj);
 	}
 	else
 	{
-		pObj->SetPrev(GetTail());
-		GetTail()->SetNext(pObj);
-		SetTail(pObj);
+		if (GetHead() == 0)
+		{
+			SetHead(pObj);
+			SetTail(pObj);
+		}
+		else
+		{
+			pObj->SetPrev(GetTail());
+			GetTail()->SetNext(pObj);
+			SetTail(pObj);
+		}
+		++m_nTotalObjects;
 	}
-	++m_nTotalObjects;
 }
 
 void CBaseDocument::RemoveObject(CCadObject * pObj)
 {
-	if (pObj == GetHead())
+	if (GetCurrentOrigin())
 	{
-		SetHead(pObj->GetNext());
-		if (GetHead())
-			GetHead()->SetPrev(0);
-		else
-			SetTail(0);
-	}
-	else if (pObj == GetTail())
-	{
-		SetTail(pObj->GetPrev());
-		if (GetTail())
-			GetTail()->SetNext(0);
-		else
-			SetHead(0);
+		GetCurrentOrigin()->RemoveObject(pObj);
 	}
 	else
 	{
-		pObj->GetNext()->SetPrev(pObj->GetPrev());
-		pObj->GetPrev()->SetNext(pObj->GetNext());
+		if (pObj == GetHead())
+		{
+			SetHead(pObj->GetNext());
+			if (GetHead())
+				GetHead()->SetPrev(0);
+			else
+				SetTail(0);
+		}
+		else if (pObj == GetTail())
+		{
+			SetTail(pObj->GetPrev());
+			if (GetTail())
+				GetTail()->SetNext(0);
+			else
+				SetHead(0);
+		}
+		else
+		{
+			pObj->GetNext()->SetPrev(pObj->GetPrev());
+			pObj->GetPrev()->SetNext(pObj->GetNext());
+		}
+		--m_nTotalObjects;
 	}
+}
+
+//----------------------------------------------
+// List of Origin Objects
+//---------------------------------------------
+
+void CBaseDocument::AddOriginAtFront(CCadObject* pObj)
+{
+	if (GetOriginHead() == 0)
+	{
+		SetOriginHead(pObj);
+		SetOriginTail(pObj);;
+	}
+	else
+	{
+		pObj->SetNextOrigin(GetOriginHead());
+		GetOriginHead()->SetPrevOrigin(pObj);
+		SetOriginHead(pObj);
+	}
+	++m_nTotalOrigins;
+}
+
+void CBaseDocument::AddOriginAtTail(CCadObject* pObj)
+{
+	if (GetOriginHead() == 0)
+	{
+		SetOriginHead(pObj);
+		SetOriginTail(pObj);
+	}
+	else
+	{
+		pObj->SetPrevOrigin(GetOriginTail());
+		GetOriginTail()->SetNextOrigin(pObj);
+		SetOriginTail(pObj);
+	}
+	++m_nTotalOrigins;
+}
+
+void CBaseDocument::RemoveOrigin(CCadObject* pObj)
+{
+	if (pObj == GetOriginHead())
+	{
+		SetOriginHead(pObj->GetNextOrigin());
+		if (GetOriginHead())
+			GetOriginHead()->SetPrevOrigin(0);
+		else
+			SetOriginTail(0);
+	}
+	else if (pObj == GetOriginTail())
+	{
+		SetOriginTail(pObj->GetPrevOrigin());
+		if (GetOriginTail())
+			GetOriginTail()->SetNextOrigin(0);
+		else
+			SetOriginHead(0);
+	}
+	else
+	{
+		pObj->GetNextOrigin()->SetPrevOrigin(pObj->GetPrevOrigin());
+		pObj->GetPrevOrigin()->SetNextOrigin(pObj->GetNextOrigin());
+	}
+	--m_nTotalOrigins;
 }
 
 void CBaseDocument::SetAllDirty(void)
