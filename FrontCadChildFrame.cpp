@@ -52,7 +52,6 @@ BOOL CFrontCadChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pC
 		TRACE("Error creation of rulers\n");
 		return CMDIChildWnd::OnCreateClient(lpcs, pContext);
 	}
-	Print();
 	return TRUE;
 }
 
@@ -61,10 +60,8 @@ void CFrontCadChildFrame::InitToolBar()
 {
 	CWnd* pWnd = 0;
 
-//	Print();
-//	printf("m_ToolBarSpliter.hWnd= %08X\n", m_ToolBarSplitter.m_hWnd);
-//	pWnd = m_ToolBarSplitter.GetPane(TOOLBAR_PANE);
-//	((CMyToolBarView*)pWnd)->InitToolbar();
+	pWnd = m_ToolBarSplitter.GetPane(TOOLBAR_PANE);
+	((CMyToolBarView*)pWnd)->InitToolbar();
 }
 
 void CFrontCadChildFrame::ShowRulers(int nShow)

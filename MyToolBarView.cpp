@@ -85,7 +85,11 @@ void CMyToolBarView::InitToolbar()
 	CSize Sz = CSize(100, 24);
 	int Spacing = 16;
 	m_Static_X.Create(_T("0.000"), WS_BORDER | WS_CHILD, CRect(UL, Sz), this, TOOLBAR_STATIC_X);
+	m_Static_X.EnableWindow(1);
+	m_Static_X.ShowWindow(1);
 	UL.x += Sz.cx + Spacing;
 	m_Static_Y.Create(_T("0.000"), WS_BORDER | WS_CHILD, CRect(UL, Sz), this, TOOLBAR_STATIC_Y);
+	m_Static_Y.EnableWindow(1);
+	m_Static_Y.ShowWindow(1);
 }
 

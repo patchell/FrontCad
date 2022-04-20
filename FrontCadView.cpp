@@ -142,8 +142,6 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBrush br;
 	MODE mode;
 
-	printf("On Initial Update:");
-	GetMyFrame()->Print();
 	GetClientRect(&rectClient);
 	memDC.CreateCompatibleDC(pDC);
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
@@ -841,8 +839,6 @@ void CFrontCadView::OnInitialUpdate()
 {
 	static int OnlyOnce = 0;
 
-//	printf("On Initial Update:");
-	GetMyFrame()->Print();
 	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
 	CFrontCadDoc *pDoc = GetDocument();
 	SetObjectEnables(

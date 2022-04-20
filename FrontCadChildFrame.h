@@ -28,9 +28,6 @@ public:
 	void InitToolBar();
 	void ShowRulers(int nShow);
 	void ShowToolBar(int nShow);
-	void Print() {
-		printf("m_ToolBarSpliter.hWnd= %08X\n", m_ToolBarSplitter.m_hWnd);
-	}
 };
 
 
