@@ -34,18 +34,45 @@ BOOL CFrontCadChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CFrontCadChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
-	SetWindowPos(this,0, 0, 1024, 512, 0);
-	if (!m_RulerSplitter.CreateRulers(this, pContext)) 
+	SetWindowPos(this,0, 0, 1024, 768, 0);
+	
+	if(!m_ToolBarSplitter.CreateToolBar(this, pContext))
+	{
+		TRACE("Error creation of ToolBar\n");
+		return CMDIChildWnd::OnCreateClient(lpcs, pContext);
+	}
+
+	if (!m_RulerSplitter.CreateRulers(
+		&m_ToolBarSplitter, 
+		pContext, WS_CHILD | WS_VISIBLE | WS_BORDER, 
+		m_ToolBarSplitter.IdFromRowCol(1, 0)
+		)
+	)
 	{
 		TRACE("Error creation of rulers\n");
 		return CMDIChildWnd::OnCreateClient(lpcs, pContext);
 	}
+	Print();
 	return TRUE;
 }
 
+
+void CFrontCadChildFrame::InitToolBar()
+{
+	CWnd* pWnd = 0;
+
+//	Print();
+//	printf("m_ToolBarSpliter.hWnd= %08X\n", m_ToolBarSplitter.m_hWnd);
+//	pWnd = m_ToolBarSplitter.GetPane(TOOLBAR_PANE);
+//	((CMyToolBarView*)pWnd)->InitToolbar();
+}
 
 void CFrontCadChildFrame::ShowRulers(int nShow)
 {
 	m_RulerSplitter.ShowRulers(nShow);
 }
 
+void CFrontCadChildFrame::ShowToolBar(int nShow)
+{
+//	m_ToolBarSplitter.ShowToolBar(nShow);
+}

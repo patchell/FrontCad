@@ -57,9 +57,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 
 	// TODO: Delete these three lines if you don't want the toolbar to be dockable
-	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
-	EnableDocking(CBRS_ALIGN_ANY);
-	DockControlBar(&m_wndToolBar);
+//	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+//	EnableDocking(CBRS_ALIGN_ANY);
+//	DockControlBar(&m_wndToolBar);
 
 
 	return 0;
@@ -69,9 +69,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CMDIFrameWnd::PreCreateWindow(cs) )
 		return FALSE;
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
-
+	
 	return TRUE;
 }
 
@@ -100,31 +98,23 @@ afx_msg LRESULT CMainFrame::OnMainframeFinishupdate(WPARAM wParam, LPARAM lParam
 	long NumberOfChildWindowws = 0;
 	int loop = 1;
 
-	printf("Finish Update\n");
 	NumberOfChildWindowws = GetWindowedChildCount();
-	printf("Number Of Children %ld\n", NumberOfChildWindowws);
 	
 	for (long i = 0; (i < NumberOfChildWindowws) && loop; ++i)
 	{
 		if (i == 0)
 		{
 			ChildWnd = GetWindow(GW_CHILD);
-			if (ChildWnd)
-				printf("Got First Child %p\n", ChildWnd);
-			else
+			if (!ChildWnd)
 			{
-				printf("Got Null first time\n");
 				loop = 0;
 			}
 		}
 		else
 		{
 			ChildWnd = GetWindow(GW_HWNDNEXT);
-			if (ChildWnd)
-				printf("Got Next Child %p\n", ChildWnd);
-			else
+			if (!ChildWnd)
 			{
-				printf("Nope\n");
 				loop = 0;
 			}
 		}

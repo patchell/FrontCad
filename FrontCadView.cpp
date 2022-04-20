@@ -10,6 +10,7 @@ IMPLEMENT_DYNCREATE(CFrontCadView, CChildViewBase)
 
 CFrontCadView::CFrontCadView()
 {
+	m_pParentFrame = 0;
 	m_ObjectEnables = 0;	//all objects disabled
 	m_ControlKeyDown = FALSE;
 	m_ShiftKeyDown = FALSE;
@@ -141,6 +142,8 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBrush br;
 	MODE mode;
 
+	printf("On Initial Update:");
+	GetMyFrame()->Print();
 	GetClientRect(&rectClient);
 	memDC.CreateCompatibleDC(pDC);
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
@@ -836,7 +839,12 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 
 void CFrontCadView::OnInitialUpdate()
 {
-	CBaseDocument *pDoc = (CBaseDocument *)GetDocument();
+	static int OnlyOnce = 0;
+
+//	printf("On Initial Update:");
+	GetMyFrame()->Print();
+	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
+	CFrontCadDoc *pDoc = GetDocument();
 	SetObjectEnables(
 		OBJECT_ENABLE_ROUNDEDRECT |
 		OBJECT_ENABLE_POLYGON |
@@ -847,13 +855,17 @@ void CFrontCadView::OnInitialUpdate()
 		OBJECT_ENABLE_ARROW |
 		OBJECT_ENABLE_ORIGIN 
 	);
+	//-----------------------------------------
+	GetMyFrame()->InitToolBar();
+	//------------------------------------------
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
-	m_pParent = (CFrontCadChildFrame*)GetParentFrame();
 	UpdateScrollbarInfo();
 	ShowScrollBar(SB_BOTH, TRUE);
 	EnableScrollBarCtrl(SB_VERT, TRUE);
 	EnableScrollBarCtrl(SB_HORZ, TRUE);
-
+	//----------------------------------------------------
+	//----------------------------------------------------
+	ShowToolBar(TRUE);
 	//----------------------------------------------------
 	// Initialize Ruler Info
 	//----------------------------------------------------
@@ -880,6 +892,8 @@ void CFrontCadView::OnInitialUpdate()
 	SendMessageToRulers(RW_SHOW, TRUE);
 	PostMessageToRulers(RW_ZOOM);
 	PostMessageToRulers(RW_POSITION);
+
+	
 	//----------------------------------------
 	// Initialize Mouse Tracking Event
 	//----------------------------------------

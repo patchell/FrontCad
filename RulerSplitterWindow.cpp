@@ -34,6 +34,7 @@ BOOL CRulerSplitterWnd::CreateRulers(CWnd* pParent, CCreateContext* pContext, DW
 	BOOL rV = FALSE;
 
 	printf("Create Spliter panes\n");
+
 	if (CreateStatic(pParent, 2, 2, dwStyle, nID))
 	{
 		//corner

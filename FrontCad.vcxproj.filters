@@ -251,6 +251,12 @@
     <ClInclude Include="DlgOriginAttributes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyToolBarView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MyToolBarSplitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
@@ -464,6 +470,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DlgOriginAttributes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyToolBarView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyToolBarSplitter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

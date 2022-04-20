@@ -66,7 +66,7 @@ class CFrontCadView : public CChildViewBase
 	//---------------------------------
 	int m_GrabbedVertex;	//vertex that is being dragged
 	CADObjectTypes m_CadObj;
-	CFrontCadChildFrame* m_pParent;
+	CFrontCadChildFrame* m_pParentFrame;
 
 	DECLARE_DYNCREATE(CFrontCadView)
 protected:
@@ -79,6 +79,7 @@ protected:
 #endif
 #endif
 public:
+	CFrontCadChildFrame* GetMyFrame() { return  m_pParentFrame; }
 	void SetObjectEnables(unsigned u) { m_ObjectEnables |= u; }
 	void ClearObjectEnables(unsigned u) { m_ObjectEnables &= ~u; }
 	virtual void OnInitialUpdate();
@@ -279,6 +280,13 @@ public:
 	void ZoomOut(CPoint point);
 	void EnableAutoScroll(BOOL flag);
 	BOOL IsAutoScrollEnabled() { return m_AutoScroll; }
+	//------------------------------------------
+	// ToolBar
+	//------------------------------------------
+	void ShowToolBar(BOOL bShow) {
+		if(m_pParentFrame)
+			m_pParentFrame->ShowToolBar(bShow);
+	}
 	//------------------------------------------
 	// Rulers
 	//------------------------------------------

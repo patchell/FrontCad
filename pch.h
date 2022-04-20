@@ -92,6 +92,8 @@
 #include "RulerSplitterWindow.h"
 #include "RulerCornerView.h"
 #include "RulerView.h"
+#include "MyToolBarSplitter.h"
+#include "MyToolBarView.h"
 #include "ChildFrameBase.h"
 #include "FrontCadChildFrame.h"
 #include "BaseDocument.h"

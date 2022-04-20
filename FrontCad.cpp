@@ -164,8 +164,6 @@ BOOL CFrontCadApp::InitInstance()
 	//-------------------------------------------------------------
 	// The main window has been initialized, so show and update it
 	//-------------------------------------------------------------
-//	pMainFrame->ShowWindow(m_nCmdShow);
-	printf("UpdateWindows\n");
 	pMainFrame->UpdateWindow();
 	pMainFrame->PostMessageW(UINT(WindowsMsg::WM_MAINFRAME_FINISHUPDATE));
 	return TRUE;

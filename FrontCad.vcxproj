@@ -249,6 +249,8 @@
     <ClInclude Include="MoveObjects.h" />
     <ClInclude Include="MyBitmap.h" />
     <ClInclude Include="MyEvent.h" />
+    <ClInclude Include="MyToolBarSplitter.h" />
+    <ClInclude Include="MyToolBarView.h" />
     <ClInclude Include="ObjectAttributs.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Primitives.h" />
@@ -325,6 +327,8 @@
     <ClCompile Include="MoveObjects.cpp" />
     <ClCompile Include="MyBitmap.cpp" />
     <ClCompile Include="MyEvent.cpp" />
+    <ClCompile Include="MyToolBarSplitter.cpp" />
+    <ClCompile Include="MyToolBarView.cpp" />
     <ClCompile Include="ObjectAttributes.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

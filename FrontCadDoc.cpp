@@ -25,7 +25,6 @@ BOOL CFrontCadDoc::OnNewDocument()
 	CDlgNewDrawing Dlg;
 	int Id;
 	BOOL rV = FALSE;
-
 	csName.Format(_T("FrontCadDoc%d"), ++NewFileCount);
 	csTitle.Format(_T("New FrontCad Drawuing"));
 	Dlg.SetDialogTitle(csTitle);

@@ -4,6 +4,7 @@
 
 class CFrontCadChildFrame : public CMDIChildWnd
 {
+	CMyToolBarSplitter m_ToolBarSplitter;
 	CRulerSplitterWnd m_RulerSplitter;
 	DECLARE_DYNCREATE(CFrontCadChildFrame)
 protected:
@@ -19,7 +20,17 @@ public:
 		pRSW = &m_RulerSplitter;
 		return pRSW; 
 	}
+	CMyToolBarSplitter* GetToolBarSplitterWnd() {
+		CMyToolBarSplitter* pTBSW;
+		pTBSW = &m_ToolBarSplitter;
+		return pTBSW;
+	}
+	void InitToolBar();
 	void ShowRulers(int nShow);
+	void ShowToolBar(int nShow);
+	void Print() {
+		printf("m_ToolBarSpliter.hWnd= %08X\n", m_ToolBarSplitter.m_hWnd);
+	}
 };
 
 

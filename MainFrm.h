@@ -7,6 +7,9 @@
 class CMainFrame : public CMDIFrameWnd
 {
 	DECLARE_DYNAMIC(CMainFrame)
+protected:  // control bar embedded members
+	CToolBar        m_wndToolBar;
+	CStatusBar      m_wndStatusBar;
 public:
 	CMainFrame() noexcept;
 
@@ -29,9 +32,6 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 
-protected:  // control bar embedded members
-	CToolBar          m_wndToolBar;
-	CStatusBar        m_wndStatusBar;
 
 // Generated message map Methods
 protected:
