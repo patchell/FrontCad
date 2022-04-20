@@ -3,6 +3,9 @@
 
 // CMyToolBarSplitter
 
+#define TOOLBAR_PANE		0,0
+#define TOOLBAR_MAINPANE	1,0
+
 class CMyToolBarSplitter : public CSplitterWnd
 {
 	BOOL m_bToolBarVisible;
@@ -25,8 +28,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-#define TOOLBAR_PANE			0,0
-#define TOOLBAR_MAINPANE	1,0
 
 #define TOOLBAR				((CMyToolBarView*)GetPane(0, 0))
 

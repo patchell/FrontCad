@@ -739,6 +739,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 			GetGrid().IsSnapOn()
 		)
 	);
+	ToolBarSetMousePosition(GetCurrentMousePosition());
 	if (DidMouseLeaveWindow())
 	{
 		SetMouseLeftWindow(FALSE);

@@ -8,7 +8,7 @@ constexpr auto TOOLBAR_STATIC_Y = 801;
 
 class CMyToolBarView : public CWnd
 {
-	CStatic m_Static_X, m_Static_Y;
+	CStaticDouble m_Static_X, m_Static_Y;
 protected:
 	CMyToolBarView();
 	virtual ~CMyToolBarView();
@@ -21,7 +21,10 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 	void InitToolbar();
-
+	void SetToolBarPosition(CDoublePoint pos) {
+		m_Static_X.SetDoubleValue(pos.dX);
+		m_Static_Y.SetDoubleValue(pos.dY);
+	}
 protected:
 	DECLARE_MESSAGE_MAP()
 public:

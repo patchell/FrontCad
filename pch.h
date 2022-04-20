@@ -39,6 +39,7 @@
 #include "Lexer.h"
 #include "ComboBoxFontWeight.h"
 #include "MyBitmap.h"
+#include "StaticDouble.h"
 //-------------------------------------------------
 #include "MainFrm.h"
 #include "MoveObjects.h"

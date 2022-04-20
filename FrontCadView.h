@@ -116,6 +116,16 @@ public:
 		return rV;
 	}
 	MouseIsHere WhereIsMouse();
+	//------------------------------------------
+	// Tool Bar Methods
+	//------------------------------------------
+	void ToolBarSetMousePosition(CDoublePoint pos) {
+		GetMyFrame()->ToolBarSetPosition(pos);
+	}
+	//------------------------------------------
+	// Client Area Methods
+	//------------------------------------------
+
 	double GetClientWidth() {
 		//--------------------------------------
 		// returns the width of the client

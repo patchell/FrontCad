@@ -261,6 +261,7 @@
     <ClInclude Include="RulerView.h" />
     <ClInclude Include="Scale.h" />
     <ClInclude Include="StaticBitmap.h" />
+    <ClInclude Include="StaticDouble.h" />
     <ClInclude Include="StaticPreview.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -342,6 +343,7 @@
     <ClCompile Include="RulerView.cpp" />
     <ClCompile Include="Scale.cpp" />
     <ClCompile Include="StaticBitmap.cpp" />
+    <ClCompile Include="StaticDouble.cpp" />
     <ClCompile Include="StaticPreview.cpp" />
   </ItemGroup>
   <ItemGroup>

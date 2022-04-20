@@ -14,19 +14,34 @@ protected:
 	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
 	DECLARE_MESSAGE_MAP()
 public:
+	//------------------------------------------
+	// Ruler View Methods
+	//------------------------------------------
+	void ShowRulers(int nShow);
 	CRulerSplitterWnd* GetRulerSpliterWnd() { 
 		CRulerSplitterWnd* pRSW;
 
 		pRSW = &m_RulerSplitter;
 		return pRSW; 
 	}
+	//------------------------------------------
+	// Tool Bar Methods
+	//------------------------------------------
 	CMyToolBarSplitter* GetToolBarSplitterWnd() {
 		CMyToolBarSplitter* pTBSW;
 		pTBSW = &m_ToolBarSplitter;
 		return pTBSW;
 	}
+	CMyToolBarView* GetToolBarView() {
+		CMyToolBarView* pMTBV;
+		pMTBV = (CMyToolBarView*)GetToolBarSplitterWnd()->GetPane(TOOLBAR_PANE);
+		return pMTBV;
+	}
+	void ToolBarSetPosition(CDoublePoint pos)
+	{
+		GetToolBarView()->SetToolBarPosition(pos);
+	}
 	void InitToolBar();
-	void ShowRulers(int nShow);
 	void ShowToolBar(int nShow);
 };
 
