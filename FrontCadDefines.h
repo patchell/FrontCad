@@ -334,9 +334,21 @@ enum class WindowsMsg {
 	//-------------------------
 	WM_STOPAUTOSCROLL,
 	WM_RULER_MESSAGE,
-	WM_MAINFRAME_FINISHUPDATE
+	WM_MAINFRAME_FINISHUPDATE,
+	//--------------------------
+	// Messages From Tool Bar
+	//--------------------------
+	WM_FROM_TOOLBAR_MESSAGE
 };
 
+//----------------------------
+// WM_FROM_TOOLBAR_MESSAGE
+//	Submessages
+//---------------------------
+
+enum class ToolBarMsg {
+	ORIGIN_SEL_CHANGE
+};
 enum class WMarrowSubMsg {
 WM_ARROWATTRB_VALUE_L1,
 WM_ARROWATTRB_VALUE_L2,

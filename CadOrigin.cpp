@@ -455,7 +455,6 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
-	CFrontCadDoc* pDoc = 0;
 	CPoint MouseScreenCoordinate;
 
 	switch (DrawState)
@@ -494,8 +493,7 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		m_Origin = MousePos;
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
-		pDoc = GETVIEW()->GetDocument();
-		pDoc->AddOriginAtTail(this);
+		GETVIEW()->AddOriginAtTail(this);
 		GETVIEW()->EnableAutoScroll(0);
 		GETVIEW()->SetObjectTypes(new CCadOrigin);
 		GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));

@@ -30,6 +30,10 @@ END_MESSAGE_MAP()
 
 void CStaticDouble::SetDoubleValue(double v)
 {
+    //----------------------------------------
+    // Displays a double value in a CStatic
+    // Object
+    //----------------------------------------
     CString csValue;
 
     csValue.Format(_T("%8.3lf"), v);

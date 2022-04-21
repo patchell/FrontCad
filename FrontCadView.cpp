@@ -124,6 +124,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnUpdateDrawPlacebitmap)
 	ON_WM_MBUTTONDOWN()
 	ON_WM_MBUTTONUP()
+	ON_MESSAGE(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), &CFrontCadView::OnFromToolbarMessage)
 END_MESSAGE_MAP()
 
 
@@ -379,6 +380,26 @@ int CFrontCadView::SelectAnObject(CCadObject** ppObj, int n, CPoint p)
 	if (Id >= 3000) Id -= 3000;
 	else Id = -1;
 	return Id;
+}
+
+void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
+{
+	CFrontCadDoc* pDoc = GetDocument();
+
+	GetToolBarView()->AddOrigine(pObj);
+	pDoc->AddOriginAtFront(pObj);
+}
+
+void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
+{
+	CFrontCadDoc* pDoc = GetDocument();
+
+	GetToolBarView()->AddOrigine(pObj);
+	pDoc->AddOriginAtTail(pObj);
+}
+
+void CFrontCadView::RemoveOrigin(CCadOrigin* pObj)
+{
 }
 
 
@@ -2314,11 +2335,13 @@ void CFrontCadView::ZoomIn(CPoint point)
 	// returns:nothing
 	//-----------------------------------------
 	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
-	CDoublePoint Scaled, Unscaled, HsVs;
+	CDoublePoint Scaled, HsVs;
+	CPoint  Unscaled;
+
 	Scaled = ProcessMousePosition(point, GetGrid().GetSnapGrid(), PROC_MOUSE_POSISTION_SNAPPED);
 	GetGrid().ZoomIn();
-	Unscaled = (Scaled + GetOrigin()).ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
-	HsVs = CalculateHsVs(Unscaled.ToCPoint(), point);
+	Unscaled = Scaled.ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
+	HsVs = CalculateHsVs(Unscaled, point);
 	if (0 > HsVs.dX) HsVs.dX = 0.0;
 	if (0 > HsVs.dY) HsVs.dY = 0.0;
 	m_HScrollPos = HsVs.ToCPoint().x;
@@ -2348,11 +2371,13 @@ void CFrontCadView::ZoomOut(CPoint point)
 	// returns:nothing
 	//-----------------------------------------
 	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
-	CDoublePoint Scaled, Unscaled, HsVs;
+	CDoublePoint Scaled, HsVs;
+	CPoint Unscaled;
+
 	Scaled = ProcessMousePosition(point, GetGrid().GetSnapGrid(), PROC_MOUSE_POSISTION_SNAPPED);
 	GetGrid().ZoomOut();
-	Unscaled = (Scaled + GetOrigin()).ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
-	HsVs = CalculateHsVs(Unscaled.ToCPoint(), point);
+	Unscaled = Scaled.ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
+	HsVs = CalculateHsVs(Unscaled, point);
 	if (0.0 > HsVs.dX) HsVs.dX = 0.0;
 	if (0.0 > HsVs.dY) HsVs.dY = 0;
 	m_HScrollPos = HsVs.ToCPoint().x;
@@ -2535,4 +2560,21 @@ void CFrontCadView::OnMButtonUp(UINT nFlags, CPoint point)
 {
 	EnableAutoScroll(FALSE);
 	CChildViewBase::OnMButtonUp(nFlags, point);
+}
+
+
+afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Data)
+{
+	ToolBarMsg submsg = ToolBarMsg(SubMessage);
+	CCadOrigin* pCORG = 0;
+	CFrontCadDoc* pDoc = GetDocument();
+
+	switch (submsg)
+	{
+	case ToolBarMsg::ORIGIN_SEL_CHANGE:
+		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
+		pDoc->SetCurrentOrigin(pCORG);
+		break;
+	}
+	return 0;
 }

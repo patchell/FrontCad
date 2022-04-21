@@ -43,7 +43,6 @@ class CFrontCadView : public CChildViewBase
 	MouseIsHere m_MouseLocation;
 	BOOL m_LeftMouseButtonDown;
 	//--------------------------------------------------------
-	CDoublePoint m_Origin;	//More complicated than it seems
 	unsigned m_ObjectEnables;
 	//----------------------------------
 	// Drawing Variables
@@ -122,6 +121,13 @@ public:
 	void ToolBarSetMousePosition(CDoublePoint pos) {
 		GetMyFrame()->ToolBarSetPosition(pos);
 	}
+	CComboBox& GetOriginSelectCombo() {
+		return GetMyFrame()->GetToolBarView()->GetOriginSelCB();
+	}
+	CMyToolBarView* GetToolBarView() {
+		return GetMyFrame()->GetToolBarView();
+	}
+	afx_msg LRESULT OnFromToolbarMessage(WPARAM wParam, LPARAM lParam);
 	//------------------------------------------
 	// Client Area Methods
 	//------------------------------------------
@@ -162,8 +168,6 @@ public:
 	virtual void RemoveObject(CCadObject* pObj);
 	virtual void AddObjectAtFrontIntoDoc(CCadObject* pObj);
 	virtual void AddObjectAtEndIntoDoc(CCadObject* pObj);
-	void SetOrigin(CDoublePoint o) { m_Origin = o; }
-	CDoublePoint GetOrigin(void) { return m_Origin; }
 	//-------------------------------------------------
 	// Selection of objects methods
 	//-------------------------------------------------
@@ -173,6 +177,12 @@ public:
 	void RemoveSelectedObjects(CCadObject* pO);
 	void ClearSelList();
 	int SelectAnObject(CCadObject** ppObj, int n, CPoint p);
+	//-----------------------------------------------
+	// CCadOrigin management
+	//-----------------------------------------------
+	void AddOriginAtHead(CCadOrigin* pObj);
+	void AddOriginAtTail(CCadOrigin* pObj);
+	void RemoveOrigin(CCadOrigin* pObj);
 	//-----------------------------------------------
 	// Moving Object Methods
 	//-----------------------------------------------

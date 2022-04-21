@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(CDlgTextProperties, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_FONT, &CDlgTextProperties::OnBnClickedButtonFont)
 	ON_STN_CLICKED(IDC_STATIC_TEXT_COLOR, &CDlgTextProperties::OnStnClickedStaticTextColor)
 	ON_STN_CLICKED(IDC_STATIC_BACKGROUND_COLOR, &CDlgTextProperties::OnStnClickedStaticBackgroundColor)
+	ON_CBN_SELCHANGE(IDC_COMBO_FONTWEIGHT, &CDlgTextProperties::OnSelchangeComboFontweight)
 END_MESSAGE_MAP()
 
 
@@ -149,4 +150,9 @@ int DoTextPropertiesDlg(CCadText* pCT)
 	Dlg.SetTextObject(pCT);
 	Id = Dlg.DoModal();
 	return Id;
+}
+
+void CDlgTextProperties::OnSelchangeComboFontweight()
+{
+	// TODO: Add your control notification handler code here
 }
