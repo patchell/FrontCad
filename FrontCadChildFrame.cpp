@@ -56,12 +56,12 @@ BOOL CFrontCadChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pC
 }
 
 
-void CFrontCadChildFrame::InitToolBar()
+void CFrontCadChildFrame::InitToolBar(CWnd* pWndMessageDest)
 {
 	CWnd* pWnd = 0;
 
 	pWnd = m_ToolBarSplitter.GetPane(TOOLBAR_PANE);
-	((CMyToolBarView*)pWnd)->InitToolbar();
+	((CMyToolBarView*)pWnd)->InitToolbar(pWndMessageDest);
 }
 
 void CFrontCadChildFrame::ShowRulers(int nShow)

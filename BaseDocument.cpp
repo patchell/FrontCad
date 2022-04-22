@@ -13,6 +13,11 @@ CBaseDocument::CBaseDocument()
 	m_pHead = 0;
 	m_pTail = 0;
 	m_nTotalObjects = 0;
+	m_nTotalOrigins = 0;
+	m_pCurrentOrigin = 0;
+	m_pOriginHead = 0;
+	m_pOriginTail = 0;
+	m_pDocView = 0;
 }
 
 CBaseDocument::~CBaseDocument()

@@ -382,26 +382,6 @@ int CFrontCadView::SelectAnObject(CCadObject** ppObj, int n, CPoint p)
 	return Id;
 }
 
-void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-
-	GetToolBarView()->AddOrigine(pObj);
-	pDoc->AddOriginAtFront(pObj);
-}
-
-void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-
-	GetToolBarView()->AddOrigine(pObj);
-	pDoc->AddOriginAtTail(pObj);
-}
-
-void CFrontCadView::RemoveOrigin(CCadOrigin* pObj)
-{
-}
-
 
 void CFrontCadView::AddToSelList(CCadObject* pO)
 {
@@ -750,17 +730,26 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	///     see MSDN docs for CChildViewBase::OnMouseMove
 	///-----------------------------------------------
 	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
+	CDoublePoint pointCenter;
+	CDoublePoint pointMousePos;
 
-	SetCurrentMousePosition(
-		ConvertMousePosition(
-			point,
-			GetScrollOffset(),
-			GetGrid().GetInchesPerPixel(),
-			GetGrid().GetSnapGrid(),
-			GetGrid().IsSnapOn()
-		)
+	pointMousePos = ConvertMousePosition(
+		point,
+		GetScrollOffset(),
+		GetGrid().GetInchesPerPixel(),
+		GetGrid().GetSnapGrid(),
+		GetGrid().IsSnapOn()
 	);
-	ToolBarSetMousePosition(GetCurrentMousePosition());
+	SetCurrentMousePosition(pointMousePos);
+	if (pDoc->GetCurrentOrigin())
+	{
+		pDoc->GetCurrentOrigin()->GetCenter(pointCenter);
+		pointCenter.dX = pointMousePos.dX - pointCenter.dX;
+		pointCenter.dY = pointCenter.dY - pointMousePos.dY;
+		ToolBarSetMousePosition(pointCenter);
+	}
+	else
+		ToolBarSetMousePosition(GetCurrentMousePosition());
 	if (DidMouseLeaveWindow())
 	{
 		SetMouseLeftWindow(FALSE);
@@ -859,10 +848,10 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 
 void CFrontCadView::OnInitialUpdate()
 {
-	static int OnlyOnce = 0;
-
 	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
 	CFrontCadDoc *pDoc = GetDocument();
+	
+	pDoc->SetDocView(this);
 	SetObjectEnables(
 		OBJECT_ENABLE_ROUNDEDRECT |
 		OBJECT_ENABLE_POLYGON |
@@ -874,7 +863,7 @@ void CFrontCadView::OnInitialUpdate()
 		OBJECT_ENABLE_ORIGIN 
 	);
 	//-----------------------------------------
-	GetMyFrame()->InitToolBar();
+	GetMyFrame()->InitToolBar(this);
 	//------------------------------------------
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
 	UpdateScrollbarInfo();
@@ -920,6 +909,7 @@ void CFrontCadView::OnInitialUpdate()
 	m_TrackMouseEvent.dwHoverTime = INFINITE;
 	m_TrackMouseEvent.hwndTrack = m_hWnd;
 
+	PostMessage(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), UINT(ToolBarMsg::CREATE_FIRST_ORIGIN), 0);
 	CChildViewBase::OnInitialUpdate();
 }
 
@@ -2563,16 +2553,55 @@ void CFrontCadView::OnMButtonUp(UINT nFlags, CPoint point)
 }
 
 
+//--------------------------------------------------------------
+// Tool Bar Methods
+//--------------------------------------------------------------
+
+void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
+{
+	CFrontCadDoc* pDoc = GetDocument();
+
+	GetToolBarView()->AddOrigine(pObj);
+	pDoc->AddOriginAtFront(pObj);
+}
+
+void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
+{
+	CFrontCadDoc* pDoc = GetDocument();
+
+	GetToolBarView()->AddOrigine(pObj);
+	pDoc->AddOriginAtTail(pObj);
+}
+
+void CFrontCadView::RemoveOrigin(CCadOrigin* pObj)
+{
+}
+
 afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Data)
 {
 	ToolBarMsg submsg = ToolBarMsg(SubMessage);
 	CCadOrigin* pCORG = 0;
 	CFrontCadDoc* pDoc = GetDocument();
-
+	CString csName;
+	
 	switch (submsg)
 	{
 	case ToolBarMsg::ORIGIN_SEL_CHANGE:
 		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
+		pDoc->SetCurrentOrigin(pCORG);
+		GetRulerInfo().SetOrigin(pCORG);
+		break;
+	case ToolBarMsg::CREATE_FIRST_ORIGIN:
+		//--------------------------------------------
+		// Add an origin object in the lower left
+		// Hand corner
+		//------------------------------------------
+		pCORG = new CCadOrigin;
+		csName = _T("Default");
+
+		pCORG->Create(0.0, GetDocSize().dCY, csName);
+		AddOriginAtHead(pCORG);
+		GetOriginSelectCombo().SetCurSel(0);
 		pDoc->SetCurrentOrigin(pCORG);
 		break;
 	}

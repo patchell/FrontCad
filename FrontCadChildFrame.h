@@ -41,7 +41,7 @@ public:
 	{
 		GetToolBarView()->SetToolBarPosition(pos);
 	}
-	void InitToolBar();
+	void InitToolBar(CWnd* pWnd);
 	void ShowToolBar(int nShow);
 };
 

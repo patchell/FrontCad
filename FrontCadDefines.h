@@ -347,7 +347,8 @@ enum class WindowsMsg {
 //---------------------------
 
 enum class ToolBarMsg {
-	ORIGIN_SEL_CHANGE
+	ORIGIN_SEL_CHANGE,
+	CREATE_FIRST_ORIGIN
 };
 enum class WMarrowSubMsg {
 WM_ARROWATTRB_VALUE_L1,

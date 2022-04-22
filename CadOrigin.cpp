@@ -17,6 +17,14 @@ CCadOrigin::~CCadOrigin()
 {
 }
 
+
+void CCadOrigin::Create(double x, double y, CString& csName)
+{
+	SetName(csName);
+	m_Origin.dX = x;
+	m_Origin.dY = y;
+}
+
 void CCadOrigin::Move(CDoubleSize Diff)
 {
 	//***************************************************
@@ -197,64 +205,6 @@ CDoublePoint CCadOrigin::GetReference()
 	return m_Origin;
 }
 
-void CCadOrigin::AddObject(CCadObject *pO)
-{
-	//***************************************************
-	// AddObject
-	//	Adds a child object to an object.  This Method
-	// is not supported by all objects, because they just
-	// can have children.  A good example of an object
-	// that has children would be a library object
-	//
-	// parameters:
-	//	pO.....pointer to object to add.
-	//
-	// return value:none
-	//--------------------------------------------------
-}
-
-void CCadOrigin::RemoveObject(CCadObject *pO)
-{
-	//***************************************************
-	// RemoveObject
-	//	Removes a child object from an object
-	//
-	// parameters:
-	//	pO.....pointer to object to remove
-	//
-	// return value:none
-	//--------------------------------------------------
-
-}
-
-CCadObject *CCadOrigin::GetHead(void)
-{
-	//***************************************************
-	// GetHead
-	//	Retrieves the head pointer to a list of children
-	// in the object
-	// parameters:
-	//
-	// return value: Head pointer to children
-	//--------------------------------------------------
-	return 0;
-}
-
-
-
-CDoubleRect& CCadOrigin::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	return rect;
-}
 
 CString& CCadOrigin::GetTypeString(void)
 {
@@ -314,16 +264,6 @@ CCadObject * CCadOrigin::CopyObject(void)
 	return pCO;
 }
 
-void CCadOrigin::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
-{
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
 void CCadOrigin::RenderEnable(int e)
 {
 	//***************************************************
@@ -338,18 +278,6 @@ void CCadOrigin::RenderEnable(int e)
 	// return value:
 	//--------------------------------------------------
 
-}
-
-CDoublePoint CCadOrigin::GetCenter()
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	return m_Origin;
 }
 
 

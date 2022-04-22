@@ -59,6 +59,7 @@ public:
 	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
 	CCadObject* GetReferenceObject() { return m_pReferenceObj; }
 	CString& GetName() { return m_csName; }
+	void SetName(CString& csName) { m_csName = csName; }
 	UINT GetId() { return m_Id; }
 	ObjectType GetType(void) { return m_Type; }
 	void SetType(ObjectType type) { m_Type = type; }

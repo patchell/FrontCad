@@ -2,10 +2,12 @@
 
 
 // CBaseDocument class
+class CFrontCadView;
 
 class CBaseDocument : public CDocument
 {
 	CString csDocName;
+	CFrontCadView* m_pDocView;
 	//------- Drawing Objects --------
 	CCadObject* m_pHead;
 	CCadObject* m_pTail;
@@ -28,6 +30,8 @@ public:
 	{ 
 		return 0; 
 	};
+	void SetDocView(CFrontCadView* pFCV) { m_pDocView = pFCV; }
+	CFrontCadView* GetDocView() { return m_pDocView; }
 	//-------------- Drawing Objects ----------------
 	virtual void AddObjectAtFront(CCadObject* pObj);
 	virtual void AddObjectAtEnd(CCadObject* pObj);

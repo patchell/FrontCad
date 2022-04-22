@@ -6,7 +6,6 @@ class CFrontCadDoc : public CBaseDocument
 {
 	CDoubleSize m_DocSize;
 	CDoubleSize m_PaperSize;
-	CString m_DocName;
 	DECLARE_DYNCREATE(CFrontCadDoc)
 public:
 	CFrontCadDoc();
@@ -31,8 +30,6 @@ public:
 	CDoubleSize GetDocSize() { return m_DocSize; }
 	void SetPaperSize(CDoubleSize szPaper) { m_PaperSize = szPaper; }
 	CDoubleSize GetPaperSize() { return m_PaperSize; }
-	void SetDocName(CString& csName) { m_DocName = csName; }
-	CString& GetDocName() { return m_DocName; }
 protected:
 	virtual BOOL OnNewDocument();
 

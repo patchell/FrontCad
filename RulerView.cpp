@@ -153,6 +153,9 @@ void CRulerView::DrawTicker(
 	int AddLableEvery = 1;
 	int LabelCount = 1;
 
+	//-------------------------------------------
+	// Create Drawing Objects, pens, brushes etc
+	//-------------------------------------------
 	brushBK.CreateSolidBrush(RGB(64,0,64)/*GetRulersInfo()->GetBackGroundColor()*/);
 	oldBrush = pDC->SelectObject(&brushBK);
 	GetClientRect(&rectClient);
@@ -160,6 +163,9 @@ void CRulerView::DrawTicker(
 	pDC->SelectObject(oldBrush);
 
 	CScale RulerPixPerIn = GetRulersInfo()->GetGrid()->GetPixelsPerInch();
+	//--------------------------------------------
+	// Calculate parameters for type of ruler
+	//--------------------------------------------
 	switch (GetRulerType())
 	{
 	case RT_HORIZONTAL:

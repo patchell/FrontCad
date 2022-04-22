@@ -72,11 +72,13 @@ BOOL CMyToolBarView::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 }
 
-void CMyToolBarView::InitToolbar()
+void CMyToolBarView::InitToolbar(CWnd* pWnd)
 {
 	//----------------------------------------
 	// InitToolbar
 	//	Add controls to the tool bar, etc
+	//----------------------------------------
+	m_pWndMessageDestination = pWnd;
 	//----------------------------------------
 	// X,Y display
 	//----------------------------------------
@@ -92,11 +94,8 @@ void CMyToolBarView::InitToolbar()
 	m_Static_Y.ShowWindow(1);
 	UL.x += Sz.cx + Spacing;
 	m_Combo_OriginSelector.Create(WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, CRect(UL, Sz), this, IDC_COMBO_ORIGINLIST);
-	m_Combo_OriginSelector.InsertString(m_ComboOriginIndex++, _T("None"));
-	m_Combo_OriginSelector.InsertString(m_ComboOriginIndex++, _T("Next"));
 	m_Combo_OriginSelector.EnableWindow(1);
 	m_Combo_OriginSelector.ShowWindow(1);
-	m_Combo_OriginSelector.SetCurSel(0);
 }
 
 //------------------------------------------------
@@ -121,13 +120,18 @@ CCadOrigin* CMyToolBarView::GetOrigin(int index)
 
 void CMyToolBarView::OnComboOriginSel()
 {
-	printf("Combo Box Sel Change\n");
-//	MessageBox(_T("Selected"), _T("Combo"));
+	int CurSel;
+
+	CurSel = m_Combo_OriginSelector.GetCurSel();
+	m_pWndMessageDestination->PostMessageW(
+		UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), 
+		UINT(ToolBarMsg::ORIGIN_SEL_CHANGE), 
+		CurSel
+	);
 }
 
 
 void CMyToolBarView::OnMouseMove(UINT nFlags, CPoint point)
 {
-	printf("Tool Bar Mouse Move\n");
 	CWnd::OnMouseMove(nFlags, point);
 }

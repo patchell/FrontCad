@@ -11,6 +11,7 @@ constexpr auto IDC_COMBO_ORIGINLIST = TOOLBAR_ID_BASE+2;
 
 class CMyToolBarView : public CWnd
 {
+	CWnd* m_pWndMessageDestination;
 	CStaticDouble m_Static_X, m_Static_Y;
 	CComboBox m_Combo_OriginSelector;
 	int m_ComboOriginIndex;
@@ -25,7 +26,7 @@ public:
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
 #endif
-	void InitToolbar();
+	void InitToolbar(CWnd* pWnd);
 	void AddOrigine(CCadOrigin* pORG);
 	CCadOrigin* GetOrigin(int index);
 	void SetToolBarPosition(CDoublePoint pos) {

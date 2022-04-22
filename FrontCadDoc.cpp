@@ -40,8 +40,8 @@ BOOL CFrontCadDoc::OnNewDocument()
 		rV = TRUE;
 		SetPaperSize(CDoubleSize(Dlg.GetPaperSizeX(), Dlg.GetPaperSizeY()));
 		SetDocSize(CDoubleSize(Dlg.GetDrawingSizeX(), Dlg.GetDrawingSizeY()));
-		SetDocName(Dlg.GetDocumentName());
-		SetTitle(GetDocName());
+		SetDocumentName(Dlg.GetDocumentName());
+		SetTitle(GetDocumentName());
 	}
 	return rV;
 }
