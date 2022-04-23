@@ -27,11 +27,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-#define HRULER				0,1
-#define VRULER				1,0
-#define RULERCORNER			0,0
-#define MAINPANE			1,1
-#define HORIZONTALRULER		((CRulerView*)GetPane(0, 1))
-#define VERTICALRULER		((CRulerView*)GetPane(1, 0))
-#define CORNER				((CRulerCornerView*)GetPane(0, 0))
-#define MAINVIEW			((CRulerView*)GetPane(1, 1))
+#define HRULER				1,1
+#define VRULER				0,0
+#define RULERCORNER			1,0
+#define MAINPANE			0,1
+#define HORIZONTALRULER		((CRulerView*)GetPane(HRULER))
+#define VERTICALRULER		((CRulerView*)GetPane(VRULER))
+#define CORNER				((CRulerCornerView*)GetPane(RULERCORNER))
+#define MAINVIEW			((CFrontCadView*)GetPane(MAINPANE))

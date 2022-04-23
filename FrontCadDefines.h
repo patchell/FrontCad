@@ -314,7 +314,7 @@ enum class ObjectDrawState {
 	VERTEX_GRABBED
 };
 //--------------------------------------------
-// Ruler Defines
+// Ruler  And ToolBar Defines
 // -------------------------------------------
 
 constexpr auto RULER_SIZE = (32);
@@ -322,6 +322,13 @@ constexpr auto RULER_SNAP_TICK_LEN = 8;
 constexpr auto RULER_HALF_TICK_LEN = 12;
 constexpr auto RULER_MAJOR_TICK_LEN = 16;
 constexpr auto RULER_FONT_HEIGHT = 16;
+
+constexpr auto TOOLBAR_HIEGHT = 32;
+
+constexpr auto TOOLBAR_ID_BASE = 1250;
+constexpr auto IDC_STATIC_TOOLBAR_X = TOOLBAR_ID_BASE;
+constexpr auto IDC_STATIC_TOOLBAR_Y = TOOLBAR_ID_BASE + 1;
+constexpr auto IDC_COMBO_ORIGINLIST = TOOLBAR_ID_BASE + 2;
 
 //--------------------------------------------
 // Windows User Messages

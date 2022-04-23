@@ -1,11 +1,5 @@
 #pragma once
 
-constexpr auto TOOLBAR_HIEGHT = 32;
-
-constexpr auto TOOLBAR_ID_BASE = 1250;
-constexpr auto IDC_STATIC_TOOLBAR_X = TOOLBAR_ID_BASE;
-constexpr auto IDC_STATIC_TOOLBAR_Y = TOOLBAR_ID_BASE+1;
-constexpr auto IDC_COMBO_ORIGINLIST = TOOLBAR_ID_BASE+2;
 
 // CMyToolBar
 

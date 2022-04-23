@@ -152,6 +152,7 @@ void CRulerView::DrawTicker(
 	CBrush brushBK, * oldBrush;
 	int AddLableEvery = 1;
 	int LabelCount = 1;
+	CDoublePoint pointCent;
 
 	//-------------------------------------------
 	// Create Drawing Objects, pens, brushes etc
@@ -176,7 +177,7 @@ void CRulerView::DrawTicker(
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCX;
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)
 		FirstTick = GETAPP.RoundUpToNearest(
-			GetRulersInfo()->GetUpperLeft().dX,
+			GetRulersInfo()->GetUpperLeft().dX - GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dX,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCX
 		);
 		AxisType = Axis::X;
@@ -195,7 +196,7 @@ void CRulerView::DrawTicker(
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCY;
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)		break;
 		FirstTick = GETAPP.RoundUpToNearest(
-			GetRulersInfo()->GetUpperLeft().dY,
+			GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY - GetRulersInfo()->GetUpperLeft().dY,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCY
 		);
 		AxisType = Axis::Y;

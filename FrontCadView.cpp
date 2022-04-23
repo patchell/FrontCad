@@ -53,6 +53,9 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_WM_ERASEBKGND()
 	ON_WM_MOUSELEAVE()
 	ON_WM_TIMER()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_MESSAGE(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), &CFrontCadView::OnFromToolbarMessage)
 	//----- Menu Draw Objects ------
 	ON_COMMAND(ID_DRAW_ARCANGLE, &CFrontCadView::OnDrawArcangle)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ARCANGLE, &CFrontCadView::OnUpdateDrawArcangle)
@@ -122,9 +125,6 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_ZOOMOUT, &CFrontCadView::OnUpdateViewZoomout)
 	ON_COMMAND(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnDrawPlaceBitmap)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnUpdateDrawPlacebitmap)
-	ON_WM_MBUTTONDOWN()
-	ON_WM_MBUTTONUP()
-	ON_MESSAGE(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), &CFrontCadView::OnFromToolbarMessage)
 END_MESSAGE_MAP()
 
 
@@ -729,7 +729,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	/// parameters:
 	///     see MSDN docs for CChildViewBase::OnMouseMove
 	///-----------------------------------------------
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
+	CFrontCadDoc* pDoc = GetDocument();
 	CDoublePoint pointCenter;
 	CDoublePoint pointMousePos;
 
@@ -753,8 +753,13 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	if (DidMouseLeaveWindow())
 	{
 		SetMouseLeftWindow(FALSE);
-//		printf("Mouse Entered Window\n");
+//		printf("Mouse Entered Window > MMB=%d\n", m_MiddleMouseButtonDown);
 		TrackMouseEvent(&m_TrackMouseEvent);
+		if (IsMiddleMouseButtonDown())
+		{
+			SetMiddleMouseButtonDown(FALSE);
+			EnableAutoScroll(0);
+		}
 	}
 	switch (m_DrawMode)
 	{
@@ -850,7 +855,11 @@ void CFrontCadView::OnInitialUpdate()
 {
 	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
 	CFrontCadDoc *pDoc = GetDocument();
-	
+	static CCadOrigin Org;
+	CString csName = _T("Kluge");
+
+	Org.Create(0, 0, csName);
+	GetRulerInfo().SetOrigin(&Org);
 	pDoc->SetDocView(this);
 	SetObjectEnables(
 		OBJECT_ENABLE_ROUNDEDRECT |
@@ -2453,6 +2462,7 @@ CDoublePoint CFrontCadView::ProcessMousePosition(
 void CFrontCadView::OnMouseLeave()
 {
 	SetMouseLeftWindow(TRUE);
+//	printf("Mouse Left the Building MB = %d\n", m_MiddleMouseButtonDown);
 //	CChildViewBase::OnMouseLeave();
 }
 
@@ -2507,7 +2517,7 @@ void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 	//-----------------------------------------
 	MouseIsHere MouseLocation;
 
-	if (m_AutoScroll)
+	if (IsAutoScrollEnabled())
 	{
 		MouseLocation = WhereIsMouse();
 		switch (MouseLocation)
@@ -2541,13 +2551,15 @@ void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 
 void CFrontCadView::OnMButtonDown(UINT nFlags, CPoint point)
 {
-
+	SetMiddleMouseButtonDown(TRUE);
 	EnableAutoScroll(TRUE);
 	CChildViewBase::OnMButtonDown(nFlags, point);
 }
 
+
 void CFrontCadView::OnMButtonUp(UINT nFlags, CPoint point)
 {
+	SetMiddleMouseButtonDown(FALSE);
 	EnableAutoScroll(FALSE);
 	CChildViewBase::OnMButtonUp(nFlags, point);
 }
@@ -2607,3 +2619,4 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 	}
 	return 0;
 }
+

@@ -36,12 +36,12 @@ class CFrontCadView : public CChildViewBase
 	//----------------Keyboard/Mouse------------------------
 	BOOL m_ControlKeyDown;	//true when control key is pushed
 	BOOL m_ShiftKeyDown;	// true when shift key is pushed
-	BOOL m_MouseDown;	//left mouse button is down
 	CDoublePoint m_CurMousePos;	//mouse position raw, screen units
 	TRACKMOUSEEVENT m_TrackMouseEvent;
 	BOOL m_MouseLeftWindow;
 	MouseIsHere m_MouseLocation;
-	BOOL m_LeftMouseButtonDown;
+	BOOL m_LeftMouseButtonDown;	//left mouse button is down
+	BOOL m_MiddleMouseButtonDown;	//Ture if button down
 	//--------------------------------------------------------
 	unsigned m_ObjectEnables;
 	//----------------------------------
@@ -91,6 +91,8 @@ public:
 	BOOL IsControlKeyDown() { return m_ControlKeyDown; }
 	BOOL IsShiftKeyDown() { return m_ShiftKeyDown; }
 	BOOL IsLeftMouseButtonDown() { return m_LeftMouseButtonDown; }
+	BOOL IsMiddleMouseButtonDown() { return m_MiddleMouseButtonDown; }
+	void SetMiddleMouseButtonDown(BOOL f) { m_MiddleMouseButtonDown = f; }
 	CDoublePoint GetCurrentMousePosition() { return m_CurMousePos; }
 	void SetCurrentMousePosition(CDoublePoint DP) { m_CurMousePos = DP; }
 	CDoublePoint ProcessMousePosition(CPoint point, CDoubleSize SnapGrid, int Which);

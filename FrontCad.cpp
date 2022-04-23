@@ -940,3 +940,17 @@ void CFrontCadApp::OnFileOpen()
 {
 
 }
+
+BOOL CFrontCadApp::PreTranslateMessage(MSG* pMsg)
+{
+	switch (pMsg->message)
+	{
+	case WM_NCMBUTTONDOWN:
+		printf("Middle Button Down NC\n");
+		break;
+	case WM_NCMBUTTONUP:
+		printf("Middle Button UP NC\n");
+		break;
+	}
+	return CWinApp::PreTranslateMessage(pMsg);
+}

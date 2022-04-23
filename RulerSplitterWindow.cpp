@@ -33,21 +33,21 @@ BOOL CRulerSplitterWnd::CreateRulers(CWnd* pParent, CCreateContext* pContext, DW
 {
 	BOOL rV = FALSE;
 
-	printf("Create Spliter panes\n");
+	printf("Create Ruler Spliter panes\n");
 
 	if (CreateStatic(pParent, 2, 2, dwStyle, nID))
 	{
 		//corner
-		if (CreateView(0, 0, RUNTIME_CLASS(CRulerCornerView), CSize(0, 0), pContext))
+		if (CreateView(RULERCORNER, RUNTIME_CLASS(CRulerCornerView), CSize(0, 0), pContext))
 		{
 			// Horizontal Ruler
-			if (CreateView(0, 1, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
+			if (CreateView(HRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
 			{
 				// Vertical Ruler
-				if (CreateView(1, 0, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
+				if (CreateView(VRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
 				{
 					//remaining (main) view
-					if (CreateView(1, 1, pContext->m_pNewViewClass, CSize(0, 0), pContext))
+					if (CreateView(MAINPANE, pContext->m_pNewViewClass, CSize(0, 0), pContext))
 					{
 						SetColumnInfo(0, 0, 0);
 						SetRowInfo(0, 0, 0);
@@ -69,9 +69,14 @@ void CRulerSplitterWnd::ShowRulers(BOOL bShow, BOOL bSave)
 {
 	int nSize = (bShow) ? RULER_SIZE : 0;
 	int nSizeBorder = (bShow) ? 3 : 1;
+	CRect rect;
+	int szScrollBar = GetSystemMetrics(SM_CYHSCROLL);
 
-	SetRowInfo(0, nSize, 0);
+	GetParent()->GetClientRect(&rect);
+	SetRowInfo(0, rect.Height() -  nSize - szScrollBar - TOOLBAR_HIEGHT,0);
+	SetRowInfo(1, nSize, 0);
 	SetColumnInfo(0, nSize, 0);
+	SetColumnInfo(1, rect.Width() - nSize, 0);
 	m_cxSplitterGap = nSizeBorder;
 	m_cySplitterGap = nSizeBorder;
 	m_bRulersVisible = (bSave) ? bShow : m_bRulersVisible;
