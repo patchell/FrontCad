@@ -296,15 +296,29 @@ public:
 	//------------------------------------------------------
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
-	void DoVScroll(double Vinches, BOOL Update = TRUE);
-	void DoHScroll(double change, BOOL Update = TRUE);
+	void DoVScroll(double Yinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
+	void DoHScroll(double Xinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
 	void UpdateScrollbarInfo(CDoublePoint ULHC);
 	void GetDeviceScrollSizes(CSize& sizePage, CSize& sizeLine);
 	void EnableAutoScroll(BOOL flag);
 	SCROLLINFO& GetHScrollBarInfo() { return m_HScrollInfo; }
 	SCROLLINFO& GetVScrollBarInfo() { return m_VScrollInfo; }
-	int GetHScrollPos() { return GetHScrollBarInfo().nPos; }
-	int GetVScrollPos() { return GetVScrollBarInfo().nPos; }
+	double GetHScrollPos(int nPos) { 
+		double max;
+		double result;
+
+		max = double(GetHScrollBarInfo().nMax);
+		result = double(nPos) / max;
+		return result; 
+	}
+	double GetVScrollPos(int nPos) { 
+		double max;
+		double result;
+
+		max = double(GetVScrollBarInfo().nMax);
+		result = double(nPos) / max;
+		return result;
+	}
 	BOOL IsAutoScrollEnabled() { return m_AutoScroll; }
 	CDoublePoint& CalculateNewULHC(
 		CScale CurrentScale,

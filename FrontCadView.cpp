@@ -2000,6 +2000,7 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	double cY = pDoc->GetDocSize().dCY;
 	int Delta = 0;
 	BOOL Update = TRUE;
+	BOOL Absolute = FALSE;
 	double Yinches = 0.0;
 
 	switch (nSBCode)
@@ -2011,8 +2012,8 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Yinches = -GetGrid().GetMajorGrid().dCY;
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - GetVScrollPos();	//units are pixels
-		Yinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleY();
+		Absolute = TRUE;
+		Yinches = GetVScrollPos(nPos)* pDoc->GetDocHieght();
 		Yinches = GETAPP.Snap(Yinches, GetGrid().GetSnapGrid().dCY);
 		break;
 	case SB_LINEDOWN:
@@ -2024,19 +2025,30 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	case SB_ENDSCROLL:
 		Update = FALSE;
 		break;
+	case SB_THUMBPOSITION:
+		Absolute = TRUE;
+		Update = FALSE;
+		break;
 	}
-	DoVScroll(Yinches, Update);
+	DoVScroll(Yinches, Absolute, Update);
 	CChildViewBase::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
-void CFrontCadView::DoVScroll(double Vinches, BOOL Update)
+void CFrontCadView::DoVScroll(double Yinches, BOOL Absolute, BOOL Update)
 {
 	CFrontCadDoc* pDoc = GetDocument();;
 	CDoublePoint UL;
 
 	if (Update)
 	{
-		UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Vinches);
+		if (Absolute)
+		{
+			UL = GetRulerInfo().GetUpperLeft();
+			UL.dY = Yinches;
+		}
+		else
+			UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
+
 		if (UL.dY < 0.0)
 			UL.dY = 0.0;
 		else if (UL.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
@@ -2073,6 +2085,7 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	double dCX = pDoc->GetDocSize().dCX;
 	int Delta = 0;
 	BOOL Update = TRUE;
+	BOOL Absolute = FALSE;
 	double Xinches = 0.0;
 
 	switch (nSBCode)
@@ -2084,11 +2097,12 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Xinches = -GetGrid().GetMajorGrid().dCX;
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - GetHScrollPos();	//units are pixels
-		Xinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleX();
+		Absolute = TRUE;
+		Xinches = GetHScrollPos(nPos) * pDoc->GetDocWidth();
 		Xinches = GETAPP.Snap(Xinches, GetGrid().GetSnapGrid().dCX);
 		break;
 	case SB_THUMBPOSITION:
+		Absolute = TRUE;
 		Update = FALSE;
 		break;
 	case SB_LINERIGHT:
@@ -2098,21 +2112,29 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Xinches = GetGrid().GetMajorGrid().dCX;
 		break;
 	case SB_ENDSCROLL:
+		printf("End ");
 		Update = FALSE;
 		break;
 	}
+	printf("nPos = %d  Xinches = %8.3lf  Update=%d\n", nPos, Xinches,Update);
 	DoHScroll(Xinches, Update);
 	CChildViewBase::OnHScroll(nSBCode, nPos, pScrollBar);
 }
 
-void CFrontCadView::DoHScroll(double Xinches, BOOL Update)
+void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 {
 	CDoublePoint UL;
 	CFrontCadDoc* pDoc = GetDocument();
 
 	if (Update)
 	{
-		UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
+		if (Absolute)
+		{
+			UL = GetRulerInfo().GetUpperLeft();
+			UL.dX = Xinches;
+		}
+		else
+			UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
 		if (UL.dX < 0.0)
 			UL.dX = 0.0;
 		else if (UL.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
@@ -2564,16 +2586,16 @@ void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 		switch (MouseLocation)
 		{
 		case MouseIsHere::UPPER:
-			DoVScroll(-GetGrid().GetSnapGrid().dCY, TRUE);
+			DoVScroll(-GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
 			break;
 		case MouseIsHere::LOWER:
-			DoVScroll(GetGrid().GetSnapGrid().dCY, TRUE);
+			DoVScroll(GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
 			break;
 		case MouseIsHere::LEFT:
-			DoHScroll(-GetGrid().GetSnapGrid().dCX, TRUE);
+			DoHScroll(-GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
 			break;
 		case MouseIsHere::RIGHT:
-			DoHScroll(GetGrid().GetSnapGrid().dCX, TRUE);
+			DoHScroll(GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
 			break;
 		case MouseIsHere::UPPERLEFT:
 			break;
