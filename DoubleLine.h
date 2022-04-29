@@ -18,7 +18,7 @@ public:
 		dP2 = DOUBLEPOINT(P2);
 	}
 	~CDoubleLine() {}
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	CDoublePoint& GetPoint(LinePoint Type);
 	CDoublePoint MidPoint() {
 		return CDoublePoint(dP1).MidPoint(dP2);

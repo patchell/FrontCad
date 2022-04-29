@@ -98,9 +98,10 @@ void CStaticPreview::OnPaint()
 	}
 	dc.SelectObject(oldPen);
 	MODE mode;
+	CDoublePoint ulhc;
 	while(pO)
 	{
-		pO->Draw(&dc, mode, m_Offset, m_Scale);
+		pO->Draw(&dc, mode, ulhc, m_Scale);
 		pO = pO->GetNext();
 	}
 }
@@ -150,7 +151,7 @@ void CStaticPreview :: AutoScale(CDoubleRect &rect)
 	CDoubleSize ObjectSize;
 	CDoublePoint pointScratch;
 	CPoint ClientCenterPoint;
-
+	CDoublePoint dblPtZero;
 
 	GetClientRect(&RectClient);
 	ClientCenterPoint = RectClient.CenterPoint();
@@ -161,5 +162,5 @@ void CStaticPreview :: AutoScale(CDoubleRect &rect)
 	// offset value so that the drawing
 	// can start inside of the rectangle
 	//-----------------------------------
-	m_Offset = rect.GetCenter(pointScratch).ToPixelPoint(CSize(0, 0), m_Scale) - ClientCenterPoint;
+	m_Offset = rect.GetCenter(pointScratch).ToPixelPoint(dblPtZero, m_Scale) - ClientCenterPoint;
 }

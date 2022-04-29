@@ -2,6 +2,8 @@
 
 CCadPoint::CCadPoint()
 {
+	dX = 0.0;
+	dY = 0.0;
 }
 
 CCadPoint::CCadPoint(double x, double y)
@@ -41,6 +43,6 @@ BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
 	return rV;
 }
 
-void CCadPoint::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadPoint::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 }

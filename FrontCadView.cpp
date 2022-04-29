@@ -139,10 +139,11 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
 	CCadObject* pDrawingObjectList, * pOriginList;
-	CSize Offset = -GetScrollOffset();
+	CDoublePoint ULHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
 
+	ULHC = GetRulerInfo().GetUpperLeft();
 	GetClientRect(&rectClient);
 	memDC.CreateCompatibleDC(pDC);
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
@@ -156,15 +157,15 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	memDC.FillRect(&rectClient, &br);
 
 	UprLHCorner = GetRulerInfo().GetUpperLeft();
-	GetGrid().Draw(&memDC, mode, Offset, Scale, rectClient, UprLHCorner);
+	GetGrid().Draw(&memDC, mode, UprLHCorner, Scale, rectClient);
 	while (pDrawingObjectList)
 	{
-		pDrawingObjectList->Draw(&memDC, mode, Offset, Scale);
+		pDrawingObjectList->Draw(&memDC, mode, UprLHCorner, Scale);
 		pDrawingObjectList = pDrawingObjectList->GetNext();
 	}
 	while (pOriginList)
 	{
-		pOriginList->Draw(&memDC, mode, Offset, Scale);
+		pOriginList->Draw(&memDC, mode, UprLHCorner, Scale);
 		pOriginList = pOriginList->GetNextOrigin();
 	}
 	if (GetObjectTypes().pCadObject)	//is an object being draw?
@@ -188,16 +189,16 @@ void CFrontCadView::OnDraw(CDC* pDC)
 			mode.DrawMode = ObjectDrawMode::ARCEND;
 			break;
 		}
-		GetObjectTypes().pCadObject->Draw(&memDC, mode, Offset, Scale);
+		GetObjectTypes().pCadObject->Draw(&memDC, mode, UprLHCorner, Scale);
 	}
 //	if (GetMoveObjectes())	//are there any objects being moved?
-//		GetMoveObjectes()->Draw(&memDC, Offset, Scale);
+//		GetMoveObjectes()->Draw(&memDC, UprLHCorner, Scale);
 //	pDoc->DrawReference(&memDC, Offset, Scale, rectClient);
 	DrawCursor(
 		&memDC, 
 		GetCurrentMousePosition(),
 		&rectClient,
-		Offset,
+		UprLHCorner,
 		Scale,
 		RGB(255, 255, 255)
 	);
@@ -412,16 +413,25 @@ void CFrontCadView::AddToSelList(CCadObject* pO)
 
 BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
+	CDoublePoint pointMousePos;
 	ScreenToClient(&pt);
-	
+
+	pointMousePos = ConvertMousePosition(
+		pt,
+		GetRulerInfo().GetUpperLeft(),
+		GetGrid().GetInchesPerPixel(),
+		GetGrid().GetSnapGrid(),
+		GetGrid().IsSnapOn()
+	);
+	SetCurrentMousePosition(pointMousePos);
 
 	if (IsShiftKeyDown())	//scroll up or down
 	{
-		DoVScroll(zDelta);
+		DoVScroll(double(zDelta)/120.0 * GetGrid().GetSnapGrid().dCX);
 	}
 	else if (IsControlKeyDown())	//scroll left or right
 	{
-		DoHScroll(zDelta);
+		DoHScroll(double(zDelta) / 120.0 * GetGrid().GetSnapGrid().dCY);
 	}
 	else
 	{
@@ -429,11 +439,11 @@ BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		zDelta /= 120;
 		if (zDelta > 0)	//zoom in
 		{
-			ZoomIn(pt);
+			ZoomIn(pointMousePos);
 		}
 		else  //Zoom Out
 		{
-			ZoomOut(pt);
+			ZoomOut(pointMousePos);
 		}
 	}
 	CFrontCadDoc* pDoc = GetDocument();
@@ -457,7 +467,7 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	SetCurrentMousePosition(
 		ConvertMousePosition(
 			point,
-			GetScrollOffset(),
+			GetRulerInfo().GetUpperLeft(),
 			GetGrid().GetInchesPerPixel(),
 			GetGrid().GetSnapGrid(),
 			GetGrid().IsSnapOn()
@@ -557,7 +567,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 	SetCurrentMousePosition(
 		ConvertMousePosition(
 			point,
-			GetScrollOffset(),
+			GetRulerInfo().GetUpperLeft(),
 			GetGrid().GetInchesPerPixel(),
 			GetGrid().GetSnapGrid(),
 			GetGrid().IsSnapOn()
@@ -729,13 +739,18 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	/// parameters:
 	///     see MSDN docs for CChildViewBase::OnMouseMove
 	///-----------------------------------------------
+	CString csDB;
 	CFrontCadDoc* pDoc = GetDocument();
 	CDoublePoint pointCenter;
 	CDoublePoint pointMousePos;
+	CPoint ptScreen = point;
+	ClientToScreen(&ptScreen);
 
+	csDB.Format(_T("C(%d, %d)  S(%d,%d)"), point.x, point.y, ptScreen.x, ptScreen.y);
+	ToolBarSetDebug(csDB);
 	pointMousePos = ConvertMousePosition(
 		point,
-		GetScrollOffset(),
+		GetRulerInfo().GetUpperLeft(),
 		GetGrid().GetInchesPerPixel(),
 		GetGrid().GetSnapGrid(),
 		GetGrid().IsSnapOn()
@@ -845,10 +860,8 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 
 	CChildViewBase::OnMouseMove(nFlags, point);
-	GetRulerInfo().SetScrollOffset(GetScrollOffset());
 	GetRulerInfo().SetCursorPos(GetCurrentMousePosition());
 	PostMessageToRulers(RW_POSITION);
-//	AutoScroll(WindowsMsg::WM_STOPAUTOSCROLL);
 }
 
 void CFrontCadView::OnInitialUpdate()
@@ -873,9 +886,10 @@ void CFrontCadView::OnInitialUpdate()
 	);
 	//-----------------------------------------
 	GetMyFrame()->InitToolBar(this);
-	//------------------------------------------
+	//------------- Scroll Bars ---------------
+	GetRulerInfo().SetUpperLeft(CDoublePoint(0.0, 0.0));
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
-	UpdateScrollbarInfo();
+	UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 	ShowScrollBar(SB_BOTH, TRUE);
 	EnableScrollBarCtrl(SB_VERT, TRUE);
 	EnableScrollBarCtrl(SB_HORZ, TRUE);
@@ -889,7 +903,6 @@ void CFrontCadView::OnInitialUpdate()
 	GetRulerInfo().SetCornerColor(GETAPP.GetRulerAttributes()->m_colorCorner);
 	GetRulerInfo().SetCursorColor(GETAPP.GetRulerAttributes()->m_colorCursor);
 	GetRulerInfo().SetMajorTickLength(GETAPP.GetRulerAttributes()->m_MajTickLength);
-	GetRulerInfo().SetScrollOffset(GetScrollOffset());
 	CRect rect;
 	GetClientRect(&rect);
 	GetRulerInfo().SetClientSize(rect.Size());
@@ -1944,15 +1957,6 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	//		This method is called in response to
 	// a WM_SIZE message
 	//----------------------------------------------
-	CMainFrame* pMainFrame;
-	CRect rectMainFrame;
-	int cxMain, cyMain;
-
-	pMainFrame = GETAPP.GetMainFrame();
-	pMainFrame->GetClientRect(&rectMainFrame);
-	cxMain = rectMainFrame.Width();
-	cyMain = rectMainFrame.Height();
-
 	switch (nType)
 	{
 	case SIZE_MAXIMIZED:
@@ -1963,9 +1967,8 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 		break;
 	case SIZE_RESTORED:
 //		printf("Set Window Size To (%d,%d)\n", cx, cy);
-		UpdateScrollbarInfo();
+		UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 		GetRulerInfo().SetClientSize(CSize(cx, cy));
-		GetRulerInfo().SetScrollOffset(GetScrollOffset());
 		if (GetRulerInfo().AreFulersReady())
 			PostMessageToRulers(RW_ZOOM);
 		Invalidate();
@@ -2008,7 +2011,7 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Yinches = -GetGrid().GetMajorGrid().dCY;
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - m_VScrollPos;	//units are pixels
+		Delta = nPos - GetVScrollPos();	//units are pixels
 		Yinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleY();
 		Yinches = GETAPP.Snap(Yinches, GetGrid().GetSnapGrid().dCY);
 		break;
@@ -2037,17 +2040,15 @@ void CFrontCadView::DoVScroll(double Vinches, BOOL Update)
 		if (UL.dY < 0.0)
 			UL.dY = 0.0;
 		else if (UL.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
+		{
 			UL.dY = pDoc->GetDocSize().dCY - GetClientHieght();
+			if (UL.dY < 0.0)
+				UL.dY = 0.0;
+		}
 		GetRulerInfo().SetUpperLeft(UL);
 		double pos = UL.dY;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleY();
-		m_VScrollPos = GETAPP.RoundDoubleToInt(pos);
-		if (m_VScrollPos < 0)
-			m_VScrollPos = 0;
-		else if (m_VScrollPos > m_VScrollInfo.nMax)
-			m_VScrollPos = m_VScrollInfo.nMax;
-		SetScrollPos(SB_VERT, m_VScrollPos, TRUE);
-		GetRulerInfo().SetScrollOffset(GetScrollOffset());
+		SetScrollPos(SB_VERT, GETAPP.RoundDoubleToInt(pos), TRUE);
 		PostMessageToRulers(RW_VSCROLL);
 		PostMessageToRulers(RW_POSITION);
 		Invalidate();
@@ -2083,13 +2084,12 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Xinches = -GetGrid().GetMajorGrid().dCX;
 		break;
 	case SB_THUMBTRACK:
-		Delta = nPos - m_HScrollPos;	//units are pixels
+		Delta = nPos - GetHScrollPos();	//units are pixels
 		Xinches = double(Delta) * GetGrid().GetInchesPerPixel().GetScaleX();
 		Xinches = GETAPP.Snap(Xinches, GetGrid().GetSnapGrid().dCX);
 		break;
 	case SB_THUMBPOSITION:
 		Update = FALSE;
-		printf("Thumb Position nPos=%d  HScrollPos=%d\n", nPos, m_HScrollPos);
 		break;
 	case SB_LINERIGHT:
 		Xinches = GetGrid().GetSnapGrid().dCX;
@@ -2099,7 +2099,6 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		break;
 	case SB_ENDSCROLL:
 		Update = FALSE;
-		printf("SB_ENDSCROLL\n");
 		break;
 	}
 	DoHScroll(Xinches, Update);
@@ -2117,84 +2116,78 @@ void CFrontCadView::DoHScroll(double Xinches, BOOL Update)
 		if (UL.dX < 0.0)
 			UL.dX = 0.0;
 		else if (UL.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
+		{
 			UL.dX = pDoc->GetDocSize().dCX - GetClientWidth();
+			if (UL.dX < 0.0)
+				UL.dX = 0;
+		}
 		GetRulerInfo().SetUpperLeft(UL);
 
 		double pos = UL.dX;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleX();
-		m_HScrollPos = GETAPP.RoundDoubleToInt(pos);;
-		if (m_HScrollPos < 0)
-			m_HScrollPos = 0;
-		else if (m_HScrollPos > m_HScrollInfo.nMax)
-			m_HScrollPos = m_HScrollInfo.nMax;
-		SetScrollPos(SB_HORZ, m_HScrollPos, TRUE);
+		SetScrollPos(SB_HORZ, pos, TRUE);
 		//----------------------------------------------------------
 		// Update Rulers
 		//---------------------------------------------------------
-		GetRulerInfo().SetScrollOffset(GetScrollOffset());
 		PostMessageToRulers(RW_HSCROLL);
 		PostMessageToRulers(RW_POSITION);
 		Invalidate();
 	}
 }
 
-void CFrontCadView::UpdateScrollbarInfo()
+void CFrontCadView::UpdateScrollbarInfo(CDoublePoint ULHC)
 {
 	//---------------------------------------------------------------------
 	//  UpdateScrollbarInfo
 	//
 	//      This Method updates the positions of the scrollbars (really?)
+	// 
+	// Parameters:
+	// ULHC........Upper Left hand corner (in inches)
+	// 
+	// Returns Nothing
+	// Update Upper Left Hand Corner
 	//---------------------------------------------------------------------
-	CRect clientrect;
-	GetClientRect(&clientrect);
-	int cx = clientrect.Width();	// width of workspace in pixels
-	int cy = clientrect.Height();	// height of workspace in pixels
-	int HScrollMax = 0;
-	m_HPageSize = cx;
-	int x1 = 0, x2 = 0;
+	CFrontCadDoc* pDoc = GetDocument();
+	double HScrollMax = 0.0;
+	CDoubleSize DocSize = pDoc->GetDocSize();
+	double ScrollArea;
+	double ScrollPos;
 
 	//------------------------------------------------
-	// Document Size is in inches
-	// cx is in pixels (width of work space)
+	// Calculations for Horizontal Scroll Bar
 	//------------------------------------------------
-	if (cx < GETAPP.RoundDoubleToInt((GetDocSize().dCX * GetGrid().GetPixelsPerInch().GetScaleX())))
+	// Document Size is in inches
+	// cx is in pixels (width of the work space)
+	//------------------------------------------------
+	ScrollArea = DocSize.dCX - GetClientWidth();
+	ScrollPos = ULHC.dX / ScrollArea;
+	if (GetClientWidth() < GetDocSize().dCX)
 	{
-		HScrollMax = GETAPP.RoundDoubleToInt((GetDocSize().dCX * GetGrid().GetPixelsPerInch().GetScaleX()));
-		m_HPageSize = cx;
-		x1 = m_HScrollPos;
-		x2 = GETAPP.RoundDoubleToInt(
-			GetDocSize().dCX * GetGrid().GetPixelsPerInch().GetScaleX() - 1.0
-		) - m_HPageSize - 1;
-		if (x2 < 0)x2 = 0;
-		SetHScrollPos(min(x1, x2));
+		if (ScrollArea < 0)ScrollArea = 0.0;
+		SetScrollPos(SB_HORZ, GETAPP.RoundDoubleToInt(min(ScrollPos, ScrollArea) * GetGrid().GetPixelsPerInch().GetScaleX()), TRUE);
 	}
 	m_HScrollInfo.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
 	m_HScrollInfo.nMin = 0;
-	m_HScrollInfo.nMax = HScrollMax;
-	m_HScrollInfo.nPos = m_HScrollPos;
-	m_HScrollInfo.nPage = m_HPageSize;
+	m_HScrollInfo.nMax = GETAPP.RoundDoubleToInt(ScrollArea * GetGrid().GetPixelsPerInch().GetScaleX() - 1.0);
+	m_HScrollInfo.nPos = GETAPP.RoundDoubleToInt(min(ScrollPos, ScrollArea) * GetGrid().GetPixelsPerInch().GetScaleX());
+	m_HScrollInfo.nPage = GETAPP.RoundDoubleToInt(GetClientWidth() * GetGrid().GetPixelsPerInch().GetScaleX() );
 	SetScrollInfo(SB_HORZ, &m_HScrollInfo, TRUE);
-	//--------- Vertical Scrolling -------------------
-	x1 = x2 = 0;
-	int VScrollMax = 0;
-	m_VPageSize = cy;
-
-	if (cy < GETAPP.RoundDoubleToInt(GetDocSize().dCY * GetGrid().GetPixelsPerInch().GetScaleY()))
+	//------------------------------------------------
+	// Vertical Scrolling 
+	//------------------------------------------------
+	ScrollArea = DocSize.dCY - GetClientHieght();
+	ScrollPos = ULHC.dY / ScrollArea;
+	if (GetClientHieght() < GetDocSize().dCY)
 	{
-		VScrollMax = GETAPP.RoundDoubleToInt(GetDocSize().dCY * GetGrid().GetPixelsPerInch().GetScaleY()) - 1;
-		m_VPageSize = cy;
-		x1 = m_VScrollPos;
-		x2 = GETAPP.RoundDoubleToInt(
-			GetDocSize().dCY * GetGrid().GetPixelsPerInch().GetScaleY()
-		) - m_VPageSize - 1;
-		if (x2 < 0) x2 = 0;
-		SetVScrollPos(min(x1, x2));
+		if (ScrollArea < 0)ScrollArea = 0.0;
+		SetScrollPos(SB_VERT, GETAPP.RoundDoubleToInt(min(ScrollPos, ScrollArea) * GetGrid().GetPixelsPerInch().GetScaleY()), TRUE);
 	}
 	m_VScrollInfo.fMask = SIF_PAGE | SIF_RANGE | SIF_POS;
 	m_VScrollInfo.nMin = 0;
-	m_VScrollInfo.nMax = VScrollMax;
-	m_VScrollInfo.nPos = m_VScrollPos;
-	m_VScrollInfo.nPage = m_VPageSize;
+	m_VScrollInfo.nMax = GETAPP.RoundDoubleToInt(ScrollArea * GetGrid().GetPixelsPerInch().GetScaleY() - 1.0);
+	m_VScrollInfo.nPos = GETAPP.RoundDoubleToInt(min(ScrollPos, ScrollArea) * GetGrid().GetPixelsPerInch().GetScaleY());
+	m_VScrollInfo.nPage = GETAPP.RoundDoubleToInt(GetClientHieght() * GetGrid().GetPixelsPerInch().GetScaleY());
 
 	SetScrollInfo(SB_VERT, &m_VScrollInfo, TRUE);
 }
@@ -2238,10 +2231,10 @@ BOOL CFrontCadView::PostMessageToRulers(UINT msg, LPARAM data)
 
 
 CDoublePoint CFrontCadView::ConvertMousePosition(
-	CPoint MousePoint,
-	CSize Offset,
-	CScale Scale,
-	CDoubleSize SnapGrid,
+	CPoint& MousePoint,	//mouse position client ref
+	CDoublePoint& ULHC,	//upper left corner of client in inches
+	CScale& Scale,		//Inches per Pixel
+	CDoubleSize& SnapGrid,
 	BOOL SnapGridIsEnabled
 )
 {
@@ -2255,25 +2248,32 @@ CDoublePoint CFrontCadView::ConvertMousePosition(
 	// scroll position of the view.
 	//
 	// parameters:
-	//	point......Position of mouse pointer in view
+	//	MousePoint......Position of mouse pointer in view
+	//  ULHC............Upper Left Hand Corner Coordinate
+	//	Scale...........Inches Per Pixel Scale
+	//	SnapGrid........Snap to closest.
+	//	SnapGridIsEnabled..Snap if true
+	// 
 	// returns:
 	//		The Value, in inches, of the point.
 	//-------------------------------------------------
-//	point -= GetOrigin().ToCPoint();
-	//----------------------------------------------
-	// Add the scroll position to the mouse point
+	// Add the Upper Left Hand corner to the mouse point
 	// the units of this value will be "pixels"
 	//----------------------------------------------
 	// Convert from pixels to inches
 	//-----------------------------------------------
-	return (
-		CDoublePoint(MousePoint + Offset) * Scale).Snap(
-			SnapGrid, SnapGridIsEnabled
-		);
+	return (CDoublePoint(MousePoint) * Scale + ULHC).Snap(SnapGrid, SnapGridIsEnabled);
 }
 
 
-void CFrontCadView::DrawCursor(CDC* pDC, CDoublePoint pos, CRect* pRect, CSize Offset, CScale Scale, COLORREF color)
+void CFrontCadView::DrawCursor(
+	CDC* pDC, 
+	CDoublePoint& pos, 
+	CRect* pRect, 
+	CDoublePoint& ULHC, 
+	CScale& Scale, 
+	COLORREF color
+)
 {
 	//-------------------------------------------
 	// DrawCursor
@@ -2296,6 +2296,7 @@ void CFrontCadView::DrawCursor(CDC* pDC, CDoublePoint pos, CRect* pRect, CSize O
 	pOldPen = pDC->SelectObject(&pen);
 	int w, h;
 	CPoint p;
+//	CDoublePoint Org = GetDocument()->GetCurrentOrigin()->GetCenter(Org);
 
 	pos -= GetRulerInfo().GetUpperLeft();
 	pos = pos * Scale;
@@ -2312,15 +2313,45 @@ void CFrontCadView::DrawCursor(CDC* pDC, CDoublePoint pos, CRect* pRect, CSize O
 
 // Zoom in around a point
 
-CPoint CFrontCadView::CalculateHsVs(CPoint p, CPoint DesiredScreenLocation)
+CDoublePoint& CFrontCadView::CalculateNewULHC(
+	CScale CurrentScale, 
+	CScale NextScale, 
+	CDoublePoint& pointResult, 
+	CDoublePoint& pointLocation,
+	CDoublePoint& pointULHC
+)
 {
-	CPoint HsVs;
+	//--------------------------------------
+	//	CalculateNewULHC
+	// Calculate a New Upper Left Hand 
+	// corner coordinate.  So far, primarily
+	// used when zooming in and out
+	// 
+	// Parameters:
+	//	CurrentScale.....Current scale factor
+	//	NextScale........New Scale factor
+	//	pointResult......Store result here
+	//	pointLocation....Point to zoom around
+	//	pointULHC........Current Upper Left
+	//					Hand Corner
+	// 
+	// Returns:
+	//	Reference to the new U.L.H.C
+	//--------------------------------------
+	double Ux=0.0, Uy=0.0;
+	double Temp;
 
-	HsVs = p - DesiredScreenLocation;
-	return HsVs;
+	Temp = CurrentScale.GetScaleX() / NextScale.GetScaleX();
+	Temp *= (pointLocation.dX - pointULHC.dX);
+	Ux = pointLocation.dX - Temp;
+	Temp = CurrentScale.GetScaleY() / NextScale.GetScaleY();
+	Temp *= (pointLocation.dY - pointULHC.dY);
+	Uy = pointLocation.dY - Temp;
+	pointResult = CDoublePoint(Ux, Uy);
+	return pointResult;
 }
 
-void CFrontCadView::ZoomIn(CPoint point)
+void CFrontCadView::ZoomIn(CDoublePoint point)
 {
 	//---------------------------------------
 	// ZoomIn
@@ -2333,30 +2364,37 @@ void CFrontCadView::ZoomIn(CPoint point)
 	//	point......point in view to zoom around
 	// returns:nothing
 	//-----------------------------------------
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
-	CDoublePoint Scaled, HsVs;
-	CPoint  Unscaled;
+	CScale CurrentScale, NextScale;
+	CDoublePoint pointNewULHC;
+	CDoublePoint ptULHC = GetRulerInfo().GetUpperLeft();
 
-	Scaled = ProcessMousePosition(point, GetGrid().GetSnapGrid(), PROC_MOUSE_POSISTION_SNAPPED);
-	GetGrid().ZoomIn();
-	Unscaled = Scaled.ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
-	HsVs = CalculateHsVs(Unscaled, point);
-	if (0 > HsVs.dX) HsVs.dX = 0.0;
-	if (0 > HsVs.dY) HsVs.dY = 0.0;
-	m_HScrollPos = HsVs.ToCPoint().x;
-	m_VScrollPos = HsVs.ToCPoint().y;
-	UpdateScrollbarInfo();
-	GetRulerInfo().SetScrollOffset(GetScrollOffset());
-	PostMessageToRulers(RW_ZOOM);
-	PostMessageToRulers(RW_POSITION);
-	if (pDoc)
-		pDoc->SetDirty(0);
-	Invalidate();
+	CurrentScale = GetGrid().GetPixelsPerInch();
+	if (GetGrid().ZoomIn())	// did a zoom
+	{
+		NextScale = GetGrid().GetPixelsPerInch();
+		pointNewULHC = CalculateNewULHC(
+			CurrentScale,
+			NextScale,
+			pointNewULHC,
+			point,
+			ptULHC
+		);
+		//---------------------------------
+		// Clean up ULHC ie Snap
+		//--------------------------------
+		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		//--------------------------------
+		// Update the Scroll Position
+		//--------------------------------
+		UpdateScrollbarInfo(pointNewULHC);
+		SetCursorPosition(GetCurrentMousePosition());
+		Invalidate();
+	}
 }
 
 
 // //zoom out around a point
-void CFrontCadView::ZoomOut(CPoint point)
+void CFrontCadView::ZoomOut(CDoublePoint point)
 {
 	//---------------------------------------
 	// ZoomOut
@@ -2369,25 +2407,29 @@ void CFrontCadView::ZoomOut(CPoint point)
 	//	point......point in view to zoom around
 	// returns:nothing
 	//-----------------------------------------
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
-	CDoublePoint Scaled, HsVs;
-	CPoint Unscaled;
+	CScale CurrentScale, NextScale;
+	CDoublePoint pointNewULHC;
+	CDoublePoint ptULHC = GetRulerInfo().GetUpperLeft();
 
-	Scaled = ProcessMousePosition(point, GetGrid().GetSnapGrid(), PROC_MOUSE_POSISTION_SNAPPED);
-	GetGrid().ZoomOut();
-	Unscaled = Scaled.ToPixelPoint(GetScrollOffset(), GetGrid().GetInchesPerPixel());
-	HsVs = CalculateHsVs(Unscaled, point);
-	if (0.0 > HsVs.dX) HsVs.dX = 0.0;
-	if (0.0 > HsVs.dY) HsVs.dY = 0;
-	m_HScrollPos = HsVs.ToCPoint().x;
-	m_VScrollPos = HsVs.ToCPoint().y;
-	UpdateScrollbarInfo();
-	GetRulerInfo().SetScrollOffset(GetScrollOffset());
-	PostMessageToRulers(RW_ZOOM);
-	PostMessageToRulers(RW_POSITION);
-	if (pDoc)
-		pDoc->SetDirty(0);
-	Invalidate();
+	CurrentScale = GetGrid().GetPixelsPerInch();
+	if (GetGrid().ZoomOut())	// did a zoom
+	{
+		NextScale = GetGrid().GetPixelsPerInch();
+		pointNewULHC = CalculateNewULHC(
+			CurrentScale,
+			NextScale,
+			pointNewULHC,
+			point,
+			ptULHC
+		);
+		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		//--------------------------------
+		// Update the Scroll Position
+		//--------------------------------
+		UpdateScrollbarInfo(pointNewULHC);
+		SetCursorPosition(GetCurrentMousePosition());
+		Invalidate();
+	}
 }
 
 void CFrontCadView::EnableAutoScroll(BOOL flag)
@@ -2439,7 +2481,7 @@ CDoublePoint CFrontCadView::ProcessMousePosition(
 	case PROC_MOUSE_POSISTION_SCALED:
 		rV = ConvertMousePosition(
 			point,
-			GetScrollOffset(),
+			GetRulerInfo().GetUpperLeft(),
 			GetGrid().GetInchesPerPixel(),
 			GetGrid().GetSnapGrid(),
 			GetGrid().IsSnapOn()
@@ -2448,13 +2490,12 @@ CDoublePoint CFrontCadView::ProcessMousePosition(
 	case PROC_MOUSE_POSISTION_SNAPPED:
 		rV = ConvertMousePosition(
 			point,
-			GetScrollOffset(),
+			GetRulerInfo().GetUpperLeft() ,
 			GetGrid().GetInchesPerPixel(),
 			SnapGrid,
 			TRUE
 		);
 		break;
-
 	}
 	return rV;
 }

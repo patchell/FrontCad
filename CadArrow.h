@@ -9,6 +9,7 @@ enum class Arrow{
 
 class CCadArrow :public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_ArrowCount;
 	inline static SArrowAttributes m_LastAttributes;
 	inline static SArrowAttributes m_CurrentAttributes;
@@ -29,7 +30,7 @@ public:
 	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
 	virtual int GrabPoint(CDoublePoint point);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	virtual BOOL PointInObjectAndSelect(
 		CDoublePoint p,
 		CCadObject** ppSelList = 0,

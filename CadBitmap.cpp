@@ -121,7 +121,7 @@ int CCadBitmap::GrabPoint(CDoublePoint  point)
 }
 
 
-void CCadBitmap::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadBitmap::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -146,8 +146,8 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
 			m_P2.dY = AspectRatioBM * abs(m_P2.dX - m_P1.dX) + m_P1.dY;
 		}
-		P1 = m_P1.ToPixelPoint(Offset, Scale);
-		P2 = m_P1.ToPixelPoint(Offset, Scale);
+		P1 = m_P1.ToPixelPoint(ULHC, Scale);
+		P2 = m_P1.ToPixelPoint(ULHC, Scale);
 		rect.SetRect(P1, P2);
 
 		switch (mode.DrawMode)
@@ -489,16 +489,21 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
 		if (IDOK == Id)
 		{
+			m_AttributesDirty = TRUE;
 			CopyAttributesTo(&m_CurrentAttributes);
 		}
 		break;

@@ -3,6 +3,7 @@
 
 class CCadArcAngle :  public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_ArcCount;
 	inline static SArcAngleAttributes m_LastAttributes;
 	inline static SArcAngleAttributes m_CurrentAttributes;

@@ -1,9 +1,9 @@
 #include "pch.h"
 
-void CDoubleLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDoubleLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
-	pDC->MoveTo(CDoublePoint(dP1).ToPixelPoint(Offset, Scale));
-	pDC->LineTo(CDoublePoint(dP1).ToPixelPoint(Offset, Scale));
+	pDC->MoveTo(CDoublePoint(dP1).ToPixelPoint(ULHC, Scale));
+	pDC->LineTo(CDoublePoint(dP1).ToPixelPoint(ULHC, Scale));
 }
 
 CDoublePoint& CDoubleLine::GetPoint(LinePoint Type)

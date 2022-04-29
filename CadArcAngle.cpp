@@ -50,10 +50,14 @@ ObjectDrawState CCadArcAngle::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::START_DRAWING:
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:

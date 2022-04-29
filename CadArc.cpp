@@ -96,7 +96,7 @@ int CCadArc::GrabPoint(CDoublePoint p)
 	return rV;
 }
 
-void CCadArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadArc::Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale)
 {
 	//***************************************************
 	// Draw
@@ -118,10 +118,10 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadArc::IsRenderEnabled())
 	{
-		Start = m_pointStart.ToPixelPoint(Offset, Scale);
-		End = m_pointEnd.ToPixelPoint(Offset, Scale);
-		P1 = m_rectShape.GetPoint(RectPoint::UPPERLEFT).ToPixelPoint(Offset,Scale);
-		P2 = m_rectShape.GetPoint(RectPoint::LOWERRIGHT).ToPixelPoint(Offset, Scale);
+		Start = m_pointStart.ToPixelPoint(ULHC, Scale);
+		End = m_pointEnd.ToPixelPoint(ULHC, Scale);
+		P1 = m_rectShape.GetPoint(RectPoint::UPPERLEFT).ToPixelPoint(ULHC,Scale);
+		P2 = m_rectShape.GetPoint(RectPoint::LOWERRIGHT).ToPixelPoint(ULHC, Scale);
 		Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.m_ScaleX);
 		if (Lw <= 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
 		{
@@ -489,10 +489,14 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("ARC:Place First Corner of Circle Shape"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
@@ -501,6 +505,7 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

@@ -9,6 +9,7 @@ enum class Intercept {
 
 class CCadHoleRnd2Flat:public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_RoundHole2FlatCount;
 	inline static SRndHole2FlatAttributes m_LastAttributes;
 	inline static SRndHole2FlatAttributes m_CurrentAttributes;
@@ -24,7 +25,7 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	double CalculateAngle(double FlatDist, double Radius);
 	CDoublePoint SolveIntersection(Intercept mode, CDoublePoint Center, double FlatDist, double Radius);
 	virtual int PointInObjectAndSelect(

@@ -3,6 +3,7 @@
 
 class CCadPoint : public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	double dX, dY;
 public:
 	CCadPoint();
@@ -10,7 +11,7 @@ public:
 	~CCadPoint();
 	BOOL Create(CCadObject* pRefObj);
 	virtual BOOL Destroy(CCadObject* pDependentObject);
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	void SetX(double x) { dX = x; }
 	void SetY(double y) { dY = y; }
 	CDoublePoint GetPoint() { return CDoublePoint(dX, dY); }

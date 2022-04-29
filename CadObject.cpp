@@ -23,6 +23,7 @@ CCadObject::CCadObject()
 	m_Type = ObjectType::BASE;
 	m_Dirty = FALSE;	// Dirty flag
 	m_Selected = FALSE;	//selected flag
+	m_pReferenceObj = 0;
 	//----------- Main Drawing Links --------------
 	m_pNext = 0;
 	m_pPrev = 0;
@@ -46,6 +47,11 @@ CCadObject::CCadObject()
 	m_pPrevDependentParent = 0;
 	m_nTotalDependentParents = 0;
 	//---------------------------
+	// Origin List links
+	//---------------------------
+	m_pNextOrigin = 0;
+	m_pPrevOrigin = 0;
+	//---------------------------
 	// Generate Unique ID
 	//---------------------------
 	m_Id = GETAPP.GetUniqueID();
@@ -64,7 +70,7 @@ CCadObject::~CCadObject()
 	//--------------------------------------------------
 }
 
-void CCadObject::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadObject::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw

@@ -26,10 +26,6 @@ class CFrontCadView : public CChildViewBase
 	//----------------Scrolling and Document View ---------------------------
 	SCROLLINFO m_HScrollInfo;	//Horizontal Scroll Info
 	SCROLLINFO m_VScrollInfo;	//Vertical Scroll Info
-	int m_VPageSize;	//vertical page size
-	int m_HPageSize;	//horizontal page size
-	int m_HScrollPos;	//position of horizontal scroll bar, in screen units
-	int m_VScrollPos;	//position of virtical scroll bar, in screen units
 	int m_IsScrolling;	//Indicates that the view is auto scrolling
 	UINT m_AutoScrollTimerId;
 	BOOL m_AutoScroll;	//enables auto scrolling flag
@@ -93,14 +89,14 @@ public:
 	BOOL IsLeftMouseButtonDown() { return m_LeftMouseButtonDown; }
 	BOOL IsMiddleMouseButtonDown() { return m_MiddleMouseButtonDown; }
 	void SetMiddleMouseButtonDown(BOOL f) { m_MiddleMouseButtonDown = f; }
-	CDoublePoint GetCurrentMousePosition() { return m_CurMousePos; }
+	CDoublePoint& GetCurrentMousePosition() { return m_CurMousePos; }
 	void SetCurrentMousePosition(CDoublePoint DP) { m_CurMousePos = DP; }
 	CDoublePoint ProcessMousePosition(CPoint point, CDoubleSize SnapGrid, int Which);
 	CDoublePoint ConvertMousePosition(
-		CPoint MousePoint,
-		CSize Offset,
-		CScale Scale,
-		CDoubleSize SnapGrid,
+		CPoint& MousePoint,	//mouse position client ref
+		CDoublePoint& ULHC,	//upper left corner of client in inches
+		CScale& Scale,		//Inches per Pixel
+		CDoubleSize& SnapGrid,
 		BOOL SnapGridIsEnabled
 	);
 	BOOL DidMouseLeaveWindow() { return m_MouseLeftWindow; }
@@ -110,6 +106,14 @@ public:
 		BOOL rV;
 		rV = ::GetCursorPos(pMP);
 		return rV;
+	}
+	BOOL SetCursorPosition(CDoublePoint p)
+	{
+		CPoint cp;
+
+		cp = p.ToPixelPoint(GetRulerInfo().GetUpperLeft(), GetGrid().GetPixelsPerInch());
+		ClientToScreen(&cp);
+		return SetCursorPosition(cp);
 	}
 	BOOL SetCursorPosition(CPoint MP) {
 		BOOL rV;
@@ -122,6 +126,9 @@ public:
 	//------------------------------------------
 	void ToolBarSetMousePosition(CDoublePoint pos) {
 		GetMyFrame()->ToolBarSetPosition(pos);
+	}
+	void ToolBarSetDebug(CString& csString) {
+		GetMyFrame()->SetToolbarDebug(csString);
 	}
 	CComboBox& GetOriginSelectCombo() {
 		return GetMyFrame()->GetToolBarView()->GetOriginSelCB();
@@ -283,25 +290,40 @@ public:
 	// Keyboard
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
-	// Scrollbars/Auto Scroll
-	CSize GetScrollOffset() { return CSize(m_HScrollPos, m_VScrollPos); }
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	//------------------------------------------------------
+	// Scrollbars/Auto Scroll/ Zoom
+	//------------------------------------------------------
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	void DoVScroll(double Vinches, BOOL Update = TRUE);
-	void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	void DoHScroll(double change, BOOL Update = TRUE);
-	void UpdateScrollbarInfo();
+	void UpdateScrollbarInfo(CDoublePoint ULHC);
 	void GetDeviceScrollSizes(CSize& sizePage, CSize& sizeLine);
-	void DrawCursor(CDC* pDC, CDoublePoint pos, CRect* pRect, CSize Offset, CScale Scale, COLORREF color);
-	CPoint CalculateHsVs(CPoint p, CPoint DesiredScreenLocation);
-	void SetHScrollPos(int HSP) { m_HScrollPos = HSP; }
-	int GetHScrollPos() { return m_HScrollPos; }
-	void SetVScrollPos(int VSP) { m_HScrollPos = VSP; }
-	int GetVScrollPos() { return m_VScrollPos; }
-	void ZoomIn(CPoint point);
-	void ZoomOut(CPoint point);
 	void EnableAutoScroll(BOOL flag);
+	SCROLLINFO& GetHScrollBarInfo() { return m_HScrollInfo; }
+	SCROLLINFO& GetVScrollBarInfo() { return m_VScrollInfo; }
+	int GetHScrollPos() { return GetHScrollBarInfo().nPos; }
+	int GetVScrollPos() { return GetVScrollBarInfo().nPos; }
 	BOOL IsAutoScrollEnabled() { return m_AutoScroll; }
+	CDoublePoint& CalculateNewULHC(
+		CScale CurrentScale,
+		CScale NextScale,
+		CDoublePoint& pointResult,
+		CDoublePoint& pointLocation,
+		CDoublePoint& pointULHC
+	);
+	void ZoomIn(CDoublePoint point);
+	void ZoomOut(CDoublePoint point);
+	//----------------------------------------------
+	void DrawCursor(
+		CDC* pDC, 
+		CDoublePoint& pos, 
+		CRect* pRect, 
+		CDoublePoint& ULHC, 
+		CScale& Scale, 
+		COLORREF color
+	);
 	//------------------------------------------
 	// ToolBar
 	//------------------------------------------

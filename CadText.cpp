@@ -105,7 +105,7 @@ int CCadText::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadText::Draw(CDC * pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadText::Draw(CDC * pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -127,7 +127,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadText::m_RenderEnable)
 	{
-		P1 = m_P1.ToPixelPoint(Offset, Scale);
+		P1 = m_P1.ToPixelPoint(ULHC, Scale);
 		FontHeight = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontHeight());
 		FontWidth = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontWidth());
 		if (IsLastModeSame(mode) || IsDirty() || (m_LastScaleX != Scale.GetScaleX()))
@@ -195,7 +195,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, CSize Offset, CScale Scale)
 		if (mode.DrawMode == ObjectDrawMode::SELECTED)
 		{
 			pOldPen = pDC->SelectObject(m_pSelPen);
-			m_rectSelect.Draw(pDC, mode, Offset, Scale);
+			m_rectSelect.Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
 		}
 		pDC->SetBkColor(OldBk);
@@ -548,10 +548,14 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("TEXT:Enter Text Parameters"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
@@ -560,6 +564,7 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		GETAPP.UpdateStatusBar(_T("TEXT:Place Text on Document"));
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;

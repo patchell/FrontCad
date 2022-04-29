@@ -6,39 +6,26 @@ class CDoubleRect;
 
 class CDoublePoint :public DOUBLEPOINT
 {
-	//--------------- Private Methods ---------------
-	double m_RadAngle;	//angle in radians
-	CDoublePoint* m_pPivot;
 public:	CDoublePoint() {
 		dX = 0.0;
 		dY = 0.0;
-		m_RadAngle = 0.0;
-		m_pPivot = 0;
 	}
 	CDoublePoint(DOUBLEPOINT pt) {
 		dX = pt.dX;
 		dY = pt.dY;
-		m_RadAngle = 0.0;
-		m_pPivot = 0;
 	}
 	CDoublePoint(double x, double y) {
 		dX = x;
 		dY = y;
-		m_RadAngle = 0.0;
-		m_pPivot = 0;
 	}
 	CDoublePoint(CPoint ptPoint) {
 		dX = double(ptPoint.x);
 		dY = double(ptPoint.y);
-		m_RadAngle = 0.0;
-		m_pPivot = 0;
 	}
 	CDoublePoint(int x, int y, CSize Offset, CScale Scale)
 	{
 		dX = double(LONG(x)) + double(Offset.cx) * Scale.GetScaleX();
 		dY = (double(y + Offset.cy)) * Scale.GetScaleY();
-		m_RadAngle = 0.0;
-		m_pPivot = 0;
 	}
 	~CDoublePoint() {}
 	CDoublePoint operator=(CDoublePoint a) {
@@ -126,20 +113,20 @@ public:	CDoublePoint() {
 	CDoublePoint Rotate(CDoublePoint Pivot, double Angle);
 	CDoublePoint Rotate(CDoublePoint Pivot, CDoublePoint NewPoint);
 	CDoublePoint Snap(CDoubleSize SnapSize, BOOL SnapEnabled);
-	CPoint ToPixelPoint(CSize Offset, SCALE PixelsPerInch);
+	CPoint ToPixelPoint(CDoublePoint& ULHC, CScale& PixelsPerInch);
 	CPoint ToCPoint();
 	BOOL Hover(CDoublePoint Point);
 	void FilledRect(CDC* pDC, MODE mode, CSize Offset, CScale Scale, COLORREF Border, COLORREF Fill);
 	CDoubleRect EnclosePoint(UINT nPixels, CScale Scale);
 	void Draw(CDC* pDC, 
 		MODE mode,
-		CSize Offset, 
-		CScale Scale
+		CDoublePoint& ULHC, 
+		CScale& Scale
 	);
 	BOOL MakeSelectionRect(
 		CRect& rect, 
-		SCALE Scale, 
-		CSize Offset, 
+		CScale& Scale, 
+		CDoublePoint& ULHC, 
 		double Margin
 	);
 	void Flip(CDoublePoint Pivot, Axis axix);
@@ -158,11 +145,9 @@ public:	CDoublePoint() {
 	CDoublePoint MidPoint(CDoublePoint P);
 	BOOL IsPointOnTarget(CDoublePoint p); 
 	double DistanceTo(CDoublePoint p);
-	CDoublePoint Rotate();
-	CDoublePoint Rotate(CDoublePoint* pPivot, CDoublePoint point);
 	CDoublePoint Rotate(CDoublePoint* pPivot, double Angle);
 	CDoublePoint RoundUpToNearest(CDoubleSize roundto);
 	CDoublePoint RoundToNearest(CDoubleSize roundto);
 	//-----------------------------------------
-	void Print() { printf("Point: x=%7.2lf   y=%7.2lf\n", dX, dY); }
+	void Print() { printf("Point: x=%7.3lf   y=%7.3lf\n", dX, dY); }
 };

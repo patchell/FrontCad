@@ -3,6 +3,7 @@
 class CCadLine :public CCadObject
 {
 protected:
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_LineCount;
 	inline static SLineAttributes m_LastAttributes;
 	inline static SLineAttributes m_CurrentAttributes;
@@ -23,7 +24,7 @@ public: public://public methodes
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	virtual int PointInObjectAndSelect(
 		CDoublePoint p, 
 		CCadObject ** ppSelList = 0, 

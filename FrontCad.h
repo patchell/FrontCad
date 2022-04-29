@@ -134,8 +134,8 @@ public:
 		CPoint* dest, 
 		CDoublePoint* src, 
 		int n,
-		CSize Offset,
-		CScale Scale
+		CDoublePoint& ULHC,
+		CScale& Scale
 	);
 	BOOL GeneratePointInPolygon(CDoublePoint* Poly, int n, CDoublePoint& point);
 	BOOL PtEnclosedInPolygon(CDoublePoint ptPoint, CDoublePoint* ptArray, UINT nVeticies);

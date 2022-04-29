@@ -84,7 +84,7 @@ int CCadOrigin::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadOrigin::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadOrigin::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -126,8 +126,8 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			Radius = double(rectHalfWidth);
 		}
 		
-		pointLR = m_Origin.ToPixelPoint(Offset,Scale) + CSize(rectHalfWidth, rectHalfWidth);
-		pointUL = m_Origin.ToPixelPoint(Offset, Scale) - CSize(rectHalfWidth, rectHalfWidth);
+		pointLR = m_Origin.ToPixelPoint(ULHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
+		pointUL = m_Origin.ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
 		rect.SetRect(pointUL, pointLR);
 		rect.NormalizeRect();
 		switch (mode.DrawMode)
@@ -151,7 +151,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		fillBrush.CreateStockObject(NULL_BRUSH);
 		oldBrush = pDC->SelectObject(&fillBrush);
 		pDC->Ellipse(&rect);
-		pointCenter = m_Origin.ToPixelPoint(Offset, Scale);
+		pointCenter = m_Origin.ToPixelPoint(ULHC, Scale);
 		pDC->MoveTo(pointCenter.x + CrossHairLen,pointCenter.y);
 		pDC->LineTo(pointCenter.x - CrossHairLen, pointCenter.y);
 		pDC->MoveTo(pointCenter.x,pointCenter.y + CrossHairLen);
@@ -165,7 +165,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	//---------------------------------------
 	while (pObj)
 	{
-		pObj->Draw(pDC, mode, Offset, Scale);
+		pObj->Draw(pDC, mode, ULHC, Scale);
 		pObj = pObj->GetNext();
 	}
 }
@@ -392,21 +392,24 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Origin:Place Origin Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		DrawState = ObjectDrawState::SELECT_NOTHING;
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		GETVIEW()->GetCursorPosition(&MouseScreenCoordinate);
 		Id = EditProperties();
-		printf("Id = %d\n", Id);
 		if (IDOK == Id)
 		{
-			printf("IDOK\n");
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 			GETVIEW()->EnableAutoScroll(1);
 		}

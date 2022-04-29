@@ -2,6 +2,7 @@
 
 class CCadHoleRect:public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_RectHoleCount;
 	inline static SRectHoleAttributes m_LastAttributes;
 	inline static SRectHoleAttributes m_CurrentAttributes;
@@ -18,7 +19,7 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	virtual int PointInObjectAndSelect(
 		CDoublePoint p,
 		CCadObject** ppSelList = 0,

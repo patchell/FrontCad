@@ -17,9 +17,9 @@ public:
 		m_PointAddedCount = 0;
 	}
 	void Create(UINT numberOfPoints, CDoublePoint* pPoints = NULL);
-	void Fill(CDC* pDC, MODE mode, CSize Offset, CScale Scale, COLORREF color);
-	void ConnectTheDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Fill(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale, COLORREF color);
+	void ConnectTheDots(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	void Copy(CDoublePolygon* pPoly) {
 		m_numPoints = pPoly->GetSize();
 		for (size_t i = 0; i < m_numPoints; i++)

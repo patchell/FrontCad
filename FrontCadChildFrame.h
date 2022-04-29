@@ -37,6 +37,10 @@ public:
 		pMTBV = (CMyToolBarView*)GetToolBarSplitterWnd()->GetPane(TOOLBAR_PANE);
 		return pMTBV;
 	}
+	void SetToolbarDebug(CString& csString)
+	{
+		GetToolBarView()->SetDebug(csString);
+	}
 	void ToolBarSetPosition(CDoublePoint pos)
 	{
 		GetToolBarView()->SetToolBarPosition(pos);

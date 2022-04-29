@@ -39,7 +39,6 @@ class CRulerInfo
 	CDoublePoint m_UpperLeft;
 	CDoublePoint m_CursorPosition;
 	CCadOrigin* m_pOrigin;
-	CSize m_ScrollOffset;
 	CSize m_szClient;
 	//--------------------------------
 	BOOL m_Show;
@@ -49,10 +48,8 @@ class CRulerInfo
 public:
 	CRulerInfo();
 	~CRulerInfo();
-	void SetScrollOffset(CSize offset) { m_ScrollOffset = offset; }
-	CSize GetScrollOffset() { return m_ScrollOffset; }
 	void SetUpperLeft(CDoublePoint uL) { m_UpperLeft = uL; }
-	CDoublePoint GetUpperLeft() { return m_UpperLeft; }
+	CDoublePoint& GetUpperLeft() { return m_UpperLeft; }
 	void SetCursorPos(CDoublePoint CP) { m_CursorPosition = CP; }
 	CDoublePoint GetCursorPos() { return m_CursorPosition; }
 	void SetOrigin(CCadOrigin* pOrg) { m_pOrigin = pOrg; }

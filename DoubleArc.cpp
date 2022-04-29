@@ -7,7 +7,7 @@ CDoubleArc::CDoubleArc()
 	m_SweepAngle = 0.0;
 }
 
-void CDoubleArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDoubleArc::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//------------------------------
 	// For right now, going to use
@@ -31,7 +31,7 @@ void CDoubleArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 	{
 		x = double(i) * InchesPerPixel.GetScaleX();
 		y = CalcY(x, A, B);
-		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
+		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(ULHC, Scale);
 		pDC->SetPixel(Point, RGB(2550, 64, 255));
 	}
 	for (int i = 0; i < RadiusY; i++)
@@ -42,7 +42,7 @@ void CDoubleArc::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		// x
 		//---------------------------------
 		x = CalcY(y, B, A);
-		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
+		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(ULHC, Scale);
 		pDC->SetPixel(Point, RGB(2550, 64, 255));
 	}
 }

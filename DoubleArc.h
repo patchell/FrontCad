@@ -15,7 +15,7 @@ class CDoubleArc
 	double m_Angle;	//how much the works is rotated by
 public:
 	CDoubleArc();
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	double CalcY(double x, double A, double B);
 	BadDelta DeltaIsBad(CPoint P1, CPoint P2);
 	CDoubleSize SlopeIsOneAt(double Asquared, double Bsquared);

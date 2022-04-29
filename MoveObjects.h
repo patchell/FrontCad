@@ -18,7 +18,7 @@ public:
 	virtual ~CMoveObjects();
 	void Clear(int nDeleteFlag=0);
 	void SetRef(CDoublePoint Ref);
-	void Draw(CDC *pDC, CSize ScrollOffset,CScale Scale);
+	void Draw(CDC *pDC, CDoublePoint& ULHC,CScale& Scale);
 	CCadObject *GetHead(void){return m_pHead;}
 	CCadObject * RemoveObject(CCadObject *pO);
 	void AddObject(CCadObject *pO);

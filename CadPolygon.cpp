@@ -153,7 +153,7 @@ int CCadPolygon::GrabPoint(CDoublePoint  point)
 	return rV;
 }
 
-void CCadPolygon::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadPolygon::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -199,8 +199,8 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		{
 		case ObjectDrawMode::FINAL:
 			oldpen = pDC->SelectObject(m_pPenLine);
-			m_Poly.Draw(pDC, mode, Offset, Scale);
-			m_Poly.Fill(pDC, mode, Offset, Scale, m_Attrib.m_colorFill);
+			m_Poly.Draw(pDC, mode, ULHC, Scale);
+			m_Poly.Fill(pDC, mode, ULHC, Scale, m_Attrib.m_colorFill);
 			pDC->SelectObject(oldpen);
 			SetLastMode(mode);
 			break;
@@ -208,13 +208,13 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			oldpen = pDC->SelectObject(m_pPenLine);
 			mode.LinesMode = SelectedLinesMode::HIGHLIGHT;
 			mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
-			m_Poly.Draw(pDC, mode, Offset, Scale);
+			m_Poly.Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(oldpen);
 			SetLastMode(mode);
 			break;
 		case ObjectDrawMode::SKETCH:
 			oldpen = pDC->SelectObject(m_pPenLine);
-			m_Poly.Draw(pDC, mode, Offset, Scale);
+			m_Poly.Draw(pDC, mode, ULHC, Scale);
 			SetLastMode(mode);
 			break;
 		}
@@ -477,10 +477,14 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -488,6 +492,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

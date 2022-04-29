@@ -83,7 +83,7 @@ public:
 	//-----------------------------------------
 	// Draw The Drawing
 	//-----------------------------------------
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	BOOL IsLastModeSame(MODE m) {
 		BOOL Result = FALSE;
 		if (m_LastMode.DrawMode == m.DrawMode &&

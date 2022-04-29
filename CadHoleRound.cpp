@@ -79,7 +79,7 @@ int CCadHoleRound::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadHoleRound::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadHoleRound::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -140,12 +140,12 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		case ObjectDrawMode::SKETCH:
 			pOldPen = pDC->SelectObject(m_pPenLine);
 			pDC->SelectStockObject(NULL_BRUSH);
-			RegularRect = rect.ToCRect(Offset, Scale);
+			RegularRect = rect.ToCRect(ULHC, Scale);
 			pDC->Ellipse(&RegularRect);
-			pDC->MoveTo(P1.ToPixelPoint(Offset,Scale));
-			pDC->MoveTo(P2.ToPixelPoint(Offset, Scale));
-			pDC->MoveTo(P3.ToPixelPoint(Offset, Scale));
-			pDC->MoveTo(P4.ToPixelPoint(Offset, Scale));
+			pDC->MoveTo(P1.ToPixelPoint(ULHC,Scale));
+			pDC->MoveTo(P2.ToPixelPoint(ULHC, Scale));
+			pDC->MoveTo(P3.ToPixelPoint(ULHC, Scale));
+			pDC->MoveTo(P4.ToPixelPoint(ULHC, Scale));
 			pDC->SelectObject(pOldPen);
 			break;
 		}
@@ -428,10 +428,14 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Round Hole:Place Center Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -439,6 +443,7 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

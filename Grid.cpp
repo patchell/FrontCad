@@ -20,11 +20,10 @@ CGrid::~CGrid()
 void CGrid::Draw(
 	CDC* pDC,
 	MODE mode,
-	CSize Offset,
-	CScale Scale,
-	CRect& rectClient,
-	CDoublePoint ULHC
-)
+	CDoublePoint& ULHC,
+	CScale& Scale,
+	CRect& rectClient
+	)
 {
 	//------------------------------------------------
 	// DrawGrid
@@ -35,20 +34,26 @@ void CGrid::Draw(
 	//-------------------------------------------------
 	if ((IsSnapGridShowing() && !IsSnapALine()) || (IsMajorGridShowing() && !IsMajorALine()))
 	{
-		DrawSnapDots(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
+		DrawSnapDots(pDC, mode, ULHC, Scale, rectClient );
 		if (IsMajorGridShowing() && IsMajorALine())
-			DrawMajLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
+			DrawMajLines(pDC, mode, ULHC, Scale, rectClient );
 	}
 	else if (IsSnapGridShowing() && IsMajorGridShowing())
 	{
-		DrawSnapLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
-		DrawMajLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
+		DrawSnapLines(pDC, mode, ULHC, Scale, rectClient );
+		DrawMajLines(pDC, mode, ULHC, Scale, rectClient);
 	}
 	else if (IsMajorGridShowing())
-		DrawMajLines(pDC, mode, CSize(0, 0), Scale, rectClient, ULHC);
+		DrawMajLines(pDC, mode, ULHC, Scale, rectClient);
 }
 
-void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect& rectClient, CDoublePoint ULHC)
+void CGrid::DrawSnapDots(
+	CDC* pDC,
+	MODE mode,
+	CDoublePoint ULHC,
+	CScale Scale,
+	CRect& rectClient
+)
 {
 	//-------------------------------------------
 	// DrawSnapDots
@@ -137,7 +142,13 @@ void CGrid::DrawSnapDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	}
 }
 
-void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect& rectClient, CDoublePoint ULHC)
+void CGrid::DrawMajLines(
+	CDC* pDC,
+	MODE mode,
+	CDoublePoint ULHC,
+	CScale Scale,
+	CRect& rectClient
+)
 {
 	//--------------------------------------------------------------
 	// DrawMajLines
@@ -196,7 +207,7 @@ void CGrid::DrawMajLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect&
 	}
 }
 
-void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CSize Offset, CScale Scale, CRect& rectClient, CDoublePoint ULHC)
+void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale &Scale, CRect& rectClient)
 {
 	//--------------------------------------------------------------
 	// DrawAllLines

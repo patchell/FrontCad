@@ -11,6 +11,7 @@ IMPLEMENT_DYNCREATE(CMyToolBarView, CWnd)
 CMyToolBarView::CMyToolBarView()
 {
 	m_ComboOriginIndex = 0;
+	m_pWndMessageDestination = 0;
 }
 
 CMyToolBarView::~CMyToolBarView()
@@ -96,6 +97,11 @@ void CMyToolBarView::InitToolbar(CWnd* pWnd)
 	m_Combo_OriginSelector.Create(WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, CRect(UL, Sz), this, IDC_COMBO_ORIGINLIST);
 	m_Combo_OriginSelector.EnableWindow(1);
 	m_Combo_OriginSelector.ShowWindow(1);
+	UL.x += Sz.cx + Spacing;
+	Sz.cx = 300;
+	m_StaticClient.Create(_T("0.000"), WS_BORDER | WS_CHILD, CRect(UL, Sz), this, IDC_STATIC_TOOLBAR_Y);
+	m_StaticClient.EnableWindow(1);
+	m_StaticClient.ShowWindow(1);
 }
 
 //------------------------------------------------

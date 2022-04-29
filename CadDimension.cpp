@@ -85,7 +85,7 @@ int CCadDimension::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadDimension::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadDimension::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -105,7 +105,7 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			CCadObject* pObj = GetHead();
 			while (pObj)
 			{
-				pObj->Draw( pDC, mode, Offset, Scale);
+				pObj->Draw( pDC, mode, ULHC, Scale);
 				pObj = pObj->GetNext();
 			}
 		}
@@ -331,10 +331,14 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -342,6 +346,7 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN:
@@ -444,7 +449,7 @@ void CDimLine::Create(CDoublePoint P1, CDoublePoint P2, UINT LineType)
 /*****************************************************************
 * CDimLine, Derived from CCadLine
 *****************************************************************/
-void CDimLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDimLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -464,8 +469,8 @@ void CDimLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadLine::m_RenderEnable)
 	{
-		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(Offset, Scale);
-		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(Offset, Scale);
+		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(ULHC, Scale);
+		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(ULHC, Scale);
 		Lw = int(Scale.m_ScaleX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
 		if (!IsLastModeSame(mode) || IsDirty())
@@ -528,7 +533,7 @@ double CDimLine::Slope(CDoublePoint P1, CDoublePoint P2)
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
-	double m;
+	double m = 0.0;
 	if (P1.dX != P2.dX)
 		m = (P1.dY - P2.dY) / (P1.dX - P2.dX);
 	return m;
@@ -540,7 +545,7 @@ double CDimLine::OrthogonalSlope(CDoublePoint P1, CDoublePoint P2)
 	// Get the slope of the line defined
 	// by m_P1, m_P2 that is perpendicular
 	//-----------------------------------
-	double m;
+	double m = 0.0;
 	if (P1.dY != P2.dY)
 		m = (P1.dX - P2.dX) / (P1.dY - P2.dY);
 	return m;

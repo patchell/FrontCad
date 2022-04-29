@@ -1,10 +1,11 @@
 #pragma once
-#include "CadLine.h"
+
 constexpr auto DIMLINE_HORIZONTAL = 1;
 constexpr auto DIMLINE_VERTICAL = 2;
 
 class CCadDimension:public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_DimensionCount;
 	inline static SCadDimAttributes m_LastAttributes;
 	inline static SCadDimAttributes m_CurrentAttributes;
@@ -23,7 +24,7 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CDoubleSize sz);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	virtual BOOL PointInObjectAndSelect(CPoint p, CSize Offest = CSize(0, 0), CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
 	virtual CDoublePoint GetReference();
 	virtual CDoubleRect& GetRect(CDoubleRect& rect);
@@ -81,7 +82,7 @@ public:
 		m_LineType = 0;
 	};
 	void Create(CDoublePoint P1, CDoublePoint P2, UINT LineType);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(100.0, 100.0));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	double Slope(CDoublePoint P1, CDoublePoint P2);
 	double OrthogonalSlope(CDoublePoint P1, CDoublePoint P2);
 	UINT LineIs(CDoublePoint P1, CDoublePoint P2);

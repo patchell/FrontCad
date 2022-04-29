@@ -134,7 +134,7 @@ int CCadRndRect::GrabPoint(CDoublePoint  point)
 }
 
 
-void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadRndRect::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -156,9 +156,9 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadRndRect::m_RenderEnable)
 	{
-		P1 = m_P1.ToPixelPoint(Offset,Scale);
-		P2 = m_P2.ToPixelPoint(Offset, Scale);;
-		P3 = m_P3.ToPixelPoint(Offset, Scale);;
+		P1 = m_P1.ToPixelPoint(ULHC,Scale);
+		P2 = m_P2.ToPixelPoint(ULHC, Scale);;
+		P3 = m_P3.ToPixelPoint(ULHC, Scale);;
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
 		if (Lw <= 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
 		{
@@ -204,7 +204,7 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		case ObjectDrawMode::FINAL:
 			pOld = pDC->SelectObject(m_pPenLine);
 			pOldBr = pDC->SelectObject(m_pBrush);
-			pDC->RoundRect(rect.ToCRect(Offset,Scale), P3);
+			pDC->RoundRect(rect.ToCRect(ULHC,Scale), P3);
 			pDC->SelectObject(pOldBr);
 			pDC->SelectObject(pOld);
 			break;
@@ -216,7 +216,7 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			SelBrush.CreateSolidBrush(RGB(255, 0, 0));
 			pOld = pDC->SelectObject(m_pPenLine);
 			pOldBr = pDC->SelectObject(m_pBrush);
-			pDC->RoundRect(rect.ToCRect(Offset,Scale), P3);
+			pDC->RoundRect(rect.ToCRect(ULHC,Scale), P3);
 			pDC->SelectObject(&SelPen);
 			pDC->SelectObject(&SelBrush);
 			CRect rect;
@@ -237,7 +237,7 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		break;
 		case ObjectDrawMode::SKETCH:
 			pOld = pDC->SelectObject(m_pPenLine);
-			pDC->RoundRect(rect.ToCRect(Offset,Scale), P3);
+			pDC->RoundRect(rect.ToCRect(ULHC,Scale), P3);
 			pDC->SelectObject(pOld);
 			break;
 		}
@@ -551,11 +551,14 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place First Point"));
 		break;
-	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -563,6 +566,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

@@ -46,6 +46,6 @@ public:
 	CDoubleRndRectangle() {
 		m_Angle = 0.0;
 	}
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 };
 

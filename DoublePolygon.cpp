@@ -27,7 +27,7 @@ void CDoublePolygon::Create(UINT numberOfPoints, CDoublePoint *Pounts)
 	}
 }
 
-void CDoublePolygon::Fill(CDC* pDC, MODE mode, CSize Offset, CScale Scale, COLORREF colorBoundry)
+void CDoublePolygon::Fill(CDC* pDC, MODE mode, CDoublePoint &ULHC, CScale &Scale, COLORREF colorBoundry)
 {
 	//---------------------------------------
 	// Fill
@@ -48,34 +48,34 @@ void CDoublePolygon::Fill(CDC* pDC, MODE mode, CSize Offset, CScale Scale, COLOR
 
 	if (GETAPP.GeneratePointInPolygon(m_pointsPolygon, m_numPoints, InsidePoint))
 	{
-		CPoint point = InsidePoint.ToPixelPoint(Offset, Scale);
+		CPoint point = InsidePoint.ToPixelPoint(ULHC, Scale);
 		pDC->FloodFill(point.x, point.y, colorBoundry);
 	}
 }
 
-void CDoublePolygon::ConnectTheDots(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDoublePolygon::ConnectTheDots(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	UINT i;
 
-	pDC->MoveTo(GetPoints()[0].ToPixelPoint(Offset,Scale));
+	pDC->MoveTo(GetPoints()[0].ToPixelPoint(ULHC,Scale));
 	for (i = 1; i < m_numPoints; ++i)
 	{
-		pDC->LineTo(GetPoints()[i].ToPixelPoint(Offset, Scale));
-		GetPoints()[i].Draw(pDC, mode, Offset, Scale);
+		pDC->LineTo(GetPoints()[i].ToPixelPoint(ULHC, Scale));
+		GetPoints()[i].Draw(pDC, mode, ULHC, Scale);
 	}
-	pDC->LineTo(GetPoints()[0].ToPixelPoint(Offset, Scale));
+	pDC->LineTo(GetPoints()[0].ToPixelPoint(ULHC, Scale));
 
 }
 
-void CDoublePolygon::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDoublePolygon::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:
-		ConnectTheDots(pDC, mode, Offset, Scale);
+		ConnectTheDots(pDC, mode, ULHC, Scale);
 		break;
 	case ObjectDrawMode::SELECTED:
-		ConnectTheDots(pDC, mode, Offset, Scale);
+		ConnectTheDots(pDC, mode, ULHC, Scale);
 		break;
 	}
 }

@@ -7,6 +7,7 @@ enum {
 
 class CCadText:public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_TextCount;
 	inline static STextAttributes m_LastAttributes;
 	inline static STextAttributes m_CurrentAttributes;
@@ -27,7 +28,7 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CPoint p);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 	virtual int PointInObjectAndSelect(
 		CDoublePoint p, 
 		CCadObject ** ppSelList = 0, 

@@ -7,6 +7,7 @@ class CMyToolBarView : public CWnd
 {
 	CWnd* m_pWndMessageDestination;
 	CStaticDouble m_Static_X, m_Static_Y;
+	CStatic m_StaticClient;
 	CComboBox m_Combo_OriginSelector;
 	int m_ComboOriginIndex;
 protected:
@@ -27,6 +28,7 @@ public:
 		m_Static_X.SetDoubleValue(pos.dX);
 		m_Static_Y.SetDoubleValue(pos.dY);
 	}
+	void SetDebug(CString& csS) { m_StaticClient.SetWindowTextW(csS); }
 	CComboBox& GetOriginSelCB() { return m_Combo_OriginSelector; }
 protected:
 	DECLARE_MESSAGE_MAP()

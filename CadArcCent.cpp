@@ -113,7 +113,7 @@ int CCadArcCent::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadArcCent::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadArcCent::Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale)
 {
 	//***************************************************
 	// Draw
@@ -135,10 +135,10 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadArcCent::IsRenderEnabled())
 	{
-		rect = m_rectShape.ToCRect(Offset, Scale);
-		Start = m_pointStart.ToPixelPoint(Offset, Scale);
-		End = m_pointEnd.ToPixelPoint(Offset, Scale);
-		Center = GetCenter().ToPixelPoint(Offset, Scale);
+		rect = m_rectShape.ToCRect(ULHC, Scale);
+		Start = m_pointStart.ToPixelPoint(ULHC, Scale);
+		End = m_pointEnd.ToPixelPoint(ULHC, Scale);
+		Center = GetCenter().ToPixelPoint(ULHC, Scale);
 		if ((!IsLastModeSame(mode)) || IsDirty())
 		{
 			Lw = int(round(GetAttributes().m_LineWidth * Scale.GetScaleX()));
@@ -536,10 +536,14 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("ARC CENTER:Place Center Point of Circle Shape"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
@@ -548,6 +552,7 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

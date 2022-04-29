@@ -77,14 +77,14 @@ CCadObject * CMoveObjects::RemoveObject(CCadObject *pLO)
 	return pLO;
 }
 
-void CMoveObjects::Draw(CDC *pDC, CSize ScrollOffset, CScale Scale)
+void CMoveObjects::Draw(CDC *pDC, CDoublePoint& ULHC, CScale& Scale)
 {
 	CCadObject *pCO = m_pHead;
 	MODE mode;
 	mode.DrawMode = ObjectDrawMode::SELECTED;
 	while(pCO)
 	{
-		pCO->Draw(pDC,mode, ScrollOffset, Scale);
+		pCO->Draw(pDC,mode, ULHC, Scale);
 		pCO = pCO->GetNext();
 	}
 }

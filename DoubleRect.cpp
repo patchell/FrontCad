@@ -194,8 +194,8 @@ void CDoubleRect::Rotate(CDoublePoint Pivot, double Angle, RectPoint Reference)
 void CDoubleRect::Draw(
 	CDC* pDC, 
 	MODE mode, 
-	CSize Offset, 
-	CScale Scale
+	CDoublePoint& ULHC, 
+	CScale& Scale
 )
 {
 	CPoint points[4];
@@ -205,7 +205,7 @@ void CDoubleRect::Draw(
 			points,
 			m_dptPoints,
 			4,
-			Offset,
+			ULHC,
 			Scale
 		), 
 		4
@@ -217,13 +217,13 @@ BOOL CDoubleRect::PointInRectangle(CDoublePoint dptPoint)
 	return GETAPP.PtEnclosedInPolygon(dptPoint, GetDoublePoints(), 4);
 }
 
-CRect CDoubleRect::ToCRect(CSize Offset, CScale Scale)
+CRect CDoubleRect::ToCRect(CDoublePoint& ULHC, CScale& Scale)
 {
 	CRect rectResult;
 	CPoint P1, P2;
 
-	P1 = m_dptPoints[0].ToPixelPoint(Offset, Scale);
-	P2 = m_dptPoints[2].ToPixelPoint(Offset, Scale);
+	P1 = m_dptPoints[0].ToPixelPoint(ULHC, Scale);
+	P2 = m_dptPoints[2].ToPixelPoint(ULHC, Scale);
 	rectResult.SetRect(P1, P2);
 	rectResult.NormalizeRect();
 	return rectResult;

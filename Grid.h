@@ -62,36 +62,32 @@ public:
 	CGrid();
 	~CGrid();
 	void Draw(
-		CDC* pDC, 
-		MODE mode, 
-		CSize Offset, 
-		CScale Scale, 
-		CRect& rectClient, 
-		CDoublePoint ULHC
+		CDC* pDC,
+		MODE mode,
+		CDoublePoint& ULHC,
+		CScale& Scale,
+		CRect& rectClient
 	);
 	void DrawSnapDots(
 		CDC* pDC,
 		MODE mode,
-		CSize Offset,
+		CDoublePoint ULHC,
 		CScale Scale,
-		CRect& rectClient,
-		CDoublePoint ULHC
+		CRect& rectClient
 	);
 	void DrawMajLines(
 		CDC* pDC,
 		MODE mode,
-		CSize Offset,
+		CDoublePoint ULHC,
 		CScale Scale,
-		CRect& rectClient,
-		CDoublePoint ULHC
+		CRect& rectClient
 	);
 	void DrawSnapLines(
 		CDC* pDC,
 		MODE mode,
-		CSize Offset,
-		CScale Scale,
-		CRect& rectClient,
-		CDoublePoint ULHC
+		CDoublePoint& ULHC,
+		CScale& Scale,
+		CRect& rectClient
 	);
 	int GetGridLineType(double LineV, Axis Type);
 	void EnableSnap(BOOL en) { m_SnapGridOn = en; }	//Enables the Snap Grid
@@ -106,29 +102,39 @@ public:
 	BOOL IsSnapGridShowing() { return m_GridShowSnap; }
 	int GetZoomFactor() { return m_ZoomFactor; }
 	void SetZoomFactor(int Zf) { m_ZoomFactor = Zf; }
-	int ZoomOut() {
-		if(m_ZoomFactor < (MAX_ZOOM -1))
+	BOOL ZoomOut() {	//returns true if zoom changed
+		BOOL rV = FALSE;
+
+		if (m_ZoomFactor < (MAX_ZOOM - 1))
+		{
+			rV = TRUE;
 			++m_ZoomFactor;
-		return m_ZoomFactor;
+		}
+		return rV;
 	}
-	int ZoomIn() {
+	BOOL ZoomIn() {	//returns true if zoom changed
+		BOOL rV = FALSE;
+
 		if (m_ZoomFactor > 0)
+		{
 			--m_ZoomFactor;
-		return m_ZoomFactor;
+			rV = TRUE;
+		}
+		return rV;
 	}
 	double GetScaleFactor() { return ScaleFactor[m_ZoomFactor]; }
 	//--------------------------------------------------
 	// Screen <-> Drawing (Pixels <-> Inches) Conversions ie Scaling
 	//-------------------------------------------------
-	CScale GetInchesPerPixel() { return InchesPerPixel[m_ZoomFactor]; }
-	CScale GetPixelsPerInch() { return PixelsPerInch[m_ZoomFactor]; }
+	CScale& GetInchesPerPixel() { return InchesPerPixel[m_ZoomFactor]; }
+	CScale& GetPixelsPerInch() { return PixelsPerInch[m_ZoomFactor]; }
 	//-------------------------------------------------
 	// Grid Attributes
 	//-------------------------------------------------
 	SGridAttributes& GetAttributes() { return m_Attributes; }
 	SGridAttributes* GetPtrToAttributes() { return &m_Attributes; }
 	void SetSnapGrid(CDoubleSize SnGrid) { GetAttributes().m_SnapGridSpacing = SnGrid; }
-	CDoubleSize GetSnapGrid() { return GetAttributes().m_SnapGridSpacing; }
+	CDoubleSize& GetSnapGrid() { return GetAttributes().m_SnapGridSpacing; }
 	void SetMajorGrid(CDoubleSize MajGrd) { GetAttributes().m_MajorGridSpacing = MajGrd; }
 	CDoubleSize GetMajorGrid() { return GetAttributes().m_MajorGridSpacing; }
 	void SetSnapLineColor(COLORREF c) { GetAttributes().m_colorSnapLine = c; }

@@ -85,10 +85,10 @@ public:
 
 	}
 	void Rotate(CDoublePoint ptPivot, double angle, RectPoint Reference);
-	void Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale);
+	void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
 //	CDoublePoint Extend(CDoublePoint point, RectangleExtendMode mode);
 	BOOL PointInRectangle(CDoublePoint dptPoint);
-	CRect ToCRect(CSize Offset, CScale Scale);
+	CRect ToCRect(CDoublePoint& ULHC, CScale& Scale);
 	CDoublePoint* GetDoublePoints() { return m_dptPoints; }
 	CDoublePoint& GetCenter(CDoublePoint& point);
 	CDoublePoint GetPoint(RectPoint PointNumber);

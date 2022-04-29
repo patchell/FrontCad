@@ -127,7 +127,7 @@ int CCadElispe::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadElispe::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadElispe::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -149,8 +149,8 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (IsRenderEnabled())
 	{
-		P1 = m_P1.ToPixelPoint(Offset, Scale);;
-		P2 = m_P2.ToPixelPoint(Offset, Scale);
+		P1 = m_P1.ToPixelPoint(ULHC, Scale);;
+		P2 = m_P2.ToPixelPoint(ULHC, Scale);
 		if ((Lw = int(Scale.m_ScaleX * GetLineWidth())) < 1) Lw = 1;
 		if (Lw <= 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
 		{
@@ -187,7 +187,7 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				m_pBrFill = new CBrush(GetFillColor());
 			SetDirty(FALSE);
 		}
-		rect = CDoubleRect(m_P1, m_P2).ToCRect(Offset, Scale);
+		rect = CDoubleRect(m_P1, m_P2).ToCRect(ULHC, Scale);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
@@ -519,10 +519,14 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Ellipse::Place First Point Defining Shape"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -530,6 +534,7 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

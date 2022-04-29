@@ -1,12 +1,12 @@
 #include "pch.h"
 
-CPoint CDoublePoint::ToPixelPoint(CSize Offset, SCALE PixelsPerInch)
+CPoint CDoublePoint::ToPixelPoint(CDoublePoint &ULHC, CScale &PixelsPerInch)
 {
     CPoint ResultPoint;
-    CDoublePoint p = *this;
+    CDoublePoint p = *this + -ULHC;
     p = p * PixelsPerInch;
     p.RoundToNearest(CDoubleSize(1.0,1.0));
-    ResultPoint = p.ToCPoint() + Offset;
+    ResultPoint = p.ToCPoint();
     return ResultPoint;
 }
 
@@ -46,14 +46,10 @@ CDoublePoint CDoublePoint::Snap(CDoubleSize SnapSize, BOOL SnapEnabled)
             y = dY - y_mod;
         else
             y = dY + SnapSize.dCY - y_mod;
-
-        Result = CDoublePoint(x, y);
-    }
-    else
-    {
-        Result = CDoublePoint(dX, dY);
-    }
-     return Result;
+        dX = x;
+        dY = y;
+   }
+     return *this;
 }
 
 BOOL CDoublePoint::Hover(CDoublePoint Point)
@@ -83,14 +79,14 @@ CDoubleRect CDoublePoint::EnclosePoint(UINT nPixels, CScale Scale)
     return Result;
 }
 
-void CDoublePoint::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CDoublePoint::Draw(CDC* pDC, MODE mode, CDoublePoint &ULHC, CScale &Scale)
 {
     switch (mode.PointsMode)
     {
     case SelectedPointsMode::NOP:
         break;
     case SelectedPointsMode::POINT_BOTH_RECT_FILLED:
-        EnclosePoint(10, Scale).Draw(pDC, mode, Offset, Scale);
+        EnclosePoint(10, Scale).Draw(pDC, mode, ULHC, Scale);
         break;
     case SelectedPointsMode::POINT_ENCLOSED_IN_RECT:
         break;
@@ -99,14 +95,14 @@ void CDoublePoint::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
     }
 }
 
-BOOL CDoublePoint::MakeSelectionRect(CRect& rect, SCALE Scale, CSize Offset, double Margin)
+BOOL CDoublePoint::MakeSelectionRect(CRect& rect, CScale& Scale, CDoublePoint& ULHC, double Margin)
 {
     //----------------------------------------------------
     // MakeSelectionRect
     //----------------------------------------------------
     BOOL InView = TRUE;
 
-    CPoint Point = ToPixelPoint(Offset, Scale);
+    CPoint Point = ToPixelPoint(ULHC, Scale);
     return InView;
 }
 
@@ -176,17 +172,6 @@ BOOL CDoublePoint::IsPointOnTarget(CDoublePoint p)
 double CDoublePoint::DistanceTo(CDoublePoint p)
 {
     return  (* this - p).Magnitude();
-}
-
-CDoublePoint CDoublePoint::Rotate()
-{
-    return Rotate(m_pPivot, m_RadAngle);
-}
-
-CDoublePoint CDoublePoint::Rotate(CDoublePoint* pPivot, CDoublePoint point)
-{
-    m_RadAngle = CDoubleSize(point.dX - pPivot->dY, point.dY - pPivot->dY).Angle();
-    return Rotate(m_pPivot, m_RadAngle);
 }
 
 CDoublePoint CDoublePoint::Rotate(CDoublePoint* pPivot, double Angle)

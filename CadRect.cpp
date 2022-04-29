@@ -104,7 +104,7 @@ int CCadRect::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadRect::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -167,7 +167,7 @@ void CCadRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		case ObjectDrawMode::FINAL:
 			pOld = pDC->SelectObject(m_pPenLine);
 			pOldBr = pDC->SelectObject(m_pBrFill);
-			m_Rect.Draw(pDC, mode, Offset, Scale);
+			m_Rect.Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(pOldBr);
 			pDC->SelectObject(pOld);
 			break;
@@ -179,21 +179,21 @@ void CCadRect::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			SelBrush.CreateSolidBrush(RGB(255, 0, 0));
 			pOld = pDC->SelectObject(m_pPenLine);
 			pOldBr = pDC->SelectObject(m_pBrFill);
-			m_Rect.Draw(pDC, mode, Offset, Scale);
+			m_Rect.Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(&SelPen);
 			pDC->SelectObject(&SelBrush);
 			mode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
-			m_Rect.GetPoint(RectPoint::LOWERLEFT).Draw(pDC, mode, Offset, Scale);
-			m_Rect.GetPoint(RectPoint::UPPERLEFT).Draw(pDC, mode, Offset, Scale);
-			m_Rect.GetPoint(RectPoint::LOWERRIGHT).Draw(pDC, mode, Offset, Scale);
-			m_Rect.GetPoint(RectPoint::UPPERRIGHT).Draw(pDC, mode, Offset, Scale);
+			m_Rect.GetPoint(RectPoint::LOWERLEFT).Draw(pDC, mode, ULHC, Scale);
+			m_Rect.GetPoint(RectPoint::UPPERLEFT).Draw(pDC, mode, ULHC, Scale);
+			m_Rect.GetPoint(RectPoint::LOWERRIGHT).Draw(pDC, mode, ULHC, Scale);
+			m_Rect.GetPoint(RectPoint::UPPERRIGHT).Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(pOldBr);
 			pDC->SelectObject(pOld);
 		}
 		break;
 		case ObjectDrawMode::SKETCH:
 			pOld = pDC->SelectObject(m_pPenLine);
-			m_Rect.Draw(pDC,mode,Offset,Scale);
+			m_Rect.Draw(pDC,mode, ULHC,Scale);
 			pDC->SelectObject(pOld);
 			break;
 		}
@@ -468,10 +468,14 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:

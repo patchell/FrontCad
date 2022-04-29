@@ -106,7 +106,7 @@ int CCadArrow::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadArrow::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadArrow::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -160,14 +160,14 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 		case ObjectDrawMode::SELECTED:
 			pOldPen = pDC->SelectObject(m_pPen);
 			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, Offset, Scale), 4);
+			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, ULHC, Scale), 4);
 			pDC->SelectObject(pOldPen);
 			pDC->SelectObject(pOldBr);
 			break;
 		case ObjectDrawMode::SKETCH:
 			pOldPen = pDC->SelectObject(m_pPen);
 			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, Offset, Scale), 4);
+			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, ULHC, Scale), 4);
 			pDC->SelectObject(pOldPen);
 			pDC->SelectObject(pOldBr);
 			break;
@@ -464,10 +464,14 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -475,6 +479,7 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

@@ -77,7 +77,7 @@ int CCadHoleRnd2Flat::GrabPoint(CDoublePoint p)
 }
 
 
-void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -137,7 +137,7 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 			}
 			SetDirty(FALSE);
 		}
-		CenterPoint = m_Center.ToPixelPoint(Offset, Scale);
+		CenterPoint = m_Center.ToPixelPoint(ULHC, Scale);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
@@ -159,15 +159,15 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 				float(Angle + 180.0),
 				float(180 - 2 * Angle)
 			);
-			pDC->MoveTo(P1.ToPixelPoint(Offset, Scale));
-			pDC->LineTo(P2.ToPixelPoint(Offset, Scale));
-			pDC->MoveTo(P3.ToPixelPoint(Offset, Scale));
-			pDC->LineTo(P4.ToPixelPoint(Offset, Scale));
+			pDC->MoveTo(P1.ToPixelPoint(ULHC, Scale));
+			pDC->LineTo(P2.ToPixelPoint(ULHC, Scale));
+			pDC->MoveTo(P3.ToPixelPoint(ULHC, Scale));
+			pDC->LineTo(P4.ToPixelPoint(ULHC, Scale));
 
-			pDC->MoveTo(C1.ToPixelPoint(Offset, Scale));
-			pDC->LineTo(C3.ToPixelPoint(Offset, Scale));
-			pDC->MoveTo(C2.ToPixelPoint(Offset, Scale));
-			pDC->LineTo(C4.ToPixelPoint(Offset, Scale));
+			pDC->MoveTo(C1.ToPixelPoint(ULHC, Scale));
+			pDC->LineTo(C3.ToPixelPoint(ULHC, Scale));
+			pDC->MoveTo(C2.ToPixelPoint(ULHC, Scale));
+			pDC->LineTo(C4.ToPixelPoint(ULHC, Scale));
 
 			pDC->SelectObject(pOldPen);
 			break;
@@ -464,10 +464,14 @@ ObjectDrawState CCadHoleRnd2Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Round Hole with Two Flat Side"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -475,6 +479,7 @@ ObjectDrawState CCadHoleRnd2Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

@@ -598,18 +598,16 @@ CPoint* CFrontCadApp::MakePolygonFromDoublePolygon(
 	CPoint* dest,
 	CDoublePoint* src,
 	int n,
-	CSize Offset,
-	CScale Scale
+	CDoublePoint& ULHC,
+	CScale& Scale
 )
 {
 	int i;
-//	printf("---------- - MakePolygonFromDoublePoly--------------------\n");
+
 	for (i = 0; i < n; ++i)
 	{
-		dest[i] = src[i].ToPixelPoint(Offset, Scale);
-//		src[i].Print();
+		dest[i] = src[i].ToPixelPoint(ULHC, Scale);
 	}
-//	printf("--------------\n");
 	return dest;
 }
 

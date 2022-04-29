@@ -138,7 +138,7 @@ int CCadLine::GrabPoint(CDoublePoint point)
 }
 
 
-void CCadLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
+void CCadLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 {
 	//***************************************************
 	// Draw
@@ -158,8 +158,8 @@ void CCadLine::Draw(CDC* pDC, MODE mode, CSize Offset, CScale Scale)
 
 	if (CCadLine::m_RenderEnable)
 	{
-		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(Offset,Scale);
-		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(Offset,Scale);
+		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(ULHC,Scale);
+		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(ULHC,Scale);
 		Lw = int(Scale.m_ScaleX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
 		if (!IsLastModeSame(mode) || IsDirty())
@@ -479,10 +479,14 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
-		Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
-		if (IDYES == Id)
+		if (m_AttributesDirty)
 		{
-			m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			if (IDYES == Id)
+			{
+				m_CurrentAttributes.CopyTo(&m_LastAttributes);
+			}
+			m_AttributesDirty = FALSE;
 		}
 		if(GETVIEW()->IsAutoScrollEnabled())
 			GETVIEW()->EnableAutoScroll(FALSE);
@@ -492,6 +496,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		if (IDOK == Id)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:

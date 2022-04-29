@@ -2,6 +2,7 @@
 
 class CCadArc :public CCadObject
 {
+	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_ArcCount;
 	inline static SArcAttributes m_LastAttributes;
 	inline static SArcAttributes m_CurrentAttributes;
@@ -21,7 +22,7 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void SetVertex(int v, CPoint p);
 	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CSize Offset = CSize(0, 0), CScale Scale = CScale(0.1, 0.1));
+	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale);
 	virtual int PointInObjectAndSelect(
 		CDoublePoint p,
 		CCadObject** ppSelList = 0,
