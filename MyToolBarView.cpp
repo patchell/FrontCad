@@ -137,6 +137,7 @@ void CMyToolBarView::OnComboOriginSel()
 		UINT(ToolBarMsg::ORIGIN_SEL_CHANGE), 
 		CurSel
 	);
+	m_pWndMessageDestination->SetFocus();
 }
 
 

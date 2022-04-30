@@ -445,6 +445,7 @@ BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		{
 			ZoomOut(pointMousePos);
 		}
+		PostMessageToRulers(RW_ZOOM);
 	}
 	CFrontCadDoc* pDoc = GetDocument();
 	pDoc->SetAllDirty();
@@ -2410,6 +2411,7 @@ void CFrontCadView::ZoomIn(CDoublePoint point)
 		// Clean up ULHC ie Snap
 		//--------------------------------
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
 		//--------------------------------
@@ -2450,6 +2452,7 @@ void CFrontCadView::ZoomOut(CDoublePoint point)
 			ptULHC
 		);
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
 		//--------------------------------
@@ -2670,6 +2673,7 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
 		pDoc->SetCurrentOrigin(pCORG);
 		GetRulerInfo().SetOrigin(pCORG);
+		PostMessageToRulers(RW_ZOOM);
 		printf("Origin Changed\n");
 		break;
 	}
