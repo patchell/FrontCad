@@ -9,8 +9,8 @@ IMPLEMENT_DYNCREATE(CFrontCadDoc, CBaseDocument)
 
 CFrontCadDoc::CFrontCadDoc()
 {
-	m_DocSize = CDoubleSize(22.0, 17.0);
-	m_PaperSize = CDoubleSize(11.0, 8.5);
+	m_DocSize = CDoubleSize(DOCUMENT_DRAWING_X, DOCUMENT_DRAWING_Y);
+	m_PaperSize = CDoubleSize(DOCUMENT_PAPER_X, DOCUMENT_PAPER_Y);
 }
 
 CFrontCadDoc::~CFrontCadDoc()

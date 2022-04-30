@@ -39,6 +39,7 @@ class CRulerInfo
 	CDoublePoint m_UpperLeft;
 	CDoublePoint m_CursorPosition;
 	CCadOrigin* m_pOrigin;
+	CDoubleSize m_DocSize;
 	CSize m_szClient;
 	//--------------------------------
 	BOOL m_Show;
@@ -58,6 +59,8 @@ public:
 	BOOL AreRulersShowing() { return m_Show; }
 	CSize GetClientSize() { return m_szClient; }
 	void SetClientSize(CSize sz) { m_szClient = sz; }
+	CDoubleSize& GetDocSize() { return m_DocSize; }
+	void SetDocSize(CDoubleSize& docSize) { m_DocSize = docSize; }
 	BOOL AreFulersReady() { return m_RulersReady; }
 	void SetRulersReady(BOOL b) { m_RulersReady = b; }
 	//-------------------------------

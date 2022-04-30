@@ -73,8 +73,9 @@ BOOL CMyToolBarView::OnEraseBkgnd(CDC* pDC)
 	return TRUE;
 }
 
-void CMyToolBarView::InitToolbar(CWnd* pWnd)
+void CMyToolBarView::InitToolbar(CWnd* pWnd, CRulerInfo* pRulerInfo)
 {
+	m_pRulerInfo = pRulerInfo;
 	//----------------------------------------
 	// InitToolbar
 	//	Add controls to the tool bar, etc
@@ -97,6 +98,8 @@ void CMyToolBarView::InitToolbar(CWnd* pWnd)
 	m_Combo_OriginSelector.Create(WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, CRect(UL, Sz), this, IDC_COMBO_ORIGINLIST);
 	m_Combo_OriginSelector.EnableWindow(1);
 	m_Combo_OriginSelector.ShowWindow(1);
+	AddOrigin(GetRulerInfo()->GetOrigin());
+	m_Combo_OriginSelector.SetCurSel(0);
 	UL.x += Sz.cx + Spacing;
 	Sz.cx = 300;
 	m_StaticClient.Create(_T("0.000"), WS_BORDER | WS_CHILD, CRect(UL, Sz), this, IDC_STATIC_TOOLBAR_Y);
@@ -108,7 +111,7 @@ void CMyToolBarView::InitToolbar(CWnd* pWnd)
 // Origin ComboBox Methods
 //------------------------------------------------
 
-void CMyToolBarView::AddOrigine(CCadOrigin* pORG)
+void CMyToolBarView::AddOrigin(CCadOrigin* pORG)
 {
 	m_Combo_OriginSelector.InsertString(m_ComboOriginIndex, pORG->GetName());
 	m_Combo_OriginSelector.SetItemData(m_ComboOriginIndex++, (DWORD)pORG);

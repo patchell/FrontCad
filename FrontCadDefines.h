@@ -5,6 +5,13 @@
 #define GETVIEW()	((CFrontCadView *)(theApp.GetCurrentView()))
 
 //----------------------------------
+// Document and Paper Size
+//----------------------------------
+constexpr auto DOCUMENT_PAPER_X = 11.0;
+constexpr auto DOCUMENT_PAPER_Y = 8.5;
+constexpr auto DOCUMENT_DRAWING_X = 22.0;
+constexpr auto DOCUMENT_DRAWING_Y = 17.0;
+//----------------------------------
 // It should be noted that point mP1
 // is used as the center poiot, and
 // m_P2 is used as the radius
@@ -354,9 +361,9 @@ enum class WindowsMsg {
 //---------------------------
 
 enum class ToolBarMsg {
-	ORIGIN_SEL_CHANGE,
-	CREATE_FIRST_ORIGIN
+	ORIGIN_SEL_CHANGE
 };
+
 enum class WMarrowSubMsg {
 WM_ARROWATTRB_VALUE_L1,
 WM_ARROWATTRB_VALUE_L2,

@@ -9,6 +9,7 @@ class CMyToolBarView : public CWnd
 	CStaticDouble m_Static_X, m_Static_Y;
 	CStatic m_StaticClient;
 	CComboBox m_Combo_OriginSelector;
+	CRulerInfo* m_pRulerInfo;
 	int m_ComboOriginIndex;
 protected:
 	CMyToolBarView();
@@ -21,8 +22,8 @@ public:
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
 #endif
-	void InitToolbar(CWnd* pWnd);
-	void AddOrigine(CCadOrigin* pORG);
+	void InitToolbar(CWnd* pWnd, CRulerInfo *pRulerInfo);
+	void AddOrigin(CCadOrigin* pORG);
 	CCadOrigin* GetOrigin(int index);
 	void SetToolBarPosition(CDoublePoint pos) {
 		m_Static_X.SetDoubleValue(pos.dX);
@@ -30,6 +31,9 @@ public:
 	}
 	void SetDebug(CString& csS) { m_StaticClient.SetWindowTextW(csS); }
 	CComboBox& GetOriginSelCB() { return m_Combo_OriginSelector; }
+	CRulerInfo* GetRulerInfo() {
+		return m_pRulerInfo;
+	}
 protected:
 	DECLARE_MESSAGE_MAP()
 public:

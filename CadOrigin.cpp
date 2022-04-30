@@ -11,6 +11,7 @@ CCadOrigin::CCadOrigin():CCadObject()
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
+	printf("Make new Origin\n");
 }
 
 CCadOrigin::~CCadOrigin()

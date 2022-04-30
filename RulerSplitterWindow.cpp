@@ -117,7 +117,7 @@ LRESULT CRulerSplitterWnd::OnRulerMessage(WPARAM msg, LPARAM aux)
 	switch (msg)
 	{
 	case RW_VSCROLL:
-	VERTICALRULER->Draw();
+		VERTICALRULER->Draw();
 		break;
 	case RW_HSCROLL:
 		HORIZONTALRULER->Draw();

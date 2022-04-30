@@ -14,7 +14,10 @@ CDlgNewDrawing::CDlgNewDrawing(CWnd* pParent /*=nullptr*/)
 #ifndef _WIN32_WCE
 	EnableActiveAccessibility();
 #endif
-
+	m_DrawingSizeX = 0.0;
+	m_DrawingSizeY = 0.0;
+	m_PaperSizeX = 0.0;
+	m_PaperSizeY = 0.0;
 }
 
 CDlgNewDrawing::~CDlgNewDrawing()

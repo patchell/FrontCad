@@ -27,7 +27,7 @@ public:
 #endif
 #endif
 	void SetDocSize(CDoubleSize szDoc) { m_DocSize = szDoc; }
-	CDoubleSize GetDocSize() { return m_DocSize; }
+	CDoubleSize& GetDocSize() { return m_DocSize; }
 	double GetDocWidth() { return m_DocSize.dCX; }
 	double GetDocHieght() { return m_DocSize.dCY; }
 	void SetPaperSize(CDoubleSize szPaper) { m_PaperSize = szPaper; }

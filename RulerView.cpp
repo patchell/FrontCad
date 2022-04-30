@@ -195,10 +195,15 @@ void CRulerView::DrawTicker(
 		SnapSpace = GetRulersInfo()->GetGrid()->GetSnapGrid().dCY;
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCY;
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)		break;
+		printf("DocSize = %6.3lf\n", GetRulersInfo()->GetDocSize().dCY);
+		printf("Upper Left = %6.3lf\n", GetRulersInfo()->GetUpperLeft().dY);
+		printf("Origin X = %6.3lf  Y = %6.3lf\n", GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dX, GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY);
 		FirstTick = GETAPP.RoundUpToNearest(
-			GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY - GetRulersInfo()->GetUpperLeft().dY,
+			GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY -
+			GetRulersInfo()->GetUpperLeft().dY,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCY
 		);
+		printf("First Tick = %6.3lf\n", FirstTick);
 		AxisType = Axis::Y;
 		SnapSpacing = GETAPP.RoundDoubleToInt(
 			SnapSpace * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY());
@@ -263,18 +268,20 @@ void CRulerView::DrawTicker(
 			//----------------------------
 			// Are we at a Major Tick?
 			//----------------------------
-			double tick;
-			int tickType;
-			int x, y;
-			double X, Y;
+			double tick = 0.0;;
+			int tickType = 0;
+			int x = 0, y = 0;
 
-			tick = FirstTick + SnapSpace * double(i);
-			tickType = GetRulersInfo()->GetGrid()->GetGridLineType(tick, AxisType);
 			switch (GetRulerType())
 			{
 			case RT_HORIZONTAL:
-				X = tick - FirstTick;
-				x = GETAPP.RoundDoubleToInt(X * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX());
+				tick = FirstTick + SnapSpace * double(i);
+				tickType = GetRulersInfo()->GetGrid()->GetGridLineType(tick, AxisType);
+				x = GETAPP.RoundDoubleToInt(
+					double(i) *
+					GetRulersInfo()->GetGrid()->GetSnapGrid().dCX *
+					GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX()
+				);
 				pDC->MoveTo(x,0);
 				switch (tickType)
 				{
@@ -312,14 +319,20 @@ void CRulerView::DrawTicker(
 				}  // end of "switch (tickType)"
 				break;
 			case RT_VERTICAL:
-				Y = tick - FirstTick;
-				y = GETAPP.RoundDoubleToInt(Y * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY());
+				tick = FirstTick - SnapSpace * double(i);
+				tickType = GetRulersInfo()->GetGrid()->GetGridLineType(tick, AxisType);
+				y = GETAPP.RoundDoubleToInt(
+					double(i) * 
+					GetRulersInfo()->GetGrid()->GetSnapGrid().dCY *
+					GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY()
+				);
 				pDC->MoveTo(0,y);
 				switch (tickType)
 				{
 				case GRID_MAJOR:
 					if (LabelCount-- == 0)
 					{
+						printf("Ticks=%6.3lf   First=%6.3lf\n", tick, FirstTick);
 						pDC->SelectObject(&majPen);
 						x = GetRulersInfo()->GetMajorTickLength();
 						pDC->LineTo(x, y);
@@ -352,6 +365,9 @@ void CRulerView::DrawTicker(
 				break;
 			}	// end of "switch (tickType)"
 		}	// end of for loop
+		if(GetRulerType() == RT_VERTICAL)
+			printf("-----------------\n");
+
 		// restore DC objects
 		pDC->SetMapMode(oldMapMode);
 		pDC->SelectObject(pOldFont);

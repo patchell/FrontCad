@@ -868,11 +868,17 @@ void CFrontCadView::OnInitialUpdate()
 {
 	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
 	CFrontCadDoc *pDoc = GetDocument();
-	static CCadOrigin Org;
-	CString csName = _T("Kluge");
+	CString csOrgName = _T("Default");
 
-	Org.Create(0, 0, csName);
-	GetRulerInfo().SetOrigin(&Org);
+	//------------ Setup Default Origin --------------
+	m_DefaultOrigin.Create(0, pDoc->GetDocHieght(), csOrgName);
+	pDoc->AddOriginAtFront(&m_DefaultOrigin);
+	GetRulerInfo().SetOrigin(&m_DefaultOrigin);
+	pDoc->SetCurrentOrigin(&m_DefaultOrigin);
+	// This will be finished up later when
+	// a message is recieved that the toolbard
+	// has been set up.
+	//-----------------------------------------------
 	pDoc->SetDocView(this);
 	SetObjectEnables(
 		OBJECT_ENABLE_ROUNDEDRECT |
@@ -885,7 +891,7 @@ void CFrontCadView::OnInitialUpdate()
 		OBJECT_ENABLE_ORIGIN 
 	);
 	//-----------------------------------------
-	GetMyFrame()->InitToolBar(this);
+	GetMyFrame()->InitToolBar(this, GetPtrToRulerInfo());
 	//------------- Scroll Bars ---------------
 	GetRulerInfo().SetUpperLeft(CDoublePoint(0.0, 0.0));
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
@@ -903,6 +909,7 @@ void CFrontCadView::OnInitialUpdate()
 	GetRulerInfo().SetCornerColor(GETAPP.GetRulerAttributes()->m_colorCorner);
 	GetRulerInfo().SetCursorColor(GETAPP.GetRulerAttributes()->m_colorCursor);
 	GetRulerInfo().SetMajorTickLength(GETAPP.GetRulerAttributes()->m_MajTickLength);
+	GetRulerInfo().SetDocSize(pDoc->GetDocSize());
 	CRect rect;
 	GetClientRect(&rect);
 	GetRulerInfo().SetClientSize(rect.Size());
@@ -921,7 +928,6 @@ void CFrontCadView::OnInitialUpdate()
 	SendMessageToRulers(RW_SHOW, TRUE);
 	PostMessageToRulers(RW_ZOOM);
 	PostMessageToRulers(RW_POSITION);
-
 	
 	//----------------------------------------
 	// Initialize Mouse Tracking Event
@@ -931,7 +937,6 @@ void CFrontCadView::OnInitialUpdate()
 	m_TrackMouseEvent.dwHoverTime = INFINITE;
 	m_TrackMouseEvent.hwndTrack = m_hWnd;
 
-	PostMessage(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), UINT(ToolBarMsg::CREATE_FIRST_ORIGIN), 0);
 	CChildViewBase::OnInitialUpdate();
 }
 
@@ -2636,7 +2641,7 @@ void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
 {
 	CFrontCadDoc* pDoc = GetDocument();
 
-	GetToolBarView()->AddOrigine(pObj);
+	GetToolBarView()->AddOrigin(pObj);
 	pDoc->AddOriginAtFront(pObj);
 }
 
@@ -2644,7 +2649,7 @@ void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
 {
 	CFrontCadDoc* pDoc = GetDocument();
 
-	GetToolBarView()->AddOrigine(pObj);
+	GetToolBarView()->AddOrigin(pObj);
 	pDoc->AddOriginAtTail(pObj);
 }
 
@@ -2665,19 +2670,7 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
 		pDoc->SetCurrentOrigin(pCORG);
 		GetRulerInfo().SetOrigin(pCORG);
-		break;
-	case ToolBarMsg::CREATE_FIRST_ORIGIN:
-		//--------------------------------------------
-		// Add an origin object in the lower left
-		// Hand corner
-		//------------------------------------------
-		pCORG = new CCadOrigin;
-		csName = _T("Default");
-
-		pCORG->Create(0.0, GetDocSize().dCY, csName);
-		AddOriginAtHead(pCORG);
-		GetOriginSelectCombo().SetCurSel(0);
-		pDoc->SetCurrentOrigin(pCORG);
+		printf("Origin Changed\n");
 		break;
 	}
 	return 0;

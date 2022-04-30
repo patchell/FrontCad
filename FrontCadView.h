@@ -19,6 +19,7 @@ enum class MouseIsHere {
 };
 class CFrontCadView : public CChildViewBase
 {
+	CCadOrigin m_DefaultOrigin;
 	//----------------SnapGrid et all ------------------------
 	CGrid m_Grid;
 	//----------------- Rulers --------------------------------------------
