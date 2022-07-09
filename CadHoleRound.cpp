@@ -3,12 +3,11 @@
 
 CCadHoleRound::CCadHoleRound():CCadObject()
 {
-	m_pPenLine = 0;
 	SetType(ObjectType::HOLE_ROUND);
 	GetName().Format(_T("RoundHole_%d"), ++m_RoundHoleCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetRoundHoleAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
@@ -19,9 +18,26 @@ CCadHoleRound::~CCadHoleRound()
 {
 }
 
+void CCadHoleRound::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadHoleRound::Destroy(CCadObject* pDependentObject)
+{
+	BOOL rV = TRUE;
+	return rV;
+}
+
 void CCadHoleRound::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -31,12 +47,12 @@ void CCadHoleRound::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_Center += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadHoleRound::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -46,42 +62,9 @@ void CCadHoleRound::Save(FILE * pO, DocFileParseToken Token, int Indent, int fla
 	//--------------------------------------------------
 }
 
-void CCadHoleRound::SetVertex(int v, CDoubleSize sz)
+void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-}
-
-
-int CCadHoleRound::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return 0;
-}
-
-
-void CCadHoleRound::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -92,180 +75,99 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOldPen;
-	CDoubleRect rect;
-	double dx ;
+	CPen* pOldPen, penLine;
+	CRect rect;
+	CADObjectTypes ObjCenter;
 	double Radius;
+	int nRadius;
 	int Lw;
-	CDoublePoint P1, P2, P3, P4;
+	double dS;
 
 
-	if (CCadHoleRound::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
 		Radius = GetAttributes().m_HoleRadius;
-
-		dx = (Radius * 3.0 / 4.0 );
-		P1 = m_Center + CDoubleSize(dx, dx);
-		P2 = m_Center + CDoubleSize(-dx, -dx);
-		P3 = m_Center + CDoubleSize(-dx, dx);
-		P4 = m_Center + CDoubleSize(dx, -dx);
+		dS = Radius / 3.0;
+		nRadius = GETAPP.RoundDoubleToInt(Radius * Scale.GetScaleX());
+		ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		rect.SetRect(
+			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(nRadius, nRadius),
+			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) + CSize(nRadius, nRadius)
+		);
 
 		Lw = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetAttributes().m_LineWidth);
 		if (Lw < 1) Lw = 1;
-
-		rect.SetPointsFromCenter(m_Center,CDoublePoint(Radius,Radius),m_Center);
-
-		if (!IsLastModeSame(mode) || IsDirty())
-		{
-			if (m_pPenLine) delete m_pPenLine;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pPenLine = new CPen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pPenLine = new CPen(PS_SOLID, Lw, RGB(0, 255, 0));
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pPenLine = new CPen(PS_SOLID, 1, GetAttributes().m_colorLine);
-				break;
-			}
-			SetDirty(FALSE);
-		}
-		CRect RegularRect;
+		CreateThePen(mode, &penLine, Lw);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SELECTED:
 		case ObjectDrawMode::SKETCH:
-			pOldPen = pDC->SelectObject(m_pPenLine);
-			pDC->SelectStockObject(NULL_BRUSH);
-			RegularRect = rect.ToCRect(ULHC, Scale);
-			pDC->Ellipse(&RegularRect);
-			pDC->MoveTo(P1.ToPixelPoint(ULHC,Scale));
-			pDC->MoveTo(P2.ToPixelPoint(ULHC, Scale));
-			pDC->MoveTo(P3.ToPixelPoint(ULHC, Scale));
-			pDC->MoveTo(P4.ToPixelPoint(ULHC, Scale));
+			pOldPen = pDC->SelectObject(&penLine);
+			pDC->Ellipse(&rect);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, dS), pDC, ULHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS, dS), pDC, ULHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, -dS), pDC, ULHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS,- dS), pDC, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
 			break;
 		}
-		SetLastMode(mode);
 	}
 }
 
-int CCadHoleRound::PointInObjectAndSelect(CDoublePoint testPoint, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
+BOOL CCadHoleRound::PointInThisObject(DOUBLEPOINT point)
 {
-	//***************************************************
+	return 0;
+}
+
+int CCadHoleRound::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
+)
+{
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
 	//
 	// parameters:
-	//	testPoint...point to check at
+	//	p...........point to check at
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	static int count = 0;
-	double A, B;
-	int rV = index;
-	BOOL OK;
-	CDoubleRect rect;
+	int ix;
 
-	if (index < n || n == 0)
+	if (index < n)
 	{
-		A = GetRect(rect).GetWidth() / 2.0;
-		B = rect.GetHeight() / 2.0;
-		OK = GETAPP.PointInEllipse(A, B, testPoint, m_Center);
-		if (OK)	//then point in hole
+		//---------------------------------------
+		// is point in the Arc?
+		//---------------------------------------
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)	//selected list?
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[rV++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[rV++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[rV++] = this;
-					break;
-				}
-			}
-			else//no slection list
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					rV = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						rV = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						rV = 1;
-					break;
-				}	//end of switch flag
-
-			}	//end of if (ppsellist)
-
-		}	//end of if (v < 1.0)
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
+		}
 	}
-	return rV;
-}
-
-CDoublePoint CCadHoleRound::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_Center;
-}
-
-
-CDoubleRect& CCadHoleRound::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	double Radius = GetAttributes().m_HoleRadius;
-	rect.SetPointsFromCenter(
-		m_Center, 
-		CDoublePoint(
-			Radius, 
-			Radius
-		), 
-		m_Center
-	);
-	return rect;
+	return index;
 }
 
 CString& CCadHoleRound::GetTypeString()
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -277,23 +179,21 @@ CString& CCadHoleRound::GetTypeString()
 	return csName;
 }
 
-CCadHoleRound CCadHoleRound::operator=(CCadHoleRound &v)
+CString& CCadHoleRound::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	return CCadHoleRound();
+	CADObjectTypes ObjCenter;
+
+	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	GetDescription().Format(_T("Round Hole(%7.3lf,%7.3lf)"),
+		ObjCenter.pCadPoint->GetX(),
+		ObjCenter.pCadPoint->GetY()
+	);
+	return GetDescription();
 }
 
 CCadObject * CCadHoleRound::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -302,64 +202,14 @@ CCadObject * CCadHoleRound::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadHoleRound *pHR = new CCadHoleRound;
-	*pHR = *this;
+	pHR->Create();
+	CCadObject::CopyObject(pHR);
 	return pHR;
-}
-
-void CCadHoleRound::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
-{
-	//***************************************************
-	// parameters:
-	//
-	// return value: none
-	//--------------------------------------------------
-
-}
-
-void CCadHoleRound::RenderEnable(int e)
-{
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadHoleRound::m_RenderEnable = e;
-}
-
-CDoublePoint CCadHoleRound::GetCenter()
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	return m_Center;
-}
-
-CDoubleSize CCadHoleRound::GetSize()
-{
-	//***************************************************
-	// GetSize
-	//	Get the size of the object.  Reutrns the size
-	// of the enclosing rectangle.
-	// parameters:
-	//
-	// return value:returns size of the object
-	//--------------------------------------------------
-	return CSize();
 }
 
 DocFileParseToken CCadHoleRound::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -378,31 +228,31 @@ DocFileParseToken CCadHoleRound::Parse(DocFileParseToken Token, CLexer *pLex, Do
 
 void CCadHoleRound::CopyAttributesTo(SRoundHoleAttributes *pAttrib)
 {
-	/***************************************************
-	*	GetAttributes
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an external attributes stucture
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadHoleRound::CopyAttributesFrom(SRoundHoleAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
@@ -419,18 +269,21 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Round Hole:Place Center Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -451,12 +304,15 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_Center = MousePos;
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadHoleRound);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadPoint->SetPoint(MousePos);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		Obj.pCadHoleRound = new CCadHoleRound;
+		Obj.pCadHoleRound->Create();
+		GETVIEW->SetObjectTypes(Obj.pCadHoleRound);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Round Hole:Place Center Point"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -478,13 +334,13 @@ ObjectDrawState CCadHoleRound::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		m_Center = MousePos;
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -497,16 +353,31 @@ int CCadHoleRound::EditProperties(void)
 
 	Dlg.SetRoundHole(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
 
 }
 
-BOOL CCadHoleRound::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
 
-void CCadHoleRound::ClearNeedsAttributes()
+void CCadHoleRound::CreateThePen(MODE mode, CPen* pen, int Lw)
 {
-	m_AttributesGood = TRUE;
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SELECTED:
+		pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorLine);
+		break;
+	}
 }

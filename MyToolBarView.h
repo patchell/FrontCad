@@ -25,7 +25,7 @@ public:
 	void InitToolbar(CWnd* pWnd, CRulerInfo *pRulerInfo);
 	void AddOrigin(CCadOrigin* pORG);
 	CCadOrigin* GetOrigin(int index);
-	void SetToolBarPosition(CDoublePoint pos) {
+	void SetToolBarPosition(DOUBLEPOINT pos) {
 		m_Static_X.SetDoubleValue(pos.dX);
 		m_Static_Y.SetDoubleValue(pos.dY);
 	}

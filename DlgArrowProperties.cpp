@@ -10,6 +10,7 @@ IMPLEMENT_DYNAMIC(CDlgArrowProperties, CDialog)
 CDlgArrowProperties::CDlgArrowProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ARROW_ATTRIBUTES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pArrow = 0;
 }
 
@@ -47,6 +48,7 @@ BEGIN_MESSAGE_MAP(CDlgArrowProperties, CDialog)
 	ON_MESSAGE(UINT(WindowsMsg::WM_ARROWATTRB), &CDlgArrowProperties::OnArrowAttrbValues)
 	ON_STN_CLICKED(IDC_STATIC_LINE_COLOR, &CDlgArrowProperties::OnStnClickedStaticLineColor)
 	ON_BN_CLICKED(IDCANCEL, &CDlgArrowProperties::OnBnClickedCancel)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgArrowProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -85,7 +87,8 @@ void CDlgArrowProperties::OnOK()
 			m_Static_Preview.Invalidate();
 			break;
 		case IDOK:
-			UpdateArrowData();
+			if(IsDirty())
+				UpdateArrowData();
 			CDialog::OnOK();
 			break;
 	}
@@ -99,7 +102,6 @@ void CDlgArrowProperties::OnStnClickedStaticColor()
 	{
 		m_Static_Color.SetColor(Dlg.GetColor());
 		m_pArrow->SetFillColor(Dlg.GetColor());
-		m_pArrow->SetDirty(0);
 		m_Static_Preview.Invalidate();
 	}
 }
@@ -113,15 +115,15 @@ void CDlgArrowProperties::OnCancel()
 
 void CDlgArrowProperties::UpdateControls()
 {
-	CDoubleRect rect;
+	CADObjectTypes Obj;
 
-	if (m_pArrow)
+	if (GetArrow())
 	{
-		m_Static_Preview.AutoScale(GetArrow()->GetRect(rect));
-		m_Edit_Width.SetDoubleValue(m_pArrow->GetW());
-		m_Edit_Arrow_L1.SetDoubleValue(m_pArrow->GetL1());
-		m_Edit_Arrow_L2.SetDoubleValue(m_pArrow->GetL2());
-		m_Static_Color.SetColor(m_pArrow->GetAttributes().m_colorLine);
+		m_Static_Preview.AutoScale();
+		m_Edit_Width.SetDoubleValue(GetArrow()->GetW());
+		m_Edit_Arrow_L1.SetDoubleValue(GetArrow()->GetL1());
+		m_Edit_Arrow_L2.SetDoubleValue(GetArrow()->GetL2());
+		m_Static_Color.SetColor(GetArrow()->GetAttributes().m_colorLine);
 		m_Static_Preview.Invalidate();
 	}
 }
@@ -145,7 +147,6 @@ void CDlgArrowProperties::OnStnClickedStaticLineColor()
 	{
 		m_Static_Color.SetColor(Dlg.GetColor());
 		m_pArrow->SetLineColor(Dlg.GetColor());
-		m_pArrow->SetDirty(0);
 		m_Static_Preview.Invalidate();
 	}
 }
@@ -158,4 +159,11 @@ void CDlgArrowProperties::OnBnClickedCancel()
 	//---------------------------------
 	m_pArrow->CopyAttributesFrom(&m_OriginalAttributes);
 	CDialog::OnCancel();
+}
+
+
+afx_msg LRESULT CDlgArrowProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
+{
+	m_bDirty = TRUE;
+	return 0;
 }

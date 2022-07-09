@@ -1,10 +1,10 @@
-/****************************************
+/----------------------------------------
 ** CLASS CMyBitmap
 **
 ** Derived from CBitmap, this class adds
 ** the functionality of being able to
 ** load a CBitmap from a file.
-****************************************/
+----------------------------------------/
 #include "pch.h"
 
 #ifdef _DEBUG
@@ -29,14 +29,14 @@ CMyBitmap::~CMyBitmap()
 
 BOOL CMyBitmap::LoadImageBitmap(CString csPath)
 {
-	/********************************************
-	**	LoadBitmap
-	** This function loads a bitmap from a
-	** bmp file.
-	**
-	** parameter:
-	**	csPath....file name of bitmap
-	********************************************/
+	//--------------------------------------------
+	//	LoadBitmap
+	// This function loads a bitmap from a
+	// bmp file.
+	//
+	// parameter:
+	//	csPath....file name of bitmap
+	//--------------------------------------------
 	DeleteObject();
 	HBITMAP hBitmap = NULL;
 	hBitmap = (HBITMAP)LoadImageW(

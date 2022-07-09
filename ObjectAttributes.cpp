@@ -5,15 +5,15 @@
 
 void SArcAttributes::LoadSettings(SArcAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csString;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC"), _T("COLOR"), RGB(128, 128, 192));
@@ -23,15 +23,15 @@ void SArcAttributes::LoadSettings(SArcAttributes* pAttrib)
 
 void SArcAttributes::SaveSettings(SArcAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ARC"), _T("COLOR"), pAttrib->m_colorLine);
@@ -60,35 +60,37 @@ DocFileParseToken SArcAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
 
 void SArcCenterAttributes::LoadSettings(SArcCenterAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC_CENTER"), _T("COLOR"), RGB(128, 1280, 1922));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC_CENTER"), _T("COLOR"), RGB(255, 0, 0));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ARC_CENTER"), _T("SELECTEDCOLOR"), RGB(0, 0, 1922));
 	csVal = GETAPP.GetProfileStringW(_T("ARC_CENTER"), _T("WIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 }
 
 void SArcCenterAttributes::SaveSettings(SArcCenterAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 	GETAPP.WriteProfileInt(_T("ARC_CENTER"), _T("COLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ARC_CENTER"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ARC_CENTER"), _T("WIDTH"), csString);
 }
@@ -114,15 +116,15 @@ DocFileParseToken SArcCenterAttributes::Parse(DocFileParseToken Token, CLexer* p
 
 void SArcAngleAttributes::LoadSettings(SArcAngleAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC_CENTER"), _T("COLOR"), RGB(128, 1280, 1922));
@@ -132,15 +134,15 @@ void SArcAngleAttributes::LoadSettings(SArcAngleAttributes* pAttrib)
 
 void SArcAngleAttributes::SaveSettings(SArcAngleAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ARC_CENTER"), _T("COLOR"), pAttrib->m_colorLine);
@@ -183,16 +185,16 @@ CString DefaultArrowY[4] = {
 
 void SArrowAttributes::LoadSettings(SArrowAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
-	CDoublePoint* Points;
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
+	CCadPoint* Points;
 	UINT NumOfPoints;
 	UINT i;
 	CString csString;
@@ -200,11 +202,13 @@ void SArrowAttributes::LoadSettings(SArrowAttributes* pAttrib)
 	CString csVertexNameY;
 	double x, y;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARROW"), _T("COLOR"), RGB(128,128,192));
-	csString = GETAPP.GetProfileStringW(_T("ARROW"), _T("LINEWIDTH"), _T("0.020"));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARROW"), _T("COLOR"), RGB(255,0,0));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ARROW"), _T("SELECTEDCOLOR"), RGB( 0, 255, 0));
+	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("ARROW"), _T("FILLCOLOR"), RGB(0,0,255));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
+	csString = GETAPP.GetProfileStringW(_T("ARROW"), _T("LINEWIDTH"), _T("0.020"));
 	NumOfPoints = GETAPP.GetProfileIntW(_T("ARROW"), _T("NUM_OF_VERTEX"), 4);
-	Points = new CDoublePoint[NumOfPoints];
+	Points = new CCadPoint[NumOfPoints];
 	for (i = 0; i < NumOfPoints; ++i)
 	{
 		csVertexNameX.Format(_T("VERTEX_%d_X"), i);
@@ -221,43 +225,21 @@ void SArrowAttributes::LoadSettings(SArrowAttributes* pAttrib)
 			DefaultArrowY[i]
 		);
 		y = GETAPP.StringToDouble(csString);
-		Points[i] = CDoublePoint(x, y);
+		Points[i] = CCadPoint(x, y);
 	}
-	pAttrib->m_PolyPointsShape.Create(NumOfPoints, Points);
 }
 
 void SArrowAttributes::SaveSettings(SArrowAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
-	CString csVertexNameX;
-	CString csVertexNameY;
-	CString csVertexValueX;
-	CString csVertexValueY;
-	CString csString;
-
-	GETAPP.WriteProfileInt(_T("ARROW"), _T("COLOR"), pAttrib->m_colorLine);
-	GETAPP.WriteProfileInt(_T("ARROW"), _T("FILLCOLOR"), pAttrib->m_colorFill);
-	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
-	GETAPP.WriteProfileStringW(_T("ARROW"), _T("WIDTH"), csString);
-	csString.Format(_T("%d"), pAttrib->m_PolyPointsShape.GetSize());
-	GETAPP.WriteProfileStringW(_T("ARROW"), _T("NUM_OF_VERTEX"), csString);
-	for (size_t i = 0; i < pAttrib->m_PolyPointsShape.GetSize(); i++)
-	{
-		csVertexNameX.Format(_T("VERTEX_%d_X"), i);
-		csVertexNameY.Format(_T("VERTEX_%d_Y"), i);
-		csVertexValueX.Format(_T("%lf"), (pAttrib->m_PolyPointsShape.GetPoints()[i]).dX);
-		csVertexValueY.Format(_T("%lf"), (pAttrib->m_PolyPointsShape.GetPoints()[i]).dY);
-		GETAPP.WriteProfileString(_T("ARROW"), csVertexNameX, csVertexValueX);
-		GETAPP.WriteProfileString(_T("ARROW"), csVertexNameY, csVertexValueY);
-	}
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 }
 
 DocFileParseToken SArrowAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
@@ -291,11 +273,29 @@ void SBitmapAttributes::Save(FILE* pO, DocFileParseToken TypeToken, int Indent, 
 
 void SBitmapAttributes::LoadSettings(SBitmapAttributes* pAttrb)
 {
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 
 }
 
 void SBitmapAttributes::SaveSettings(SBitmapAttributes* pAttrb)
 {
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 
 }
 
@@ -304,15 +304,15 @@ void SBitmapAttributes::SaveSettings(SBitmapAttributes* pAttrb)
 
 void SCadDimAttributes::LoadSettings(SCadDimAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	int i;
 	CString csValue;
 	CString csType;
@@ -351,15 +351,15 @@ void SCadDimAttributes::LoadSettings(SCadDimAttributes* pAttrib)
 
 void SCadDimAttributes::SaveSettings(SCadDimAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	int i;
 	CString csValue;
 	CString csType;
@@ -415,18 +415,19 @@ DocFileParseToken SCadDimAttributes::Parse(DocFileParseToken Token, CLexer* pLex
 
 void SEllipseAttributes::LoadSettings(SEllipseAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSettings
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ELIPSE"), _T("LINECOLOR"), RGB(128,128,192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ELIPSE"), _T("LINECOLOR"), RGB(0,0,255));
+	pAttrib->m_colorLineSelected = GETAPP.GetProfileIntW(_T("ELIPSE"), _T("SELECTEDCOLOR"), RGB(0, 255, 0));
 	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("ELIPSE"), _T("FILLCOLOR"), RGB(255, 0, 0));
 	csVal = GETAPP.GetProfileStringW(_T("ELIPSE"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
@@ -435,18 +436,19 @@ void SEllipseAttributes::LoadSettings(SEllipseAttributes* pAttrib)
 
 void SEllipseAttributes::SaveSettings(SEllipseAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ELIPSE"),_T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ELIPSE"), _T("SELECTEDCOLOR"), pAttrib->m_colorLineSelected);
 	GETAPP.WriteProfileInt(_T("ELIPSE"), _T("FILLCOLOR"), pAttrib->m_colorFill);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ELIPSE"), _T("LINEWIDTH"), csString);
@@ -475,9 +477,19 @@ DocFileParseToken SEllipseAttributes::Parse(DocFileParseToken Token, CLexer* pLe
 
 void SLineAttributes::LoadSettings(SLineAttributes* pAttrib)
 {
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("LINE"), _T("COLOR"), (int)RGB(128, 128, 192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("LINE"), _T("SELECTED_COLOR"), (int)RGB(192, 0, 0));
 	csVal = GETAPP.GetProfileStringW(_T("LINE"), _T("WIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 	pAttrib->m_LockLength = GETAPP.GetProfileIntW(_T("LINE"), _T("LEN_LOCKED"), 0);
@@ -485,8 +497,19 @@ void SLineAttributes::LoadSettings(SLineAttributes* pAttrib)
 
 void SLineAttributes::SaveSettings(SLineAttributes* pAttrib)
 {
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
+
 	GETAPP.WriteProfileInt(_T("LINE"), _T("COLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("LINE"), _T("SELECTED_COLOR"), pAttrib->m_colorSelected );
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("LINE"), _T("WIDTH"), csString);
 	GETAPP.WriteProfileInt(_T("LINE"), _T("LEN_LOCKED"), pAttrib->m_LockLength);
@@ -514,15 +537,15 @@ DocFileParseToken SLineAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
 
 void SOriginAttributes::LoadSettings(SOriginAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ORIGIN"), _T("LINECOLOR"), RGB(192,192,192));
@@ -535,15 +558,15 @@ void SOriginAttributes::LoadSettings(SOriginAttributes* pAttrib)
 
 void SOriginAttributes::SaveSettings(SOriginAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ORIGIN"), _T("LINECOLOR"), pAttrib->m_colorLine);
@@ -575,18 +598,19 @@ DocFileParseToken SOriginAttributes::Parse(DocFileParseToken Token, CLexer* pLex
 
 void SPolyAttributes::LoadSettings(SPolyAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("POLYGON"), _T("LINECOLOR"), RGB(128,128,192));
+	pAttrib->m_colorSelect = GETAPP.GetProfileIntW(_T("POLYGON"), _T("SELECTCOLOR"), RGB(255, 0, 64));
 	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("POLYGON"), _T("FILLCOLOR"), RGB(255, 0, 0));
 	csVal = GETAPP.GetProfileStringW(_T("POLYGON"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
@@ -595,18 +619,19 @@ void SPolyAttributes::LoadSettings(SPolyAttributes* pAttrib)
 
 void SPolyAttributes::SaveSettings(SPolyAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("POLYGON"), _T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("POLYGON"), _T("SELECTCOLOR"),pAttrib->m_colorSelect);
 	GETAPP.WriteProfileInt(_T("POLYGON"), _T("FILLCOLOR"), pAttrib->m_colorFill);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("POLYGON"), _T("LINEWIDTH"), csString);
@@ -635,19 +660,21 @@ DocFileParseToken SPolyAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
 
 void SRectAttributes::LoadSettings(SRectAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("RECTANGLE"), _T("LINECOLOR"), RGB(128, 128, 192));
 	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("RECTANGLE"), _T("FILLCOLOR"), RGB(255, 0, 0));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("RECTANGLE"), _T("SELLECTEDCOLOR"), RGB(255, 255, 0));
+	pAttrib->m_colorSketch = GETAPP.GetProfileIntW(_T("RECTANGLE"), _T("SKETCHCOLOR"), RGB(255, 255, 255));
 	csVal= GETAPP.GetProfileStringW(_T("RECTANGLE"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 	pAttrib->m_TransparentFill = GETAPP.GetProfileIntW(_T("RECTANGLE"), _T("TRANSPARENT_FILL"), 0);
@@ -655,19 +682,21 @@ void SRectAttributes::LoadSettings(SRectAttributes* pAttrib)
 
 void SRectAttributes::SaveSettings(SRectAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("RECTANGLE"), _T("LINECOLOR"), pAttrib->m_colorLine);
 	GETAPP.WriteProfileInt(_T("RECTANGLE"), _T("FILLCOLOR"), pAttrib->m_colorFill);
+	GETAPP.WriteProfileInt(_T("RECTANGLE"), _T("SELLECTEDCOLOR"), pAttrib->m_colorSelected);
+	GETAPP.WriteProfileInt(_T("RECTANGLE"), _T("SKETCHCOLOR"), pAttrib->m_colorSketch);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("RECTANGLE"), _T("LINEWIDTH"), csString);
 	GETAPP.WriteProfileInt(_T("RECTANGLE"), _T("TRANSPARENT_FILL"), pAttrib->m_TransparentFill);
@@ -694,19 +723,20 @@ DocFileParseToken SRectAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
 
 void SRoundedRectAttributes::LoadSettings(SRoundedRectAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csVal;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("LINECOLOR"), RGB(128, 128, 192));
 	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("FILLCOLOR"), RGB(255, 0, 0));
+	pAttrib->m_colorLineSelected = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("LINESELECTED"), RGB(255, 128, 0));
 	csVal = GETAPP.GetProfileStringW(_T("RNDRECT"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 	pAttrib->m_TransparentFill = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("TRANSPARENT_FILL"), 0);
@@ -716,19 +746,20 @@ void SRoundedRectAttributes::LoadSettings(SRoundedRectAttributes* pAttrib)
 
 void SRoundedRectAttributes::SaveSettings(SRoundedRectAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("LINECOLOR"), pAttrib->m_colorLine);
 	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("FILLCOLOR"), pAttrib->m_colorFill);
+	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("LINESELECTED"), pAttrib->m_colorLineSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("RNDRECT"), _T("LINEWIDTH"), csString);
 	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("TRANSPARENT_FILL"), pAttrib->m_TransparentFill);
@@ -767,7 +798,6 @@ void STextAttributes::Save(FILE* pO, int Indent, int flags)
 	GETAPP.SaveString(pO, Indent + 1, m_csFontName, DocFileParseToken::FONT);
 	GETAPP.SaveColor(pO, Indent + 1, m_colorText, DocFileParseToken::TEXTCOLOR);
 	GETAPP.SaveColor(pO, Indent + 1, m_colorBK, DocFileParseToken::BKCOLOR);
-	GETAPP.SaveDouble(pO, Indent + 1, m_Angle, DocFileParseToken::ANGLE);
 	GETAPP.SaveDouble(pO, Indent + 1, m_fontHeight, DocFileParseToken::HEIGHT);
 	GETAPP.SaveDouble(pO, Indent + 1, m_fontWidth, DocFileParseToken::WIDTH);
 	GETAPP.SaveUINT(pO, Indent + 1, m_Format, DocFileParseToken::FORMAT);
@@ -778,18 +808,18 @@ void STextAttributes::Save(FILE* pO, int Indent, int flags)
 
 void STextAttributes::LoadSettings(STextAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	pAttrib->m_colorText = GETAPP.GetProfileIntW(_T("TEXT"), _T("COLOR"), (int)RGB(0, 0, 0));
 	pAttrib->m_colorBK = GETAPP.GetProfileIntW(_T("TEXT"), _T("BACKGROUND_COLOR"), (int)RGB(255, 255, 255));
-	pAttrib->m_Angle = GETAPP.GetProfileIntW(_T("TEXT"), _T("ANGLE"), 0);
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("TEXT"), _T("SELECTED_COLOR"), (int)RGB(255, 0, 0));
 	pAttrib->m_fontHeight = GETAPP.GetProfileIntW(_T("TEXT"), _T("FONT_HEIGHT"), 60);
 	pAttrib->m_fontWidth = GETAPP.GetProfileIntW(_T("TEXT"), _T("FONT_WIDTH"), 0);
 	pAttrib->m_Format = GETAPP.GetProfileIntW(_T("TEXT"), _T("FORMAT"), DT_BOTTOM | DT_SINGLELINE);
@@ -800,22 +830,20 @@ void STextAttributes::LoadSettings(STextAttributes* pAttrib)
 
 void STextAttributes::SaveSettings(STextAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("TEXT"), _T("COLOR"), (int)pAttrib->m_colorText);
 	GETAPP.WriteProfileInt(_T("TEXT"), _T("BACKGROUND_COLOR"), (int)pAttrib->m_colorBK);
-
-	csString.Format(_T("%lf"), pAttrib->m_Angle);
-	GETAPP.WriteProfileStringW(_T("TEXT"), _T("ANGLE"), csString);
+	GETAPP.WriteProfileInt(_T("TEXT"), _T("SELECTED_COLOR"), pAttrib->m_colorSelected);
 
 	csString.Format(_T("%lf"), pAttrib->m_fontHeight);
 	GETAPP.WriteProfileStringW(_T("TEXT"), _T("FONT_HEIGHT"), csString);
@@ -833,15 +861,15 @@ void STextAttributes::SaveSettings(STextAttributes* pAttrib)
 
 void SRectHoleAttributes::LoadSettings(SRectHoleAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csString;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("RECTHOLE"), _T("LINECOLOR"), RGB(128, 128, 129));
@@ -853,15 +881,15 @@ void SRectHoleAttributes::LoadSettings(SRectHoleAttributes* pAttrib)
 
 void SRectHoleAttributes::SaveSettings(SRectHoleAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("RECTHOLE"), _T("LINECOLOR"), pAttrib->m_colorLine);
@@ -881,15 +909,15 @@ DocFileParseToken SRectHoleAttributes::Parse(DocFileParseToken Token, CLexer* pL
 
 void SRoundHoleAttributes::LoadSettings(SRoundHoleAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csString;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE"), _T("LINECOLOR"), RGB(128, 128, 192));
@@ -901,15 +929,15 @@ void SRoundHoleAttributes::LoadSettings(SRoundHoleAttributes* pAttrib)
 
 void SRoundHoleAttributes::SaveSettings(SRoundHoleAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE"), _T("LINECOLOR"), pAttrib->m_colorLine);
@@ -928,15 +956,15 @@ DocFileParseToken SRoundHoleAttributes::Parse(DocFileParseToken Token, CLexer* p
 
 void SRndHole1FlatAttributes::LoadSettings(SRndHole1FlatAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csString;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), RGB(128, 128, 192));
@@ -949,15 +977,15 @@ void SRndHole1FlatAttributes::LoadSettings(SRndHole1FlatAttributes* pAttrib)
 
 void SRndHole1FlatAttributes::SaveSettings(SRndHole1FlatAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), pAttrib->m_colorLine);
@@ -981,15 +1009,15 @@ DocFileParseToken SRndHole1FlatAttributes::Parse(DocFileParseToken Token, CLexer
 
 void SRndHole2FlatAttributes::LoadSettings(SRndHole2FlatAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csString;
 
 	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_2_FLAT"), _T("LINECOLOR"), RGB(128, 128, 192));
@@ -1006,15 +1034,15 @@ void SRndHole2FlatAttributes::LoadSettings(SRndHole2FlatAttributes* pAttrib)
 
 void SRndHole2FlatAttributes::SaveSettings(SRndHole2FlatAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), pAttrib->m_colorLine);
@@ -1042,15 +1070,15 @@ DocFileParseToken SGridAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
 
 void SGridAttributes::LoadSettings(SGridAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	CString csValue;
 	double cx, cy;
 
@@ -1077,15 +1105,15 @@ void SGridAttributes::LoadSettings(SGridAttributes* pAttrib)
 
 void SGridAttributes::SaveSettings(SGridAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
 	CString csValue;
 
 	GETAPP.WriteProfileInt(_T("GRID"), _T("MAJORCOLOR"), pAttrib->m_colorMajorLine);
@@ -1116,15 +1144,15 @@ DocFileParseToken SRullerAttributes::Parse(DocFileParseToken Token, CLexer* pLex
 
 void SRullerAttributes::LoadSettings(SRullerAttributes* pAttrib)
 {
-	/************************************************
-	* LoadSetting
-	*	This Method loads the default settings
-	* for this object.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to load settings into
-	************************************************/
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
 	//-------------------- Ruler Tick Mark Font ------------------------------------
 	pAttrib->m_csFontName = GETAPP.GetProfileStringW(_T("RULERS"), _T("FONT"),_T("ARIAL"));
 	pAttrib->m_colorBk = GETAPP.GetProfileIntW(_T("RULERS"), _T("BKCOLOR"),RGB(92,0,64) );
@@ -1150,16 +1178,16 @@ void SRullerAttributes::LoadSettings(SRullerAttributes* pAttrib)
 
 void SRullerAttributes::SaveSettings(SRullerAttributes* pAttrib)
 {
-	/************************************************
-	* SaveSettings
-	*	This Method saves the default settings
-	* for this object to the registry.
-	*
-	* Parameter:
-	*	pAttrib......pointer to attribute structure
-	*				to save settings from
-	************************************************/
-	
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
+
 	GETAPP.WriteProfileStringW(_T("RULERS"), _T("FONT"), pAttrib->m_csFontName);
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("BKCOLOR"), pAttrib->m_colorBk);
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("CORNERCOLOR"), pAttrib->m_colorCorner);
@@ -1176,3 +1204,39 @@ void SRullerAttributes::SaveSettings(SRullerAttributes* pAttrib)
 	GETAPP.WriteProfileInt(_T("RULERS"), _T("HALFTICKCOLOR"), pAttrib->m_colorHalfTick);
 }
 
+//------------- Point Attributes -------------------------
+
+DocFileParseToken SPointAttributes::Parse(DocFileParseToken Token, CLexer* pLex)
+{
+	return Token;
+}
+
+void SPointAttributes::LoadSettings(SPointAttributes* pAttrib)
+{
+	//------------------------------------------------
+	// LoadSetting
+	//	This Method loads the default settings
+	// for this object.
+	//*
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to load settings into
+	//------------------------------------------------/
+	pAttrib->m_colorNormal = GETAPP.GetProfileIntW(_T("POINT"), _T("NORMAL_COLOR"), RGB(32,128,192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("POINT"), _T("SELECTED_COLOR"), RGB(255,0,80));
+}
+
+void SPointAttributes::SaveSettings(SPointAttributes* pAttrib)
+{
+	//------------------------------------------------
+	// SaveSettings
+	//	This Method saves the default settings
+	// for this object to the registry.
+	//
+	// Parameter:
+	//	pAttrib......pointer to attribute structure
+	//				to save settings from
+	//------------------------------------------------/
+	GETAPP.WriteProfileInt(_T("POINT"), _T("NORMAL_COLOR"), pAttrib->m_colorNormal);
+	GETAPP.WriteProfileInt(_T("POINT"), _T("SELECTED_COLOR"), pAttrib->m_colorSelected);
+}

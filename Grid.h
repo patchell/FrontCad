@@ -64,28 +64,28 @@ public:
 	void Draw(
 		CDC* pDC,
 		MODE mode,
-		CDoublePoint& ULHC,
+		DOUBLEPOINT ULHC,
 		CScale& Scale,
 		CRect& rectClient
 	);
 	void DrawSnapDots(
 		CDC* pDC,
 		MODE mode,
-		CDoublePoint ULHC,
+		DOUBLEPOINT ULHC,
 		CScale Scale,
 		CRect& rectClient
 	);
 	void DrawMajLines(
 		CDC* pDC,
 		MODE mode,
-		CDoublePoint ULHC,
+		DOUBLEPOINT ULHC,
 		CScale Scale,
 		CRect& rectClient
 	);
 	void DrawSnapLines(
 		CDC* pDC,
 		MODE mode,
-		CDoublePoint& ULHC,
+		DOUBLEPOINT ULHC,
 		CScale& Scale,
 		CRect& rectClient
 	);

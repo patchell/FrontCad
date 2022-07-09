@@ -6,14 +6,18 @@
 
 class CDlgDimensionPropertiex : public CDialogEx
 {
+	BOOL m_bDirty;
 	CCadDimension* m_pDimension;
+	//---------------------------------
+	// Controls
+	//---------------------------------
 	CStaticBitmap m_Static_LineColor;
 	CStaticBitmap m_Static_TextColor;
 	CStaticBitmap m_Static_BackgroundColor;
-	CEdit m_Edit_TextHeight;
-	CEdit m_Edit_LineWidth;
-	CEdit m_Edit_DimensionText;
-	CEdit m_Edit_ExtensionLength;
+	CEditDecimal m_Edit_TextHeight;
+	CEditDecimal m_Edit_LineWidth;
+	CEditText m_Edit_DimensionText;
+	CEditDecimal m_Edit_ExtensionLength;
 	CStaticPreview m_Static_DimPreview;
 	DECLARE_DYNAMIC(CDlgDimensionPropertiex)
 
@@ -21,7 +25,8 @@ public:
 	CDlgDimensionPropertiex(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgDimensionPropertiex();
 	void SetDimension(CCadDimension* pCD) { m_pDimension = pCD; }
-// Dialog Data
+	BOOL IsDirty() { return m_bDirty; }
+	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_DIMENSION_PROPERTIES };
 #endif
@@ -37,4 +42,6 @@ public:
 	afx_msg void OnClickedStaticBackgroundColor();
 	afx_msg void OnClickedStaticDimPreviw();
 	afx_msg void OnClickedStaticLineColor();
+protected:
+	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };

@@ -6,6 +6,13 @@ constexpr auto PROC_MOUSE_POSISTION_CORRECTED = 0;
 constexpr auto PROC_MOUSE_POSISTION_SCALED = 1;
 constexpr auto PROC_MOUSE_POSISTION_SNAPPED = 2;
 
+constexpr auto TIMER_ID_AUTOSCROLL = 5600;
+constexpr auto TIMER_AUTOSCROLL_TIME = 100;
+constexpr auto TIMER_ID_LBUTTON_DOWN = 5601;
+constexpr auto TIMER_LBUTTON_DOWN_TIME = 200;
+
+constexpr auto DEFALT_SELECT_BUFFER_SIZE = 16;
+
 enum class MouseIsHere {
 	NOWHERE,
 	LEFT,
@@ -27,17 +34,22 @@ class CFrontCadView : public CChildViewBase
 	//----------------Scrolling and Document View ---------------------------
 	SCROLLINFO m_HScrollInfo;	//Horizontal Scroll Info
 	SCROLLINFO m_VScrollInfo;	//Vertical Scroll Info
-	int m_IsScrolling;	//Indicates that the view is auto scrolling
-	UINT m_AutoScrollTimerId;
 	BOOL m_AutoScroll;	//enables auto scrolling flag
+	//--------------- Timer IDs -----------------------------
+	UINT m_AutoScrollTimerId;
+	UINT m_MouseLButtonHeldDownId;
 	//----------------Keyboard/Mouse------------------------
 	BOOL m_ControlKeyDown;	//true when control key is pushed
 	BOOL m_ShiftKeyDown;	// true when shift key is pushed
-	CDoublePoint m_CurMousePos;	//mouse position raw, screen units
+	BOOL m_R_KeyDown;		//The R key is pressed
+	DOUBLEPOINT m_CurMousePos;	//mouse position raw, screen units
+	DOUBLEPOINT m_LastMousePos;
+	CDoubleSize m_DeltaMousePos;
 	TRACKMOUSEEVENT m_TrackMouseEvent;
 	BOOL m_MouseLeftWindow;
 	MouseIsHere m_MouseLocation;
 	BOOL m_LeftMouseButtonDown;	//left mouse button is down
+	BOOL m_MouseLButtonHeldDown;
 	BOOL m_MiddleMouseButtonDown;	//Ture if button down
 	//--------------------------------------------------------
 	unsigned m_ObjectEnables;
@@ -46,21 +58,10 @@ class CFrontCadView : public CChildViewBase
 	//----------------------------------
 	ObjectDrawState m_DrawState;	// current state for the current drawmode
 	DrawingMode m_DrawMode;		// what is going on in the drawing
-	//----------------------------------
-	// Object Selection Variables
-	//---------------------------------
-	int m_SelectionCount;	//count of selected objects
-	CCadObject* m_pSelObjList;	//list of selected objects
-	CCadObject* m_pSelObjEnd;	//end of selected objects list
-	//---------------------------------
-	// Moveing Objects Variables
-	//---------------------------------
-	CMoveObjects* m_pMoveObjects;	//container for objects being moved
-	CCadObject* m_pGrabbedObject;	// Not Used?
 	//---------------------------------
 	// Misc Variables
 	//---------------------------------
-	int m_GrabbedVertex;	//vertex that is being dragged
+	CADObjectTypes m_GrabbedObject;	//vertex that is being dragged
 	CADObjectTypes m_CadObj;
 	CFrontCadChildFrame* m_pParentFrame;
 
@@ -79,7 +80,6 @@ public:
 	void SetObjectEnables(unsigned u) { m_ObjectEnables |= u; }
 	void ClearObjectEnables(unsigned u) { m_ObjectEnables &= ~u; }
 	virtual void OnInitialUpdate();
-	virtual void OnAutoScroll(CPoint point, BOOL bBeforeScroll);
 	CADObjectTypes& GetObjectTypes() { return m_CadObj; }
 	void SetObjectTypes(CCadObject* pObj) { GetObjectTypes().pCadObject = pObj; }
 	//---------------------------------------------
@@ -87,17 +87,20 @@ public:
 	//---------------------------------------------
 	BOOL IsControlKeyDown() { return m_ControlKeyDown; }
 	BOOL IsShiftKeyDown() { return m_ShiftKeyDown; }
+	BOOL IsR_KeyDown() { return m_R_KeyDown; }
+	//-------
 	BOOL IsLeftMouseButtonDown() { return m_LeftMouseButtonDown; }
 	BOOL IsMiddleMouseButtonDown() { return m_MiddleMouseButtonDown; }
 	void SetMiddleMouseButtonDown(BOOL f) { m_MiddleMouseButtonDown = f; }
-	CDoublePoint& GetCurrentMousePosition() { return m_CurMousePos; }
-	void SetCurrentMousePosition(CDoublePoint DP) { m_CurMousePos = DP; }
-	CDoublePoint ProcessMousePosition(CPoint point, CDoubleSize SnapGrid, int Which);
-	CDoublePoint ConvertMousePosition(
-		CPoint& MousePoint,	//mouse position client ref
-		CDoublePoint& ULHC,	//upper left corner of client in inches
-		CScale& Scale,		//Inches per Pixel
-		CDoubleSize& SnapGrid,
+	DOUBLEPOINT GetCurrentMousePosition() { return DOUBLEPOINT(m_CurMousePos); }
+	void SetCurrentMousePosition(DOUBLEPOINT DP) { m_CurMousePos = DP; }
+	CDoubleSize GetDeltaMousePos() { return m_DeltaMousePos; }
+	void SetDeltaMousePos(CDoubleSize szDelta) { m_DeltaMousePos = szDelta; }
+	DOUBLEPOINT ConvertMousePosition(
+		CPoint MousePoint,	//mouse position client ref
+		DOUBLEPOINT ULHC,	//upper left corner of client in inches
+		CScale Scale,		//Inches per Pixel
+		CDoubleSize SnapGrid,
 		BOOL SnapGridIsEnabled
 	);
 	BOOL DidMouseLeaveWindow() { return m_MouseLeftWindow; }
@@ -108,7 +111,7 @@ public:
 		rV = ::GetCursorPos(pMP);
 		return rV;
 	}
-	BOOL SetCursorPosition(CDoublePoint p)
+	BOOL SetCursorPosition(CCadPoint& p)
 	{
 		CPoint cp;
 
@@ -122,10 +125,11 @@ public:
 		return rV;
 	}
 	MouseIsHere WhereIsMouse();
+	void StartMouseDragging();
 	//------------------------------------------
 	// Tool Bar Methods
 	//------------------------------------------
-	void ToolBarSetMousePosition(CDoublePoint pos) {
+	void ToolBarSetMousePosition(DOUBLEPOINT pos) {
 		GetMyFrame()->ToolBarSetPosition(pos);
 	}
 	void ToolBarSetDebug(CString& csString) {
@@ -162,11 +166,10 @@ public:
 		rV = GETAPP.RoundUpToNearest(rV, GetGrid().GetSnapGrid().dCY);
 		return rV;
 	}
-
 	//---------------------------------------------
 	// Manage objects in document
 	//---------------------------------------------
-	virtual CFrontCadDoc* GetDocument() {
+	CFrontCadDoc* GetDocument() {
 		return (CFrontCadDoc*)CChildViewBase::GetDocument();
 	}
 	CDoubleSize GetDocSize(void) { 
@@ -175,18 +178,6 @@ public:
 	void SetDocSize(CDoubleSize sZ) { 
 		GetDocument()->SetDocSize(sZ);
 	}
-	virtual void RemoveObject(CCadObject* pObj);
-	virtual void AddObjectAtFrontIntoDoc(CCadObject* pObj);
-	virtual void AddObjectAtEndIntoDoc(CCadObject* pObj);
-	//-------------------------------------------------
-	// Selection of objects methods
-	//-------------------------------------------------
-	void AddToSelList(CCadObject* pO);
-	CCadObject* GetTopSelection() { return m_pSelObjList; }
-	void RemoveUnselectedObjects();
-	void RemoveSelectedObjects(CCadObject* pO);
-	void ClearSelList();
-	int SelectAnObject(CCadObject** ppObj, int n, CPoint p);
 	//-----------------------------------------------
 	// CCadOrigin management
 	//-----------------------------------------------
@@ -196,8 +187,7 @@ public:
 	//-----------------------------------------------
 	// Moving Object Methods
 	//-----------------------------------------------
-	CMoveObjects* GetMoveObjectes() { return m_pMoveObjects; }
-	void SetMoveObjects(CMoveObjects* pMO) { m_pMoveObjects = pMO; }
+//	void* SetGrabbedPoint(CCadPoint* pCP) { m_pGrabbedPoint = pCP; }
 	//--------------------------------------------------
 	//  Drawing Methods
 	//--------------------------------------------------
@@ -299,7 +289,7 @@ public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	void DoVScroll(double Yinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
 	void DoHScroll(double Xinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
-	void UpdateScrollbarInfo(CDoublePoint ULHC);
+	void UpdateScrollbarInfo(DOUBLEPOINT ULHC);
 	void GetDeviceScrollSizes(CSize& sizePage, CSize& sizeLine);
 	void EnableAutoScroll(BOOL flag);
 	SCROLLINFO& GetHScrollBarInfo() { return m_HScrollInfo; }
@@ -321,22 +311,21 @@ public:
 		return result;
 	}
 	BOOL IsAutoScrollEnabled() { return m_AutoScroll; }
-	CDoublePoint& CalculateNewULHC(
+	DOUBLEPOINT CalculateNewULHC(
 		CScale CurrentScale,
 		CScale NextScale,
-		CDoublePoint& pointResult,
-		CDoublePoint& pointLocation,
-		CDoublePoint& pointULHC
+		DOUBLEPOINT pointLocation,
+		DOUBLEPOINT pointULHC
 	);
-	void ZoomIn(CDoublePoint point);
-	void ZoomOut(CDoublePoint point);
+	void ZoomIn(DOUBLEPOINT point);
+	void ZoomOut(DOUBLEPOINT point);
 	//----------------------------------------------
 	void DrawCursor(
 		CDC* pDC, 
-		CDoublePoint& pos, 
+		DOUBLEPOINT pos,
 		CRect* pRect, 
-		CDoublePoint& ULHC, 
-		CScale& Scale, 
+		DOUBLEPOINT ULHC,
+		CScale Scale, 
 		COLORREF color
 	);
 	//------------------------------------------

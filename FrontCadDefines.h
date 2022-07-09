@@ -2,8 +2,14 @@
 //------------------------------------------
 
 #define GETAPP	(theApp)
-#define GETVIEW()	((CFrontCadView *)(theApp.GetCurrentView()))
+#define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
 
+//----------------------------------
+// Constants for Line Types
+//----------------------------------
+constexpr auto LINE_IS_WHATEVER = 0;
+constexpr auto LINE_IS_HORIZONTAL = 1;
+constexpr auto LINE_IS_VERTICAL = 2;
 //----------------------------------
 // Document and Paper Size
 //----------------------------------
@@ -21,7 +27,7 @@ constexpr auto DOCUMENT_DRAWING_Y = 17.0;
 
 //---------------------------------
 
-typedef union {
+union CADObjectTypes {
 	class CCadObject* pCadObject;
 	class CCadArc *pCadArc;
 	class CCadArcCent *pCadArcCent;
@@ -36,11 +42,13 @@ typedef union {
 	class CCadLibComp *pCadLibComp;
 	class CCadLine *pCadLine;
 	class CCadOrigin *pCadOrigin;
+	class CCadPoint* pCadPoint;
 	class CCadPolygon *pCadPolygon;
 	class CCadRect *pCadRect;
 	class CCadRndRect *pCadRndRect;
 	class CCadText *pCadText;
-}CADObjectTypes;
+	CADObjectTypes() { pCadObject = 0; }
+};
 
 //-----------------------------------------------------
 // Save flags
@@ -61,6 +69,18 @@ enum class Axis {
 	Y
 };
 
+//-----------------------------------------
+// For Testing Arcs/Ellipses
+//-----------------------------------------
+
+
+enum class BadDelta {
+	GOOD,
+	X,
+	Y
+};
+
+//---------------------------------------
 enum class RectangleExtendMode {
 	BOTH,
 	WIDTH,
@@ -177,6 +197,7 @@ constexpr auto OBJECT_ENABLE_BITMAP = 0x0200;
 constexpr auto OBJECT_ENABLE_ARROW = 0x0400;
 constexpr auto OBJECT_ENABLE_ORIGIN = 0x0200;
 constexpr auto OBJECT_ENABLE_DIMENSION = 0x1000;
+constexpr auto OBJECT_ENABLE_POINT = 0x2000;
 
 //----------------------------------
 // CCadObject derived types
@@ -198,11 +219,51 @@ enum class ObjectType{
 	LIBCOMP,
 	LINE,			//drawing objects
 	ORIGIN,
+	POINT,
 	POLYGON,
 	RECT,
 	ROUNDEDRECT,
-	TEXT		,	
+	TEXT	
 };
+
+//--------------------------------------------
+// -------------------------------------------
+enum class SubType{
+	ANY,
+	//--- Arc/Ellipse ---
+	RECTSHAPE,
+	STARTPOINT,
+	ENDPOINT,
+	//--- Arrow ---
+	ARROW_TIP,
+	ARROW_END,
+	ARROW_TOP,
+	ARROW_BOT,
+	ARROW_ROTATION,
+	//--- Rectangle ---
+	RECT_TOP_CENTER,
+	RECT_BOT_CENTER,
+	RECT_LEFT_CENTER,
+	RECT_RGIHT_CENTER,
+	CORNER_RADIUS,
+	//--- Text ---
+	TEXT_LOCATION,
+	TEXT_ROTATION,
+	TEXT_RECT,
+	//--- Misc ---
+	ORIGIN_LOCATION,
+	CENTERPOINT,
+	PIVOTPOINT,
+	MIDPOINT,
+	VERTEX
+};
+
+constexpr auto SUBSUBTYPE_ANY = 0;
+constexpr auto RECT_SUBSUB_UL = 1;
+constexpr auto RECT_SUBSUB_LL = 2;
+constexpr auto RECT_SUBSUB_LR = 3;
+constexpr auto RECT_SUBSUB_UR = 4;
+
 
 //--------------------------------------------
 // Object DRAW mode defines
@@ -295,6 +356,11 @@ enum class ObjectDrawState {
 	WAITFORMOUSE_DOWN_LBUTTON_UP,
 	PLACE_LBUTTON_DOWN,
 	PLACE_LBUTTON_UP,
+	//-----Copy/Cut/Pastse -------
+	COPY_LBUTTON_DOWN,
+	COPY_LBUTTON_UP,
+	PASTE_LBUTTON_DOWN,
+	PASTE_LBUTTON_UP,
 	//------ Arc States ------
 	ARCSTART_LBUTTON_DOWN,
 	ARCSTART_LBUTTON_UP,
@@ -307,7 +373,9 @@ enum class ObjectDrawState {
 	SECOND_POINT_LBUTTON_UP,
 	EXTENSION_LINES_LBUTTON_DOWN,
 	EXTENSION_LINES_LBUTTON_UP,
-	//------------ Arrow States ----------------
+	//------------ Arrow/ROTATE States ----------------
+	SELECT_PIVOT_LBUTTON_DOWN,
+	SELECT_PIVOT_LBUTTON_UP,
 	ROTATE_LBUTTON_DOWN,
 	ROTATE_LBUTTON_UP,
 	//----------- Misc States ------------------
@@ -315,10 +383,18 @@ enum class ObjectDrawState {
 	PLACE_AUTO,
 	GETREFERENCE,
 	DRAG,
-	SELECT_NOTHING,	//nothing is selected
+	PLACE_RADIUS_LBUTTON_DOWN,
+	PLACE_RADIUS_LBUTTON_UP,
+	//----------------------------------------------
+	SELECT_WAITFOR_LBUTTON_DOWN,	//nothing is selected
+	SELECT_WAITFOR_LBUTTON_DOWN_TIMEOUT,
+	SELECT_LBUTTON_DOWN_DRAGGING,
+	SELECT_WAITFOR_LBUTTON_UP,
+	//--------------------------------------------
+	PASTE_WAITFOR_LBUTTON_DOWN,
+	PASTE_WAITFOR_LBUTTON_UP,
 	SELECT_MOVE,
 	SELECT_COPY,
-	VERTEX_GRABBED
 };
 //--------------------------------------------
 // Ruler  And ToolBar Defines
@@ -352,7 +428,11 @@ enum class WindowsMsg {
 	//--------------------------
 	// Messages From Tool Bar
 	//--------------------------
-	WM_FROM_TOOLBAR_MESSAGE
+	WM_FROM_TOOLBAR_MESSAGE,
+	//--------------------------
+	// Dirty Message To Dialog
+	//--------------------------
+	WM_DLG_CONTROL_DIRTY
 };
 
 //----------------------------

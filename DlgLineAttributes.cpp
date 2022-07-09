@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgLineAttributes, CDialog)
 CDlgLineAttributes::CDlgLineAttributes(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_LINE_ATTRB, pParent)
 {
+	m_bDirty = FALSE;
 	m_pLine = 0;
 }
 
@@ -27,7 +28,7 @@ void CDlgLineAttributes::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDlgLineAttributes, CDialog)
-	ON_STN_CLICKED(IDC_STATIC_LINE_COLOR, &CDlgLineAttributes::OnStnClickedStaticLineColor)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgLineAttributes::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -52,29 +53,19 @@ void CDlgLineAttributes::OnOK()
 	switch (Id)
 	{
 		case IDOK:
-			m_pLine->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-			m_pLine->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
+			if (IsDirty())
+			{
+				m_pLine->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+				m_pLine->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
+			}
 			CDialog::OnOK();
 			break;
 	}
 
 }
 
-
-void CDlgLineAttributes::OnStnClickedStaticLineColor()
+afx_msg LRESULT CDlgLineAttributes::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
 {
-	CColorDialog Dlg;
-
-	if (IDOK == Dlg.DoModal())
-		m_Static_LineColor.SetColor(Dlg.GetColor());
-}
-
-int DoLineAttrbDlg(CCadLine* pCL)
-{
-	int Id;
-	CDlgLineAttributes Dlg;
-
-	Dlg.SetLine(pCL);
-	Id = Dlg.DoModal();
-	return Id;
+	m_bDirty = TRUE;
+	return 0;
 }

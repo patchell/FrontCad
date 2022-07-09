@@ -36,8 +36,8 @@ class CRulerInfo
 	//-----------------------------------------
 	CGrid* m_pGrid;
 	//----------------------------------
-	CDoublePoint m_UpperLeft;
-	CDoublePoint m_CursorPosition;
+	DOUBLEPOINT m_UpperLeftHandCorner;
+	DOUBLEPOINT m_CursorPosition;
 	CCadOrigin* m_pOrigin;
 	CDoubleSize m_DocSize;
 	CSize m_szClient;
@@ -49,10 +49,10 @@ class CRulerInfo
 public:
 	CRulerInfo();
 	~CRulerInfo();
-	void SetUpperLeft(CDoublePoint uL) { m_UpperLeft = uL; }
-	CDoublePoint& GetUpperLeft() { return m_UpperLeft; }
-	void SetCursorPos(CDoublePoint CP) { m_CursorPosition = CP; }
-	CDoublePoint GetCursorPos() { return m_CursorPosition; }
+	void SetUpperLeft(DOUBLEPOINT uL) { m_UpperLeftHandCorner = uL; }
+	DOUBLEPOINT GetUpperLeft() { return m_UpperLeftHandCorner; }
+	void SetCursorPos(DOUBLEPOINT CP) { m_CursorPosition = CP; }
+	DOUBLEPOINT GetCursorPos() { return m_CursorPosition; }
 	void SetOrigin(CCadOrigin* pOrg) { m_pOrigin = pOrg; }
 	CCadOrigin* GetOrigin() { return m_pOrigin; }
 	void ShowRulers(BOOL Show) { m_Show = Show; }

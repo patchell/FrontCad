@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgRndRectProperties, CDialog)
 CDlgRndRectProperties::CDlgRndRectProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ROUNDEDRECT_PROPERTIES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pRndRect = 0;
 }
 
@@ -34,6 +35,7 @@ BEGIN_MESSAGE_MAP(CDlgRndRectProperties, CDialog)
 	ON_STN_CLICKED(IDC_STATIC_FILLCOLOR, &CDlgRndRectProperties::OnStnClickedStaticFillcolor)
 	ON_STN_CLICKED(IDC_STATIC_LINECOLOR, &CDlgRndRectProperties::OnStnClickedStaticLinecolor)
 	ON_BN_CLICKED(IDC_CHECK_RNDRECT_NOFILL, &CDlgRndRectProperties::OnBnClickedCheckRndrectNofill)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgRndRectProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -67,11 +69,14 @@ void CDlgRndRectProperties::OnOK()
 	switch (Id)
 	{
 		case IDOK:
-			m_pRndRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-			m_pRndRect->GetAttributes().m_dszCornerRadius = CDoubleSize(m_Edit_RadiusX.GetValue(), m_Edit_RadiusY.GetValue());
-			m_pRndRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
-			m_pRndRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
-			m_pRndRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
+			if (IsDirty())
+			{
+				m_pRndRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+				m_pRndRect->GetAttributes().m_dszCornerRadius = CDoubleSize(m_Edit_RadiusX.GetDoubleValue(), m_Edit_RadiusY.GetDoubleValue());
+				m_pRndRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
+				m_pRndRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
+				m_pRndRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
+			}
 			CDialog::OnOK();
 			break;
 	}
@@ -107,12 +112,8 @@ void CDlgRndRectProperties::OnBnClickedCheckRndrectNofill()
 	}
 }
 
-int DoRndRectPropertiesDlg(CCadRndRect* pCRR)
+afx_msg LRESULT CDlgRndRectProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
 {
-	CDlgRndRectProperties Dlg;
-	int Id;
-
-	Dlg.SetRndRect(pCRR);
-	Id = Dlg.DoModal();
-	return Id;
+	m_bDirty = TRUE;
+	return 0;
 }

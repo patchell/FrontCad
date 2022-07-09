@@ -1,5 +1,6 @@
 #pragma once
 
+
 class CCadLine :public CCadObject
 {
 protected:
@@ -9,35 +10,28 @@ protected:
 	inline static SLineAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CDoubleLine m_Line;
 	double m_Length;
-	CDoubleRect m_doubleRectSelected;
-	CPen *m_pLinePen;
 	SLineAttributes m_Attrib;
-	CDoubleRect& EncloseLineInRectangle(CDoubleRect& rect, int WidthInPixels);
-public: public://public methodes
+public://public methodes
 	CCadLine();
 	CCadLine(CCadLine &line);
 	virtual ~CCadLine();
-	BOOL Create(CCadObject* pObjRef);
+	BOOL Create();
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(
+		DOUBLEPOINT point
+	);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p, 
-		CCadObject ** ppSelList = 0, 
-		int index = 0, 
-		int n = 0, 
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject ** ppSelList, 
+		int index, 
+		int n
 	);
 	virtual CString& GetTypeString(void);
-	CCadLine operator=(CCadLine &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint GetCenter();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect) { return EncloseLineInRectangle(rect, 10); };
 	virtual CDoubleSize GetSize();
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------------
@@ -45,6 +39,7 @@ public: public://public methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
+	virtual void ProcessZoom(CScale& InchesPerPixel);
 	virtual int EditProperties(void);
 	//-------------------------------------
 	//attribute Methods
@@ -57,13 +52,18 @@ public: public://public methodes
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth; }
 	void CopyAttributesTo(SLineAttributes* pAtr);
 	void CopyAttributesFrom(SLineAttributes* pAtr);
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
-//--------------------------------------------------
-	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	//--------------------------------------------------
+	// Static Functions
+	//--------------------------------------------------
+	static void RenderEnable(int e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SLineAttributes* GetLastAttributes() const {
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static SLineAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

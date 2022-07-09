@@ -68,97 +68,97 @@ END_MESSAGE_MAP()
 
 void CDlgObjectEnable::OnClickedCheckArccenteredenable()
 {
-	CCadArcCent::SetRenderEnable(m_Check_ArcCenteredEnable.GetCheck());
+	CCadArcCent::RenderEnable(m_Check_ArcCenteredEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckArcenable()
 {
-	CCadArc::SetRenderEnable(m_Check_ArcEnable.GetCheck());
+	CCadArc::RenderEnable(m_Check_ArcEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckArrowenable()
 {
-	CCadArrow::SetRenderEnable(m_Check_ArrowEnable.GetCheck());
+	CCadArrow::RenderEnable(m_Check_ArrowEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckDimensionenable()
 {
-	CCadDimension::SetRenderEnable(m_Check_DimensionEnable.GetCheck());
+	CCadDimension::RenderEnable(m_Check_DimensionEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckEllispeenable()
 {
-	CCadElispe::SetRenderEnable(m_Check_EllipseEnable.GetCheck());
+	CCadElispe::RenderEnable(m_Check_EllipseEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckFilledpolyenable()
 {
-	CCadPolygon::SetRenderEnable(m_Check_FillPolygonEnable.GetCheck());
+	CCadPolygon::RenderEnable(m_Check_FillPolygonEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckLineenable()
 {
-	CCadLine::SetRenderEnable(m_Check_LineEnable.GetCheck());
+	CCadLine::RenderEnable(m_Check_LineEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckOneflatenable()
 {
-	CCadHoleRnd1Flat::SetRenderEnable(m_Check_OneFlatHoleEnable.GetCheck());
+	CCadHoleRnd1Flat::RenderEnable(m_Check_OneFlatHoleEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckOriginenable()
 {
-	CCadOrigin::SetRenderEnable(m_Check_OriginEnable.GetCheck());
+	CCadOrigin::RenderEnable(m_Check_OriginEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckPolygonenable()
 {
-	CCadPolygon::SetRenderEnable(m_Check_PolygonEnable.GetCheck());
+	CCadPolygon::RenderEnable(m_Check_PolygonEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckRectenable()
 {
-	CCadRect::SetRenderEnable(m_Check_RectEnable.GetCheck());
+	CCadRect::RenderEnable(m_Check_RectEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckRectholeenable()
 {
-	CCadHoleRect::SetRenderEnable(m_Check_RectHoleEnable.GetCheck());
+	CCadHoleRect::RenderEnable(m_Check_RectHoleEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckRoundedrectenable()
 {
-	CCadRndRect::SetRenderEnable(m_CheckRoundedRectEnable.GetCheck());
+	CCadRndRect::RenderEnable(m_CheckRoundedRectEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckRoundholeenable()
 {
-	CCadHoleRound::SetRenderEnable(m_Check_RoundHole.GetCheck());
+	CCadHoleRound::RenderEnable(m_Check_RoundHole.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckTextenabled()
 {
-	CCadText::SetRenderEnable(m_Check_TextEnable.GetCheck());
+	CCadText::RenderEnable(m_Check_TextEnable.GetCheck());
 }
 
 
 void CDlgObjectEnable::OnClickedCheckTwoflatenable()
 {
-	CCadHoleRnd2Flat::SetRenderEnable(m_Check_TwoFlatRoundHoleEnable.GetCheck());
+	CCadHoleRnd2Flat::RenderEnable(m_Check_TwoFlatRoundHoleEnable.GetCheck());
 }
 
 

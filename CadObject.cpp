@@ -1,18 +1,18 @@
-/****************************************************************
-* CCadObject
-*		This is the base class for all of the drawing objects
-* They are all the same for this simple reason that any of
-* them may exist in any document.  The idea is that they behave
-* the same so as to make things just a bit easier on me while
-* writing the program.  This class was derived from an earlier
-* work that I called FrontCad.  This version is supposedely 
-* much more object oriented.
-****************************************************************/
+//----------------------------------------------------------------
+// CCadObject
+//		This is the base class for all of the drawing objects
+// They are all the same for this simple reason that any of
+// them may exist in any document.  The idea is that they behave
+// the same so as to make things just a bit easier on me while
+// writing the program.  This class was derived from an earlier
+// work that I called FrontCad.  This version is supposedely 
+// much more object oriented.
+//----------------------------------------------------------------
 #include "pch.h"
 
 CCadObject::CCadObject()
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CCadObject
 	//	This is the default constructor
 	// parameters:
@@ -21,9 +21,10 @@ CCadObject::CCadObject()
 	//	none
 	//--------------------------------------------------
 	m_Type = ObjectType::BASE;
-	m_Dirty = FALSE;	// Dirty flag
+	m_SubType = SubType::ANY;
+	m_SubSubType = 0;
 	m_Selected = FALSE;	//selected flag
-	m_pReferenceObj = 0;
+	m_bAttributesValid = FALSE;
 	//----------- Main Drawing Links --------------
 	m_pNext = 0;
 	m_pPrev = 0;
@@ -47,10 +48,17 @@ CCadObject::CCadObject()
 	m_pPrevDependentParent = 0;
 	m_nTotalDependentParents = 0;
 	//---------------------------
+	// Clipboard Links
+	//---------------------------
+	m_pNextClipBoard = 0;
+	m_pPrevClipBoard = 0;
+	//---------------------------
 	// Origin List links
 	//---------------------------
 	m_pNextOrigin = 0;
 	m_pPrevOrigin = 0;
+	//-------------------------------
+	m_pParentObject = 0;
 	//---------------------------
 	// Generate Unique ID
 	//---------------------------
@@ -59,7 +67,7 @@ CCadObject::CCadObject()
 
 CCadObject::~CCadObject()
 {
-	//***************************************************
+	//--------------------------------------------------
 	// ~CCadObject
 	//		This is the base object destructor
 	//
@@ -70,9 +78,31 @@ CCadObject::~CCadObject()
 	//--------------------------------------------------
 }
 
-void CCadObject::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
+void CCadObject::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//--------------------------------------------------
+	//	Move
+	//		This Method is used to move the object
+	// by the point that is passed.
+	//
+	// parameters:
+	//	p.......point to move the object by
+	//
+	// return value: none
+	//--------------------------------------------------
+	CCadObject* pObj;
+
+	pObj = GetHead();
+	while (pObj)
+	{
+		pObj->Move(Diff);
+		pObj = pObj->GetNext();
+	}
+}
+
+void CCadObject::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+{
+	//--------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -85,10 +115,57 @@ void CCadObject::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//--------------------------------------------------
 }
 
+int CCadObject::PointInObjectAndSelect(
+	DOUBLEPOINT p, 
+	CCadObject** ppSelList, 
+	int index, 
+	int n
+)
+{
+	//--------------------------------------------------
+	// PointInObjectAndSelect
+	//	This Method is used to see if an object can
+	// be selected at point p.
+	//
+	// parameters:
+	//	p...........point to check at
+	//	ppSelList...pointer to list of selected objects
+	//	index.......current index into the selection list
+	//	n...........Total number of spaces in slection list
+	//	flag........Determines what sort of objects selected
+	//
+	// return value:
+	//	returns true if point is within object
+	//	otherwise, false
+	//--------------------------------------------------
+	CCadObject* pObj;
+	int ix = 0;;
+
+	if (index < n)	//Is there room?
+	{
+		pObj = GetHead();	//get head of children
+		while (pObj)	//take a look at the children
+		{
+			ix = PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			if (ix > 0)	//any objects found?
+				index += ix;
+			if (index < n)
+				pObj = pObj->GetNext();
+			else
+				pObj = NULL;
+		}
+	}
+	return index;
+}
 
 CString& CCadObject::GetTypeString(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -100,23 +177,15 @@ CString& CCadObject::GetTypeString(void)
 	return csTypeName;
 }
 
-CCadObject CCadObject::operator=(CCadObject &v)
+CString& CCadObject::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	return CCadObject();
+	GetDescription().Format(_T("Base Obj Class"));
+	return m_csDescription;
 }
 
-CCadObject * CCadObject::CopyObject(void)
+void CCadObject::CopyObject(CCadObject* pObjCopy)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -124,7 +193,25 @@ CCadObject * CCadObject::CopyObject(void)
 	//
 	// return value:a new copy of this
 	//--------------------------------------------------
-	return new CCadObject;
+
+	CCadObject* pObj;
+	CCadObject* pNew;
+
+	pObjCopy->m_Type = m_Type;
+	pObjCopy->m_SubType = m_SubType;
+	pObjCopy->m_SubSubType = m_SubSubType;
+	pObjCopy->m_Selected = m_Selected;
+	pObjCopy->m_pParentObject = m_pParentObject;
+	//------------------------------
+	// copy children
+	//------------------------------
+	pObj = GetHead();
+	while (pObj)
+	{
+		pNew = pObj->CopyObject();
+		pObjCopy->AddObjectAtTail(pNew);
+		pObj = pObj->GetNext();
+	}
 }
 
 //-------------------------------------------------
@@ -133,6 +220,8 @@ CCadObject * CCadObject::CopyObject(void)
 
 void CCadObject::AddObjectAtHead(CCadObject* pObj)
 {
+	pObj->SetParent(this);
+	pObj->SetDependentParentHead(this);
 	if (GetHead() == 0)
 	{
 		SetHead(pObj);
@@ -149,6 +238,8 @@ void CCadObject::AddObjectAtHead(CCadObject* pObj)
 
 void CCadObject::AddObjectAtTail(CCadObject* pObj)
 {
+	pObj->SetParent(this);
+	pObj->SetDependentParentHead(this);
 	if (GetHead() == 0)
 	{
 		SetHead(pObj);
@@ -186,7 +277,35 @@ void CCadObject::RemoveObject(CCadObject* pObj)
 		pObj->GetNext()->SetPrev(pObj->GetPrev());
 		pObj->GetPrev()->SetNext(pObj->GetNext());
 	}
+	pObj->SetNext(0);
+	pObj->SetPrev(0);
+	pObj->SetParent(0);
 	--m_nTotalChildObjects;
+}
+
+CCadObject* CCadObject::FindObject(ObjectType Type, SubType SubType, UINT SubSubType)
+{
+	// Is this the real one?
+	CCadObject* pResult = 0;
+	CCadObject* pObj;
+	BOOL bLoop = TRUE;
+
+	pObj = GetHead();
+	while (pObj && bLoop)
+	{
+		if (pObj->m_Type == Type &&
+			pObj->m_SubType == SubType &&
+			SubSubType == pObj->m_SubSubType)
+		{
+			bLoop = FALSE;
+			pResult = pObj;
+		}
+		else
+		{
+			pObj = pObj->GetNext();
+		}
+	}
+	return pResult;
 }
 
 //-----------------------------------------
@@ -195,16 +314,16 @@ void CCadObject::RemoveObject(CCadObject* pObj)
 
 void CCadObject::AddDepChildObjectAtHead(CCadObject* pObj)
 {
-	if (GetHead() == 0)
+	if (GetDependentChildrenHead() == 0)
 	{
-		SetHead(pObj);
-		SetTail(pObj);;
+		SetDependentChildrenHead(pObj);
+		SetDependentChildrenTail(pObj);;
 	}
 	else
 	{
-		pObj->SetNext(GetHead());
-		GetHead()->SetPrev(pObj);
-		SetHead(pObj);
+		pObj->SetNextDependentChild(GetDependentChildrenHead());
+		GetDependentChildrenHead()->SetPrevDependentChild(pObj);
+		SetDependentChildrenHead(pObj);
 	}
 	++m_nTotalDependentChildren;
 }
@@ -227,28 +346,59 @@ void CCadObject::AddDepChildObjectAtTail(CCadObject* pObj)
 
 void CCadObject::RemoveDepChildObject(CCadObject* pObj)
 {
-	if (pObj == GetHead())
+	if (pObj == GetDependentChildrenHead())
 	{
-		SetHead(pObj->GetNext());
-		if (GetHead())
-			GetHead()->SetPrev(0);
+		SetDependentChildrenHead(pObj->GetNextDependentChild());
+		if (GetDependentChildrenHead())
+			GetDependentChildrenHead()->SetPrevDependentChild(0);
 		else
-			SetTail(0);
+			SetDependentChildrenTail(0);
 	}
-	else if (pObj == GetTail())
+	else if (pObj == GetDependentChildrenTail())
 	{
-		SetTail(pObj->GetPrev());
-		if (GetTail())
-			GetTail()->SetNext(0);
+		SetDependentChildrenTail(pObj->GetPrevDependentChild());
+		if (GetDependentChildrenTail())
+			GetDependentChildrenTail()->SetNextDependentChild(0);
 		else
-			SetHead(0);
+			SetDependentChildrenHead(0);
 	}
 	else
 	{
-		pObj->GetNext()->SetPrev(pObj->GetPrev());
-		pObj->GetPrev()->SetNext(pObj->GetNext());
+		pObj->GetNextDependentChild()->SetPrevDependentChild(pObj->GetPrevDependentChild());
+		pObj->GetPrevDependentChild()->SetNextDependentChild(pObj->GetNextDependentChild());
 	}
+	SetPrevDependentChild(0);
+	SetNextDependentChild(0);
 	--m_nTotalDependentChildren;
+}
+
+CCadObject* CCadObject::FindDepChildObject(ObjectType Type, SubType SubType, UINT SubSubType)
+{
+	CCadObject* pResult = 0;;
+	CCadObject* pObj;
+	BOOL bLoop = TRUE;
+
+	pObj = GetDependentChildrenHead();
+	while (pObj && bLoop)
+	{
+		if (pObj->m_Type == Type &&
+			pObj->m_SubType == SubType &&
+			SubSubType > 0)
+		{
+			bLoop = FALSE;
+			pResult = pObj;
+		}
+		else if (pObj->m_Type == Type && pObj->m_SubType == SubType)
+		{
+			bLoop = FALSE;
+			pResult = pObj;
+		}
+		else
+		{
+			pObj = pObj->GetNextDependentChild();
+		}
+	}
+	return pResult;
 }
 
 //-----------------------------------------
@@ -256,58 +406,88 @@ void CCadObject::RemoveDepChildObject(CCadObject* pObj)
 //-----------------------------------------
 void CCadObject::AddDepParentObjectAtHead(CCadObject* pObj)
 {
-	if (GetHead() == 0)
+	if (GetDependentParentsHead() == 0)
 	{
-		SetHead(pObj);
-		SetTail(pObj);;
+		SetDependentParentHead(pObj);
+		SetDependentParentTail(pObj);;
 	}
 	else
 	{
-		pObj->SetNext(GetHead());
-		GetHead()->SetPrev(pObj);
-		SetHead(pObj);
+		pObj->SetNextDependentParent(GetDependentParentsHead());
+		GetDependentParentsHead()->SetPrevDependentParent(pObj);
+		SetDependentParentHead(pObj);
 	}
 	++m_nTotalDependentParents;
 }
 
 void CCadObject::AddDepParentObjectAtTail(CCadObject* pObj)
 {
-	if (GetHead() == 0)
+	if (GetDependentParrentsTail() == 0)
 	{
-		SetHead(pObj);
-		SetTail(pObj);
+		SetDependentParentHead(pObj);
+		SetDependentParentHead(pObj);
 	}
 	else
 	{
-		pObj->SetPrev(GetTail());
-		GetTail()->SetNext(pObj);
-		SetTail(pObj);
+		pObj->SetPrevDependentParent(GetDependentParrentsTail());
+		GetDependentParrentsTail()->SetNextDependentParent(pObj);
+		SetDependentParentTail(pObj);
 	}
 	++m_nTotalDependentParents;
 }
 
 void CCadObject::RemoveDepParentObject(CCadObject* pObj)
 {
-	if (pObj == GetHead())
+	if (pObj == GetDependentParentsHead())
 	{
-		SetHead(pObj->GetNext());
-		if (GetHead())
-			GetHead()->SetPrev(0);
+		SetDependentParentHead(pObj->GetNextDependentParent());
+		if (GetDependentParentsHead())
+			GetDependentParentsHead()->SetPrevDependentParent(0);
 		else
-			SetTail(0);
+			SetDependentParentTail(0);
 	}
-	else if (pObj == GetTail())
+	else if (pObj == GetDependentParrentsTail())
 	{
-		SetTail(pObj->GetPrev());
-		if (GetTail())
-			GetTail()->SetNext(0);
+		SetDependentParentTail(pObj->GetPrevDependentParent());
+		if (GetDependentParrentsTail())
+			GetDependentParrentsTail()->SetNextDependentParent(0);
 		else
-			SetHead(0);
+			SetDependentParentHead(0);
 	}
 	else
 	{
-		pObj->GetNext()->SetPrev(pObj->GetPrev());
-		pObj->GetPrev()->SetNext(pObj->GetNext());
+		pObj->GetNextDependentParent()->SetPrevDependentParent(pObj->GetPrevDependentParent());
+		pObj->GetPrevDependentParent()->SetNextDependentParent(pObj->GetNextDependentParent());
 	}
+	SetNextDependentParent(0);
+	SetPrevDependentParent(0);
 	--m_nTotalDependentParents;
+}
+
+CCadObject* CCadObject::FindDepParentObject(ObjectType Type, SubType SubType, UINT SubSubType)
+{
+	CCadObject* pObj = 0 , *pResult = 0;
+	BOOL bLoop = TRUE;
+
+	pObj = GetDependentParentsHead();
+	while (pObj && bLoop)
+	{
+		if (pObj->m_Type == Type &&
+			pObj->m_SubType == SubType &&
+			SubSubType > 0)
+		{
+			bLoop = FALSE;
+			pResult = pObj;
+		}
+		else if (pObj->m_Type == Type && pObj->m_SubType == SubType)
+		{
+			bLoop = FALSE;
+			pResult = pObj;
+		}
+		else
+		{
+			pObj = pObj->GetNextDependentParent();
+		}
+	}
+	return pResult;
 }

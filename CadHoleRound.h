@@ -8,33 +8,26 @@ class CCadHoleRound:public CCadObject
 	inline static SRoundHoleAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CPen *m_pPenLine;
 	SRoundHoleAttributes m_Attrib;
-	CDoublePoint m_Center;
+	CCadPoint m_Center;
 public:
 	CCadHoleRound();
 	virtual ~CCadHoleRound();
+	void Create();
+	virtual BOOL Destroy(CCadObject* pDependentObject);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p,
-		CCadObject** ppSelList = 0,
-		int index = 0,
-		int n = 0,
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int index,
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
-	CCadHoleRound operator=(CCadHoleRound &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint GetCenter();
-	virtual CDoubleSize GetSize();
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRoundHoleAttributes *pAttrb);
 	void CopyAttributesFrom(SRoundHoleAttributes *pAttrb);
@@ -44,6 +37,7 @@ public:
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual int EditProperties(void);
+	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	//---------------------------------------------
 	// Object Attributes
 	//---------------------------------------------
@@ -54,12 +48,16 @@ public:
 	void SetLineWidth(double w) { GetAttributes().m_LineWidth; }
 	double GetHoleRadius() { return GetAttributes().m_HoleRadius; }
 	void SetHoleRadius(double d) { GetAttributes().m_HoleRadius = d; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static void RenderEnable(int e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SRoundHoleAttributes* GetLastAttributes() const {
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static SRoundHoleAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

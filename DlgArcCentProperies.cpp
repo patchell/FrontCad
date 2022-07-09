@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgArcCentProperies, CDialog)
 CDlgArcCentProperies::CDlgArcCentProperies(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ARCCENTPROPERTIES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pArc = 0;
 }
 
@@ -31,7 +32,7 @@ void CDlgArcCentProperies::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDlgArcCentProperies, CDialog)
-	ON_STN_CLICKED(IDC_STATIC_LINECOLOR, &CDlgArcCentProperies::OnStnClickedStaticLinecolor)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgArcCentProperies::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 //-------------------------------------------------
@@ -53,30 +54,29 @@ void CDlgArcCentProperies::OnOK()
 	switch (Id)
 	{
 	case IDOK:
-		UpdateControls();
+		if(IsDirty())
+			UpdateControls();
 		CDialog::OnOK();
 		break;
 	}
 }
 
-void CDlgArcCentProperies::OnStnClickedStaticLinecolor()
-{
-	CColorDialog Dlg;
-
-	if (IDOK == Dlg.DoModal())
-		m_Static_Color.SetColor(Dlg.GetColor());
-}
-
 void CDlgArcCentProperies::UpdateControls()
 {
+	CADObjectTypes Obj;
+
 	m_Edit_EndX.SetDecimalPlaces(3);
-	m_Edit_EndX.SetDoubleValue(m_pArc->GetStartPoint().dX);
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	m_Edit_EndX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_EndY.SetDecimalPlaces(3);
-	m_Edit_EndY.SetDoubleValue(m_pArc->GetStartPoint().dY);
+	m_Edit_EndY.SetDoubleValue(Obj.pCadPoint->GetY());
+
 	m_Edit_StartX.SetDecimalPlaces(3);
-	m_Edit_StartX.SetDoubleValue(m_pArc->GetStartPoint().dX);
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	m_Edit_StartX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_StartY.SetDecimalPlaces(3);
-	m_Edit_StartY.SetDoubleValue(m_pArc->GetStartPoint().dX);
+	m_Edit_StartY.SetDoubleValue(Obj.pCadPoint->GetY());
+
 	m_Edit_Width.SetDecimalPlaces(3);
 	m_Edit_Width.SetDoubleValue(m_pArc->GetAttributes().m_LineWidth);
 	m_Static_Color.SetColor(m_pArc->GetAttributes().m_colorLine);
@@ -85,18 +85,25 @@ void CDlgArcCentProperies::UpdateControls()
 
 void CDlgArcCentProperies::UpdateData()
 {
+	CADObjectTypes Obj;
+
 	m_pArc->GetAttributes().m_colorLine = m_Static_Color.GetColor();
-	m_pArc->GetAttributes().m_LineWidth = m_Edit_Width.GetValue();
-	m_pArc->SetEndPoint(
-		CDoublePoint(
-			m_Edit_EndX.GetDoubleValue(), 
-			m_Edit_EndY.GetDoubleValue()
-		)
+	m_pArc->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	Obj.pCadPoint->SetPoint(
+		m_Edit_EndX.GetDoubleValue(),
+		m_Edit_EndY.GetDoubleValue()
 	);
-	m_pArc->SetStartPoint(
-		CDoublePoint(
-			m_Edit_StartX.GetDoubleValue(), 
-			m_Edit_StartY.GetDoubleValue()
-		)
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	Obj.pCadPoint->SetPoint(
+		m_Edit_StartX.GetDoubleValue(),
+		m_Edit_StartY.GetDoubleValue()
 	);
+}
+
+
+afx_msg LRESULT CDlgArcCentProperies::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
+{
+	m_bDirty = TRUE;
+	return 0;
 }

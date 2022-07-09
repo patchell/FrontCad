@@ -5,6 +5,7 @@
 
 class CDlgPolygonProperties : public CDialog
 {
+	BOOL m_bDirty;
 	//--------------------
 	// Data
 	//---------------------
@@ -21,6 +22,7 @@ class CDlgPolygonProperties : public CDialog
 public:
 	CDlgPolygonProperties(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgPolygonProperties();
+	BOOL IsDirty() { return m_bDirty; }
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -37,6 +39,6 @@ public:
 	void SetPolygon(CCadPolygon* pCP) { m_pPolygon = pCP; }
 	afx_msg void OnClickedStaticFillColor();
 	afx_msg void OnClickedStaticLineColor();
+protected:
+	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };
-
-extern int DoPolygonPropertiesDlg(CCadPolygon* pCP);

@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgBitmapProperties, CDialog)
 CDlgBitmapProperties::CDlgBitmapProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_BITMAP_PROPERTIES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pBitmap = 0;
 }
 
@@ -29,6 +30,7 @@ void CDlgBitmapProperties::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDlgBitmapProperties, CDialog)
 	ON_BN_CLICKED(IDC_CHECK_MAINTAIN_ASPECT_RATIO, &CDlgBitmapProperties::OnBnClickedCheckMaintainAspectRatio)
 	ON_BN_CLICKED(IDC_BUTTON_CHOOSE_FILE, &CDlgBitmapProperties::OnBnClickedButtonChooseFile)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgBitmapProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -52,14 +54,16 @@ void CDlgBitmapProperties::OnBnClickedButtonChooseFile()
 
 void CDlgBitmapProperties::OnOK()
 {
-	// TODO: Add your specialized code here and/or call the base class
 	CWnd *pW = GetFocus();
 	int Id = pW->GetDlgCtrlID();
 	switch (Id)
 	{
 		case IDOK:
-			m_pBitmap->GetAttributes().m_MaintainAspectRatio = m_Check_MaintainAspecRation.GetCheck();
-			m_Edit_FileName.GetWindowTextW(m_pBitmap->GetBitMapFileName());
+			if (IsDirty())
+			{
+				m_pBitmap->GetAttributes().m_MaintainAspectRatio = m_Check_MaintainAspecRation.GetCheck();
+				m_Edit_FileName.GetWindowTextW(m_pBitmap->GetBitMapFileName());
+			}
 			CDialog::OnOK();
 			break;
 	}
@@ -73,4 +77,11 @@ BOOL CDlgBitmapProperties::OnInitDialog()
 	m_Check_MaintainAspecRation.SetCheck(m_pBitmap->GetAttributes().m_MaintainAspectRatio);
 	m_Edit_FileName.SetWindowTextW(m_pBitmap->GetBitMapFileName());
 	return TRUE;  
+}
+
+
+afx_msg LRESULT CDlgBitmapProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
+{
+	m_bDirty = TRUE;
+	return 0;
 }

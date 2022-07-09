@@ -8,45 +8,28 @@ class CCadArcCent :public CCadObject
 	inline static SArcCenterAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CPen *m_pPenLine;
-	//-------------------------------------
-	// Things that define the Arc
-	//-------------------------------------
-	CDoublePoint m_pointCenter;
-	CDoubleRect m_rectShape;
-	CDoublePoint m_pointStart;
-	CDoublePoint m_pointEnd;
-	//-------------------------------------
 	SArcCenterAttributes m_Attrb;
 public:
 	CCadArcCent();
-	CCadArcCent(CCadArcCent &arc);
 	virtual ~CCadArcCent();
 	void Create(void);
+	virtual BOOL Destroy(CCadObject* pDepndentObjects);
+	virtual CString& GetObjDescription();
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CPoint p);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale);
+	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
+	virtual void Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p,
-		CCadObject** ppSelList = 0,
-		int index = 0,
-		int n = 0,
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int index,
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
-	virtual CString& GetTypeString(void);
-	CCadArcCent operator=(CCadArcCent &v);
-	virtual CCadObject * CopyObject(void);
-	virtual void Copy(CCadObject* pObj);
-	virtual CDoublePoint GetCenter() { return m_pointCenter; }
-	virtual void SetCenter(CDoublePoint cp) { m_pointCenter = cp; }
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
+	CString& GetTypeString(void);
+	virtual CCadObject* CopyObject(void);
 	virtual DocFileParseToken Parse(
-		DocFileParseToken Token, 
-		CLexer *pLex, 
+		DocFileParseToken Token,
+		CLexer* pLex,
 		DocFileParseToken TypeToken = DocFileParseToken::ARCCENTERED
 	);
 	//---------------------------------------------
@@ -54,8 +37,14 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-	BOOL PtInArc(CDoublePoint p);
-	double Evaluate(CDoublePoint p);
+	//------------------------------------------
+	// object geometry
+	//------------------------------------------
+	DOUBLEPOINT CalculateP2(CCadPoint* pPC, CCadPoint* pP1);
+//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+//	double CalcY(double x, double A, double B);
+//	BadDelta DeltaIsBad(CPoint P1, CPoint P2);
+//	CDoubleSize SlopeIsOneAt(double Asquared, double Bsquared);
 	//------------------------------------------
 	// Attribute Methods
 	//-------------------------------------------
@@ -63,29 +52,23 @@ public:
 	void CopyAttributesTo(SArcCenterAttributes* pAttrb);
 	void CopyAttributesFrom(SArcCenterAttributes* pAttrb);
 	SArcCenterAttributes& GetAttributes() { return m_Attrb; }
-	SArcCenterAttributes* GetAttributesPointer() { return &m_Attrb; }
+	SArcCenterAttributes* GetPtrToAttributes() { return &m_Attrb; }
 	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
 	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(int w) { GetAttributes().m_LineWidth; }
-	CDoublePoint GetStartPoint(void) { return m_pointStart.ToCPoint(); }
-	void SetStartPoint(CDoublePoint p) { m_pointStart = p; }
-	CDoublePoint GetEndPoint(void) { return m_pointEnd.ToCPoint(); }
-	void SetEndPoint(CDoublePoint p){m_pointEnd = p;}
-	CDoubleRect& GetShapeRect(){ return m_rectShape; };
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
-
-	double GetA() {
-		return GetShapeRect().GetWidth()/2.0;
-	}
-	double GetB() {
-		return GetShapeRect().GetHeight()/2.0;
-	}
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	//  Static Methods
+	//--------------------------------------------
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static void RenderEnable(BOOL e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SArcCenterAttributes* GetLastAttributes() const {
+	static SArcCenterAttributes* GetLastAttributes() {
 		return &m_LastAttributes;
 	}
 };

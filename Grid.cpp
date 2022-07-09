@@ -20,10 +20,10 @@ CGrid::~CGrid()
 void CGrid::Draw(
 	CDC* pDC,
 	MODE mode,
-	CDoublePoint& ULHC,
+	DOUBLEPOINT ULHC,
 	CScale& Scale,
 	CRect& rectClient
-	)
+)
 {
 	//------------------------------------------------
 	// DrawGrid
@@ -50,7 +50,7 @@ void CGrid::Draw(
 void CGrid::DrawSnapDots(
 	CDC* pDC,
 	MODE mode,
-	CDoublePoint ULHC,
+	DOUBLEPOINT ULHC,
 	CScale Scale,
 	CRect& rectClient
 )
@@ -74,7 +74,7 @@ void CGrid::DrawSnapDots(
 	int Nx, Ny;
 	int H, W;
 	CDoubleSize SnapGrdSz;
-	CDoublePoint DotPoint;
+	CCadPoint DotPoint;
 	double X, Y, dTemp;
 	int GLT_X, GLT_Y;	// Grid line types
 	CSize PixelSpacing;
@@ -145,7 +145,7 @@ void CGrid::DrawSnapDots(
 void CGrid::DrawMajLines(
 	CDC* pDC,
 	MODE mode,
-	CDoublePoint ULHC,
+	DOUBLEPOINT ULHC,
 	CScale Scale,
 	CRect& rectClient
 )
@@ -207,7 +207,7 @@ void CGrid::DrawMajLines(
 	}
 }
 
-void CGrid::DrawSnapLines(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale &Scale, CRect& rectClient)
+void CGrid::DrawSnapLines(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale &Scale, CRect& rectClient)
 {
 	//--------------------------------------------------------------
 	// DrawAllLines

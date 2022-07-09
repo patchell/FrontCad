@@ -4,14 +4,13 @@ CCadOrigin::CCadOrigin():CCadObject()
 {
 	SetType(ObjectType::ORIGIN);
 	GetName().Format(_T("Origin_%d"), ++m_OriginCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetOriginAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-	printf("Make new Origin\n");
 }
 
 CCadOrigin::~CCadOrigin()
@@ -19,16 +18,26 @@ CCadOrigin::~CCadOrigin()
 }
 
 
-void CCadOrigin::Create(double x, double y, CString& csName)
+void CCadOrigin::Create()
 {
-	SetName(csName);
-	m_Origin.dX = x;
-	m_Origin.dY = y;
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ORIGIN_LOCATION);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadOrigin::Destroy(CCadObject* pDependentObject)
+{
+	BOOL rV = TRUE;
+	return rV;
 }
 
 void CCadOrigin::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -38,11 +47,20 @@ void CCadOrigin::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
+	CCadObject::Move(Diff);
+}
+
+DOUBLEPOINT CCadOrigin::GetCenterPoint()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	return DOUBLEPOINT(*Obj.pCadPoint);
 }
 
 void CCadOrigin::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -51,43 +69,9 @@ void CCadOrigin::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	// return value:none
 	//--------------------------------------------------
 }
-
-void CCadOrigin::SetVertex(int v, CPoint p)
+void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-}
-
-
-int CCadOrigin::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return 0;
-}
-
-
-void CCadOrigin::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -101,17 +85,17 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	CCadObject* pObj = GetHead(); 
 	CPen LinePen, * OldPen = 0;
 	CBrush fillBrush, * oldBrush = 0;
+	CADObjectTypes Obj;
 	int LineWidth;
 	CRect rect;
 	int rectHalfWidth, CrossHairLen;
 	CPoint pointUL, pointLR, pointCenter;;
 	double Radius;
-	COLORREF colorLine;
 	//---------------------------------------
 	// Draw this Origin Object
 	//---------------------------------------
 
-	if (m_RenderEnable)
+	if (IsRenderEnabled())
 	{
 		LineWidth = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
 		if (LineWidth < 1)
@@ -126,33 +110,30 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 			rectHalfWidth = 10;
 			Radius = double(rectHalfWidth);
 		}
-		
-		pointLR = m_Origin.ToPixelPoint(ULHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
-		pointUL = m_Origin.ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		pointLR = Obj.pCadPoint->ToPixelPoint(ULHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
+		pointUL = Obj.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
 		rect.SetRect(pointUL, pointLR);
 		rect.NormalizeRect();
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			colorLine = GetAttributes().m_colorLine;
-			LinePen.CreatePen(PS_SOLID, LineWidth, colorLine);
+			LinePen.CreatePen(PS_SOLID, LineWidth, GetAttributes().m_colorLine);
 			OldPen = pDC->SelectObject(&LinePen);
 			break;
 		case ObjectDrawMode::SELECTED:
-			colorLine = GetAttributes().m_colorSelected;
-			LinePen.CreatePen(PS_SOLID, LineWidth, colorLine);
+			LinePen.CreatePen(PS_SOLID, LineWidth, GetAttributes().m_colorLine);
 			OldPen = pDC->SelectObject(&LinePen);
 			break;
 		case ObjectDrawMode::SKETCH:
-			colorLine = GetAttributes().m_colorLine;
-			LinePen.CreatePen(PS_DOT, LineWidth, colorLine);
+			LinePen.CreatePen(PS_DOT, LineWidth, GetAttributes().m_colorLine);
 			OldPen = pDC->SelectObject(&LinePen);
 			break;
 		}
 		fillBrush.CreateStockObject(NULL_BRUSH);
 		oldBrush = pDC->SelectObject(&fillBrush);
 		pDC->Ellipse(&rect);
-		pointCenter = m_Origin.ToPixelPoint(ULHC, Scale);
+		pointCenter = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
 		pDC->MoveTo(pointCenter.x + CrossHairLen,pointCenter.y);
 		pDC->LineTo(pointCenter.x - CrossHairLen, pointCenter.y);
 		pDC->MoveTo(pointCenter.x,pointCenter.y + CrossHairLen);
@@ -171,9 +152,19 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	}
 }
 
-BOOL CCadOrigin::PointInObjectAndSelect(CPoint p, CSize Offset, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
+BOOL CCadOrigin::PointInThisObject(DOUBLEPOINT point)
 {
-	//***************************************************
+	return 0;
+}
+
+int CCadOrigin::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
+)
+{
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -184,32 +175,38 @@ BOOL CCadOrigin::PointInObjectAndSelect(CPoint p, CSize Offset, CCadObject ** pp
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	return 0;
-}
+	int iX;
+	CCadObject* pObj;
+	CADObjectTypes Obj;
 
-CDoublePoint CCadOrigin::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_Origin;
+	if (index < n)
+	{
+		if (PointInThisObject(p))
+		{
+			Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+			ppSelList[index++] = Obj.pCadObject;
+		}
+		pObj = GetHead();
+		while (pObj)
+		{
+			iX = pObj->PointInObjectAndSelect(p, ppSelList, index, n);
+			if (iX)
+			{
+				index += iX;
+			}
+		}
+	}
+	return index;
 }
-
 
 CString& CCadOrigin::GetTypeString(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -218,41 +215,21 @@ CString& CCadOrigin::GetTypeString(void)
 	// return value:pointer to a string
 	//--------------------------------------------------
 	static CString csName = _T("Origin");
-
 	return csName;
 }
 
-CCadOrigin CCadOrigin::operator=(CCadOrigin &v)
+CString& CCadOrigin::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	CCadOrigin Origin;
+	CADObjectTypes Obj;
 
-	m_Origin = v.m_Origin;
-	Origin.GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	return Origin;
-}
-
-CPoint CCadOrigin::ScalePoint(CPoint p, int Scale, int ScaleDiv)
-{
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-	return CPoint();
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	GetDescription().Format(_T("Origin(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
+	return GetDescription();
 }
 
 CCadObject * CCadOrigin::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -261,43 +238,14 @@ CCadObject * CCadOrigin::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadOrigin *pCO = new CCadOrigin;
-	*pCO = *this;
+	pCO->Create();
+	CCadObject::CopyObject(pCO);
 	return pCO;
-}
-
-void CCadOrigin::RenderEnable(int e)
-{
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
-
-CDoubleSize CCadOrigin::GetSize()
-{
-	//***************************************************
-	// GetSize
-	//	Get the size of the object.  Reutrns the size
-	// of the enclosing rectangle.
-	// parameters:
-	//
-	// return value:returns size of the object
-	//--------------------------------------------------
-	return CSize();
 }
 
 DocFileParseToken CCadOrigin::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -315,31 +263,31 @@ DocFileParseToken CCadOrigin::Parse(DocFileParseToken Token, CLexer *pLex, DocFi
 
 void CCadOrigin::CopyAttributesTo(SOriginAttributes* pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesTo
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an external attributes stucture
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadOrigin::CopyAttributesFrom(SOriginAttributes * pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadOrigin::MouseMove(ObjectDrawState DrawState)
@@ -357,15 +305,16 @@ ObjectDrawState CCadOrigin::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePosition = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePosition = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::SET_ATTRIBUTES:
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Origin = MousePosition;
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadPoint->SetPoint(MousePosition);
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
 }
 
@@ -383,51 +332,53 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CPoint MouseScreenCoordinate;
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
 		GETAPP.UpdateStatusBar(_T("Origin:Place Origin Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
 			}
 			m_AttributesDirty = FALSE;
 		}
-		DrawState = ObjectDrawState::SELECT_NOTHING;
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
-		GETVIEW()->GetCursorPosition(&MouseScreenCoordinate);
+		GETVIEW->GetCursorPosition(&MouseScreenCoordinate);
 		Id = EditProperties();
 		if (IDOK == Id)
 		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
+			if(m_AttributesDirty)
+				CopyAttributesTo(&m_CurrentAttributes);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
-			GETVIEW()->EnableAutoScroll(1);
+			GETVIEW->EnableAutoScroll(1);
 		}
 		else
 			DrawState = ObjectDrawState::END_DRAWING;
-		GETVIEW()->SetCursorPosition(MouseScreenCoordinate);
+		GETVIEW->SetCursorPosition(MouseScreenCoordinate);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Origin = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_Origin = MousePos;
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
-		GETVIEW()->AddOriginAtTail(this);
-		GETVIEW()->EnableAutoScroll(0);
-		GETVIEW()->SetObjectTypes(new CCadOrigin);
+		GETVIEW->AddOriginAtTail(this);
+		GETVIEW->EnableAutoScroll(0);
+		GETVIEW->SetObjectTypes(new CCadOrigin);
 		GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
 		break;
 	}
@@ -441,15 +392,13 @@ int CCadOrigin::EditProperties()
 
 	Dlg.SetOrigin(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
-}
-
-BOOL CCadOrigin::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadOrigin::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
 }

@@ -18,6 +18,7 @@ CEditDecimal::CEditDecimal()
 	m_ObjMsg = WMarrowSubMsg(0);
 	m_WMsg = WindowsMsg(0);
 	m_pW = 0;
+	m_Dirty = 0;
 }
 
 CEditDecimal::~CEditDecimal()
@@ -42,8 +43,6 @@ BOOL CEditDecimal::PreTranslateMessage(MSG* pMsg)
 			if(VK_RETURN == pMsg->wParam)
 			{
 				CWnd *wC;
-				int v = GetValue();
-				if(m_pW)m_pW->SendMessage(UINT(m_WMsg),UINT(m_ObjMsg),v);
 				wC = GetParent()->GetFocus();
 				wC = GetParent()->GetNextDlgTabItem(wC);	//reset the focus
 				wC->SetFocus();
@@ -59,7 +58,29 @@ BOOL CEditDecimal::PreTranslateMessage(MSG* pMsg)
 
 void CEditDecimal::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
 {
-	CEdit::OnChar(nChar, nRepCnt, nFlags);
+	m_Dirty = TRUE;
+	switch (nChar)
+	{
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	case '.':
+	case VK_BACK:
+		if (!m_Dirty && GetParent())
+			GetParent()->PostMessageW(UINT(WindowsMsg::WM_DLG_CONTROL_DIRTY));
+		m_Dirty = TRUE;
+		CEdit::OnChar(nChar, nRepCnt, nFlags);
+		break;
+	default:
+		break;
+	}
 }
 
 int CEditDecimal::GetValue()

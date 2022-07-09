@@ -8,32 +8,44 @@ class CCadRect:public CCadObject
 	inline static SRectAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CPen *m_pPenLine;
-	CBrush *m_pBrFill;
 	SRectAttributes m_Attrib;
-	CDoubleRect m_Rect;
-	CString m_csName;
 public:
 	CCadRect();
-	CCadRect(CCadRect &r);
 	virtual ~CCadRect();
-	void EnableRener(BOOL en) { m_RenderEnable = en; }
+	virtual BOOL Destroy(CCadObject* pDependentObject);
+	void Create();
+	//--------------- Set Points In Rectangle --------------
+	void SetPoints(DOUBLEPOINT p1, DOUBLEPOINT p2, DOUBLEPOINT RotDef);
+	void SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT rotation);
+	CCadRect& SetSecondPoint(DOUBLEPOINT P2);
+	CCadRect& SetPointsFromCenter(DOUBLEPOINT P1);
+	CCadRect& SetPointsFromCenter(double Width, double Height);
+	CCadRect& SetCenterPoint(DOUBLEPOINT newCenter);
+	CRect ToCRect(DOUBLEPOINT ULHC, CScale& Scale);
+	//------------------------------------------------------------------
 	virtual void Move(CDoubleSize Diff);
+	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
-	virtual int PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
+	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BOOL bFill);
+	//------------------------------------------------------------------
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
+	virtual int PointInObjectAndSelect(
+		DOUBLEPOINT p,
+		CCadObject ** ppSelList, 
+		int index, 
+		int n
+	);
+	//--------------------------------------------
 	virtual CString& GetTypeString(void);
-	CCadRect operator=(CCadRect &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
-	void CopyAttributesTo(SRectAttributes *pAttrb);
-	void CopyAttributesFrom(SRectAttributes *pAttrb);
+	virtual CDoubleSize GetSize();
+	double GetWidth();
+	void SetWidth(double width);
+	double GetHeight();
+	void SetHeight(double Height);
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
@@ -43,6 +55,8 @@ public:
 	//------------------------------------------
 	// Attribute Methods
 	//-----------------------------------------
+	void CopyAttributesTo(SRectAttributes* pAttrb);
+	void CopyAttributesFrom(SRectAttributes* pAttrb);
 	SRectAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	SRectAttributes& GetAttributes() { return m_Attrib; }
 	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
@@ -53,12 +67,16 @@ public:
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	UINT GetTransparent(){ return GetAttributes().m_TransparentFill; }
 	void SetTransparent(UINT t) { GetAttributes().m_TransparentFill = t; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static void RenderEnable(BOOL e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SRectAttributes* GetLastAttributes() const {
+	static SRectAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

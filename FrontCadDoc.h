@@ -10,11 +10,10 @@ class CFrontCadDoc : public CBaseDocument
 public:
 	CFrontCadDoc();
 	virtual ~CFrontCadDoc();
-	virtual UINT PointInObjectAndSelect(
-		CDoublePoint p,
-		CCadObject** ppSelList = 0,
-		int n = 0,
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+	virtual int PointInObjectAndSelect(
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int n
 	);
 	virtual void SetDirty(UINT flag);
 #ifndef _WIN32_WCE

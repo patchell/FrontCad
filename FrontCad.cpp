@@ -239,51 +239,7 @@ void CFrontCadApp::OnAppAbout()
 //-------------------------------
 
 
-void CFrontCadApp::CutCopy(CCadObject* pObj, int mode)
-{
-	//---------------------------------------------------
-	//	CutCopy
-	//		This Method will cut/copy a chain of 
-	//	objects to the clipboard object.  The copy mode
-	//	actually makes a copy of the objects where cut
-	//	does not.
-	//
-	// parameters:
-	//	pObj...........pointer to an to put in clipboard
-	//	mode...........0=Don't Copy (Cut), 1 = Copy
-	//----------------------------------------------------
-
-	if (mode)	///copy the object
-		m_ClipBoard.AddObject(pObj->CopyObject());
-	else
-		m_ClipBoard.AddObject(pObj);
-}
-
-
-void CFrontCadApp::CopyToClipBoard(CCadObject* pObjList)
-{
-	CCadObject* pO = pObjList;
-
-	while (pO)
-	{
-		CutCopy(pO, 1);
-		pO = pO->GetNextSel();
-	}
-}
-
-
-void CFrontCadApp::CutToClipboard(CCadObject* pSelList)
-{
-	CCadObject* pO = pSelList;
-
-	while (pO)
-	{
-		CutCopy(pO, 0);
-		pO = pO->GetNextSel();
-	}
-}
-
-void CFrontCadApp::SetClipboardRef(CDoublePoint p)
+void CFrontCadApp::SetClipBoardRef(DOUBLEPOINT p)
 {
 	m_ClipBoard.SetRef(p);
 }
@@ -312,6 +268,7 @@ void CFrontCadApp::LoadSettings()
 	SRndHole2FlatAttributes::LoadSettings(&m_RoundHole2FlatsAttributes);
 	SGridAttributes::LoadSettings(&m_GridAttributes);
 	SRullerAttributes::LoadSettings(&m_RulerAttributes);
+	SPointAttributes::LoadSettings(&m_PointAttributes);
 }
 
 void CFrontCadApp::SaveSettings()
@@ -334,6 +291,7 @@ void CFrontCadApp::SaveSettings()
 	SRndHole2FlatAttributes::SaveSettings(&m_RoundHole2FlatsAttributes);
 	SGridAttributes::SaveSettings(&m_GridAttributes);
 	SRullerAttributes::SaveSettings(&m_RulerAttributes);
+	SPointAttributes::SaveSettings(&m_PointAttributes);
 }
 
 void* CFrontCadApp::GetObjectDefaultAttributes(ObjectType ObjectType)
@@ -439,86 +397,305 @@ char * CFrontCadApp::ConvertCStringToChar(char* cpDest, CString& csSource)
 }
 
 //-------------------------------------
-// Polygon Methods
+// Point Operations
 // ------------------------------------
 
-BOOL CFrontCadApp::GeneratePointInPolygon(CDoublePoint* Poly, int n, CDoublePoint& point)
+BOOL CFrontCadApp::IsOnSegment(DOUBLEPOINT p, DOUBLEPOINT q, DOUBLEPOINT r)
 {
-	double MaxX = -numeric_limits<double>::infinity(), MinX = numeric_limits<double>::infinity();
-	double MaxY = -numeric_limits<double>::infinity(), MinY = numeric_limits<double>::infinity();
-	int i;
-	BOOL Result = FALSE;
+	//----------------------------------------
+	// IsOnSegment
+	// Given three points that are colinear,
+	// check to see if q in on segment p,r
+	//----------------------------------------
+	BOOL rV = FALSE;
+		if (q.dX <= max(p.dX, r.dX) && q.dX >= min(p.dX, r.dX) &&
+			q.dY <= max(p.dY, r.dY) && q.dY >= min(p.dY, r.dY))
+			rV = TRUE;
+	return rV;
+}
 
-	//Find the rectangle that encloses the figure
-	for (i = 0; i < n; ++i)
+BOOL CFrontCadApp::DoLinesIntersect(
+	DOUBLEPOINT p1,
+	DOUBLEPOINT q1,
+	DOUBLEPOINT p2,
+	DOUBLEPOINT q2
+)
+{
+	BOOL rV = FALSE;
+	int o1, o2, o3, o4;
+	// Find the four orientations needed for general and
+	// special cases
+	o1 = Orientation(p1, q1, p2);
+	o2 = Orientation(p1, q1, q2);
+	o3 = Orientation(p2, q2, p1);
+	o4 = Orientation(p2, q2, q1);
+
+	// General case
+	if (o1 != o2 && o3 != o4)
+		rV = TRUE;
+	else if (o1 == 0 && IsOnSegment(p1, p2, q1))
+		rV = TRUE;
+	// p1, q1 and q2 are collinear and q2 lies on segment p1q1
+	else if (o2 == 0 && IsOnSegment(p1, q2, q1))
+		rV = TRUE;
+	// p2, q2 and p1 are collinear and p1 lies on segment p2q2
+	else if (o3 == 0 && IsOnSegment(p2, p1, q2))
+		rV = TRUE;
+	// p2, q2 and q1 are collinear and q1 lies on segment p2q2
+	else if (o4 == 0 && IsOnSegment(p2, q1, q2))
+		rV = TRUE;
+	return rV;
+}
+
+int CFrontCadApp::Orientation(DOUBLEPOINT p, DOUBLEPOINT q, DOUBLEPOINT r)
+{
+	int result;
+	double val;
+
+	val = (q.dY - p.dY) * (r.dX - q.dX) -
+		(q.dX - p.dX) * (r.dY - q.dY);
+
+	if (val == 0.0)
+		result = ORIENTATION_COLINEAR;  // collinear
+	else if (val > 0.0)
+		result = ORIENTATION_CLOCKWISE;
+	else
+		result = ORIENTATION_COUNTERCLOCKWISE;
+	return result;
+}
+
+
+DOUBLEPOINT CFrontCadApp::CalcCenter(DOUBLEPOINT p1, DOUBLEPOINT p2) 
+{
+	DOUBLEPOINT Result;
+
+	Result.dX = (p1.dX + p2.dX) / 2.0;
+	Result.dY = (p1.dY + p2.dY) / 2.0;
+	return Result;
+}
+
+DOUBLEPOINT CFrontCadApp::CalcCenter(CCadPoint* pP1, CCadPoint* pP2)
+{
+	DOUBLEPOINT Result;
+
+	Result.dX = (pP2->GetX() - pP1->GetX()) / 2.0;
+	Result.dY = (pP2->GetY() - pP1->GetY()) / 2.0;
+	return Result;;
+}
+
+//-------------------------------------
+// General Polygon Methods
+// ------------------------------------
+
+BOOL CFrontCadApp::DoLinesIntersect(
+	DOUBLEPOINT L1P1,
+	DOUBLEPOINT L1P2,
+	DOUBLEPOINT L2P1,
+	DOUBLEPOINT L2P2,
+	DOUBLEPOINT& Intersection
+)
+{
+	double s1_x, s1_y, s2_x, s2_y;
+	double s, t;
+	BOOL rV = FALSE;
+
+	s1_x = L1P2.dX - L1P1.dX;
+	s1_y = L1P2.dY - L1P1.dY;
+
+	s2_x = L2P2.dX - L2P1.dX;
+	s2_y = L2P2.dY - L2P1.dY;
+
+	s = (-s1_y * (L1P1.dX - L2P1.dX) + s1_x * (L1P1.dY - L2P1.dY)) / (-s2_x * s1_y + s1_x * s2_y);
+//		s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+	t = (s2_x * (L1P1.dY - L2P1.dY) - s2_y * (L1P1.dX - L2P1.dX)) / (-s2_x * s1_y + s1_x * s2_y);
+//		t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+	if (s >= 0 && s <= 1 && t >= 0 && t <= 1)
 	{
-		if (MaxX < Poly[i].dX) MaxX = Poly[i].dX;
-		if (MinX > Poly[i].dX) MinX = Poly[i].dX;
-		if (MaxY < Poly[i].dY) MaxY = Poly[i].dY;
-		if (MinY > Poly[i].dY) MinY = Poly[i].dY;
+		// Collision detected
+		Intersection = DOUBLEPOINT(L1P1.dX + (t * s1_x), L1P1.dY + (t * s1_y));
+		rV = TRUE;
 	}
-	// Create a rectangle
-	CDoubleRect rect(CDoublePoint(MinX, MinY), CDoublePoint(MaxX, MaxY));
-	CDoublePoint Center;
-	Center = rect.GetCenter(Center);
-	i = 0;
-	if ((Result = PtEnclosedInPolygon(Center, Poly, n)) == TRUE)
-		point = Center;
+
+	return rV; 
+}
+
+DOUBLEPOINT CFrontCadApp::GetPolygonCenter(DOUBLEPOINT *pPoly, int n)
+{
+	double x=0.0, y = 0.0;
+
+	for (int i = 0; i < n; i++)
+	{
+		x += pPoly[i].dX;
+		y += pPoly[i].dY;
+	}
+	x /= double(n);
+	y /= double(n);
+	return DOUBLEPOINT(x,y);
+}
+
+int CFrontCadApp::GetNumberOfIntersections(
+	DOUBLEPOINT* pPoly,		//set of points of a polygon
+	int n,					//Number of points
+	DOUBLEPOINT L1P1,		//endpoint of line
+	DOUBLEPOINT L1P2		//The other endpoint
+)
+{
+	//-----------------------------------------
+	// GetNumberOfIntersections
+	// Given a line between the points L1P1 and
+	// L1P2, count how many times it crosses
+	// the lines between the point of the
+	// polygon.
+	//-----------------------------------------
+	int Result = 0;
+	DOUBLEPOINT PolyPoint1, PolyPoint2;
+	int i;
+
+	PolyPoint1 = pPoly[0];
+	for (i = 1; i < n; ++i)
+	{
+		if (i & 1)	//is i odd?
+			PolyPoint2 = pPoly[i];
+		else
+			PolyPoint1 = pPoly[i];
+		if (DoLinesIntersect(L1P1, L1P2, PolyPoint1, PolyPoint2))
+			Result++;
+	}
+	return Result;
+}
+
+BOOL CFrontCadApp::ValidatePolygon(DOUBLEPOINT* pPoly, int n)
+{
+	BOOL rV = FALSE;
+
+	return rV;
+}
+
+BOOL CFrontCadApp::GeneratePointInPolygon(DOUBLEPOINT* Poly, int n, DOUBLEPOINT& ThePoint)
+{
+	CCadRect rect;	
+	double MaxX, MinX;
+	double MaxY, MinY;
+	double SizeX, SizeY;
+	int LeftCount = 0;
+	int RightCount = 0;
+	int TopCount = 0;
+	int BotCount = 0;
+	BOOL Result = FALSE;
+	BOOL Loop = TRUE;
+	BOOL DoX = FALSE;
+	BOOL DoY = FALSE;
+	DOUBLEPOINT P1, P2, P3;
+
+	ThePoint = GetPolygonCenter(Poly, n);
+	if (PtEnclosedInPolygon(ThePoint, Poly, n))
+	{
+		Result = TRUE;
+	}
 	else
 	{
-		//first guess did not work, try four more
-		int loop = 1;
-		while (loop&&!Result)
+		//----------------------------------
+		// This polygon is not going to come
+		// along easily, gonna take a bit of
+		// work
+		//----------------------------------
+		GetPolyMinMax(Poly, n, MinX, MaxX, MinY, MaxY);
+		SizeX = MaxX - MinX;
+		SizeY = MaxY - MinY;
+		//----------------------------
+		// Try to guess which way is
+		// the best to try
+		//----------------------------
+		if (ThePoint.dX < MaxX && ThePoint.dX > MinX)
 		{
-			CDoublePoint p1;
-			//----------------------
-			// well, a really odd
-			// shaped polygon.
-			//----------------------
-			switch (i)
-			{
-			case 0:
-				p1 = CDoublePoint(MinX, MinY);
-				break;
-			case 1:
-				p1 = CDoublePoint(MinX, MaxY);
-				break;
-			case 2:
-				p1 = CDoublePoint(MaxX, MaxY);
-				break;
-			case 3:
-				p1 = CDoublePoint(MaxX, MinY);
-				loop = 0; //final try
-				break;
-			}
-			rect.SetPointsFromCenter(Center, p1, Center);
-			Result = PtEnclosedInPolygon(rect.GetCenter(point), Poly, n);
+			DoX = TRUE;
 		}
-		point = rect.GetCenter(point);	//we can only hope
+		else if (ThePoint.dY < MaxY && ThePoint.dY > MinY)
+		{
+			DoY = TRUE;
+		}
+		else if (SizeX > SizeY)
+		{
+			DoX = TRUE;
+		}
+		else
+		{
+			DoY = TRUE;
+		}
+		while (Loop)
+		{
+			if (DoX)
+			{
+				P1 = ThePoint;
+				P2 = DOUBLEPOINT(P1.dX + SizeX, P1.dY);
+				P3 = DOUBLEPOINT(P1.dX - SizeX, P1.dY);
+				LeftCount = GetNumberOfIntersections(Poly, n, P1,P2);
+				RightCount = GetNumberOfIntersections(Poly, n, P1, P3);
+				SizeX /= 2.0;
+				if(LeftCount > RightCount)
+					ThePoint = DOUBLEPOINT(P1.dX + SizeX, P1.dY);
+				else
+					ThePoint = DOUBLEPOINT(P1.dX - SizeX, P1.dY);
+				if (PtEnclosedInPolygon(ThePoint, Poly, n))
+				{
+					Loop = FALSE;
+					Result = TRUE;
+				}
+				else if (SizeX < 0.05)
+				{
+					Loop = FALSE;
+					Result = FALSE;
+				}
+			}
+			else if (DoY)
+			{
+				P1 = ThePoint;
+				P2 = DOUBLEPOINT(P1.dX, P1.dY + SizeY);
+				P3 = DOUBLEPOINT(P1.dX, P1.dY - SizeY);
+				BotCount = GetNumberOfIntersections(Poly, n, P1, P2);
+				TopCount = GetNumberOfIntersections(Poly, n, P1, P3);
+				SizeY /= 2.0;
+				if (BotCount > TopCount)
+					ThePoint = DOUBLEPOINT(P1.dX, P1.dY + SizeY);
+				else
+					ThePoint = DOUBLEPOINT(P1.dX, P1.dY - SizeY);
+				if (PtEnclosedInPolygon(ThePoint, Poly, n))
+				{
+					Loop = FALSE;
+					Result = TRUE;
+				}
+				else if (SizeY < 0.05)
+				{
+					Loop = FALSE;
+					Result = FALSE;
+				}
+			}
+		}
 	}
 	return Result;
 }
 
 BOOL CFrontCadApp::PtEnclosedInPolygon(
-	CDoublePoint ptPoint,
-	CDoublePoint* ptArray,
+	DOUBLEPOINT ptPoint,
+	DOUBLEPOINT* ptArray,
 	UINT nVeticies
 )
 {
-	/*****************************************
-	** PtEnclosedInPolygon
-	**	This Method determines if a point
-	** is enclosed within a polygon.
-	**
-	** parameters:
-	*	ptPoint....point to test
-	*	ptArray....array of points defining polygon
-	*	nVeticies..number of verticies in polygon
-	*	ptOffset...polygon offset
-	*
-	** Returns: TRUE if point inside
-	**          FALSE if point is outside
-	*****************************************/
+	//----------------------------------------*
+	// PtEnclosedInPolygon
+	//	This Method determines if a point
+	// is enclosed within a polygon.
+	//
+	// parameters:
+	//	ptPoint....point to test
+	//	ptArray....array of points defining polygon
+	//	nVeticies..number of verticies in polygon
+	//	ptOffset...polygon offset
+	//
+	// Returns: TRUE if point inside
+	//          FALSE if point is outside
+	//----------------------------------------*/
 	UINT   i;
 	int j = nVeticies - 1;
 	double MaxX = -numeric_limits<double>::infinity(), MinX = numeric_limits<double>::infinity();
@@ -568,10 +745,38 @@ BOOL CFrontCadApp::PtEnclosedInPolygon(
 	return Enclosed;
 }
 
-void CFrontCadApp::ShiftDoublePointArray(CDoublePoint* pdptPoints, UINT nPoints, UINT Direction)
+void CFrontCadApp::GetPolyMinMax(
+	DOUBLEPOINT* pPoly, 
+	int n, 
+	double& MinX, 
+	double& MaxX, 
+	double& MinY, 
+	double& MaxY
+)
+{
+	MaxX = -numeric_limits<double>::infinity();
+	MinX = numeric_limits<double>::infinity();
+	MaxY = -numeric_limits<double>::infinity();
+	MinY = numeric_limits<double>::infinity();
+
+	int i;
+	for (i = 0; i < n; ++i)
+	{
+		if (pPoly[i].dX < MinX)
+			MinX = pPoly[i].dX;
+		if (pPoly[i].dX > MaxX)
+			MaxX = pPoly[i].dX;
+		if (pPoly[i].dY < MinY)
+			MinY = pPoly[i].dY;
+		if (pPoly[i].dY > MaxY)
+			MaxY = pPoly[i].dY;
+	}
+}
+
+void CFrontCadApp::ShiftDoublePointArray(CCadPoint* pdptPoints, UINT nPoints, UINT Direction)
 {
 	int i;
-	CDoublePoint dptTemp;
+	CCadPoint dptTemp;
 
 	if (Direction)	//Clockwise
 	{
@@ -594,11 +799,11 @@ void CFrontCadApp::ShiftDoublePointArray(CDoublePoint* pdptPoints, UINT nPoints,
 }
 
 
-CPoint* CFrontCadApp::MakePolygonFromDoublePolygon(
+CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
 	CPoint* dest,
-	CDoublePoint* src,
+	DOUBLEPOINT* src,
 	int n,
-	CDoublePoint& ULHC,
+	DOUBLEPOINT ULHC,
 	CScale& Scale
 )
 {
@@ -606,7 +811,7 @@ CPoint* CFrontCadApp::MakePolygonFromDoublePolygon(
 
 	for (i = 0; i < n; ++i)
 	{
-		dest[i] = src[i].ToPixelPoint(ULHC, Scale);
+		dest[i] = CPoint((ULHC + src[i]) * Scale);
 	}
 	return dest;
 }
@@ -617,8 +822,8 @@ CPoint* CFrontCadApp::MakePolygonFromDoublePolygon(
 BOOL CFrontCadApp::PointInEllipse(
 	double A,	// Major Axis
 	double B,	// Minor Axis
-	CDoublePoint Point,	//Test this point 
-	CDoublePoint Center	// Cneter point of Ellipse
+	DOUBLEPOINT Point,	//Test this point 
+	DOUBLEPOINT Center	// Cneter point of Ellipse
 )
 {
 	BOOL rV = FALSE;
@@ -636,10 +841,14 @@ BOOL CFrontCadApp::PointInEllipse(
 double CFrontCadApp::Ellipse(
 	double A,	// Major Axis
 	double B,	// Minor Axis
-	CDoublePoint Point,	//Test this point 
-	CDoublePoint Center	// Cneter point of Ellipse
+	DOUBLEPOINT Point,	//Test this point 
+	DOUBLEPOINT Center	// Cneter point of Ellipse
 )
 {
+	//----------------------------
+	// Test to see if a point 
+	// lies on an ellipse
+	//----------------------------
 	// Square Everything
 	Point.dX -= Center.dX;
 	Point.dY -= Center.dY;
@@ -654,8 +863,8 @@ double CFrontCadApp::Ellipse(
 BOOL CFrontCadApp::TestEllipsePoint(
 	double A,	// Major Axis
 	double B,	// Minor Axis
-	CDoublePoint Point,	//Test this point 
-	CDoublePoint Center,	// Cneter point of Ellipse
+	DOUBLEPOINT Point,	//Test this point 
+	DOUBLEPOINT Center,	// Cneter point of Ellipse
 	double Tolerance	// just how close do we need to be
 )
 {
@@ -692,6 +901,37 @@ BOOL CFrontCadApp::TestEllipsePoint(
 //---------------------------------------------
 // Math Methods
 //---------------------------------------------
+
+BOOL CFrontCadApp::QuadradicEquation(double a, double b, double c, double& X1, double& X2)
+{
+	//-------------------------------------
+	// QuadradicEquation
+	// calculates the solution of a
+	// quadradic equation
+	// 
+	// parameters:
+	//	a.......X^2 coeficient
+	//	b.......X coeficient
+	//	c.......Constant
+	// 
+	// Returns:
+	// FALSE on fail (b^2 - 4ac) < 0
+	// TRUE on Success
+	//		X1 and X2 will be the solutions
+	//-------------------------------------
+	BOOL rv = FALSE;
+	double t;
+
+	t = b * b - 4.0 * a * c;
+	if (t >= 0.0)
+	{
+		rv = TRUE;
+		t = sqrt(t);
+		X1 = (-b + t) / (2.0 * a);
+		X2 = (-b - t) / (2.0 * a);
+	}
+	return rv;
+}
 
 double CFrontCadApp::ArcTan(double X, double Y)
 {
@@ -758,6 +998,63 @@ double CFrontCadApp::RoundToNearset(double v, double roundto)
 			rV = v;
 	}
 	return rV;
+}
+
+DOUBLEPOINT CFrontCadApp::RoundToNearest(DOUBLEPOINT point, CDoubleSize roundto)
+{
+	if (roundto.dCX != 0.0 && roundto.dCY != 0.0)
+	{
+		double FracPartX, FracPartY;
+		double IntPartX, IntPartY;
+		double X, Y;
+		
+		FracPartX = modf(point.dX / roundto.dCX, &IntPartX);
+		FracPartY = modf(point.dY / roundto.dCY, &IntPartY);
+		if (FracPartX > 0.0)
+		{
+			if (FracPartX >= 0.5)
+				X = (IntPartX + 1.0) * roundto.dCX;
+			else
+				X = IntPartX * roundto.dCX;
+		}
+		else if (FracPartX < 0.0)
+		{
+			if (FracPartX <= -0.5)
+				X = (IntPartX - 1) * roundto.dCX;
+			else
+				X = (IntPartX)* roundto.dCX;
+		}
+		else
+			X = point.dX;
+		//-------------------------
+		if (FracPartY > 0.0)
+		{
+			if (FracPartY >= 0.5)
+			{
+				Y = (IntPartY + 1.0) * roundto.dCX;
+			}
+			else
+			{
+				Y = IntPartY * roundto.dCY;
+			}
+		}
+		else if (FracPartY < 0.0)
+		{
+			if (FracPartY <= -0.5)
+			{
+				Y = (IntPartY - 1.0) * roundto.dCY;
+			}
+			else
+			{
+				Y = (IntPartY)*roundto.dCY;
+			}
+		}
+		else
+			Y = point.dY;
+		point.dX = X;
+		point.dY = Y;
+	}
+	return point;
 }
 
 double CFrontCadApp::RoundDownToNearest(double v, double roundDownTo)
@@ -938,6 +1235,8 @@ void CFrontCadApp::OnFileOpen()
 {
 
 }
+
+//-----------------------------------------------------------
 
 BOOL CFrontCadApp::PreTranslateMessage(MSG* pMsg)
 {

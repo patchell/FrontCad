@@ -6,64 +6,52 @@
 // I wrote a while back.  Its name has
 // changed, but some of the klugy code that
 // was in the original is still here.
+// Well, even less now.
 //------------------------------------------
 
 #include "pch.h"
 
+using namespace std;
 
 CCadPolygon::CCadPolygon():CCadObject()
 {
-	m_PolyID = GETAPP.GetUniqueID();;
 	SetSelected(0);	//initial not selected
-	m_pPenLine = 0;
 	SetType(ObjectType::POLYGON);
 	GetName().Format(_T("Polygon_%d"), ++m_PolygonCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetPolygonAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
+	m_NumVertices = 0;
 }
 
-CCadPolygon::CCadPolygon(int nVertex) : CCadObject()
-{
-	m_PolyID = GETAPP.GetUniqueID();
-	SetSelected(0);	//initial not selected
-	m_pPenLine = 0;
-	SetType(ObjectType::POLYGON);
-	++m_PolygonCount;
-	if (NeedsAttributes())
-	{
-		ClearNeedsAttributes();
-		GetAttributes().CopyFrom(GETAPP.GetPolygonAttributes());
-	}
-}
-
-CCadPolygon::CCadPolygon(CCadPolygon &v):CCadObject()
-{
-	m_PolyID = GETAPP.GetUniqueID();
-	m_pPenLine = 0;
-	m_Poly.Copy(v.GetPoly());
-	SetType(ObjectType::POLYGON);
-	++m_PolygonCount;
-	if (NeedsAttributes())
-	{
-		ClearNeedsAttributes();
-		GetAttributes().CopyFrom(GETAPP.GetPolygonAttributes());
-	}
-}
 
 CCadPolygon::~CCadPolygon()
 {
-	m_Poly.Destroy();
-	if (m_pPenLine) delete m_pPenLine;
+}
+
+void CCadPolygon::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadPolygon::Destroy(CCadObject* pDendentObjects)
+{
+	BOOL rV = TRUE;
+	return rV;
 }
 
 void CCadPolygon::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -73,14 +61,12 @@ void CCadPolygon::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	UINT i;
-	for (i = 0; i<m_Poly.GetSize(); ++i)
-		m_Poly.GetPoints()[i] += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -94,68 +80,125 @@ void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 		GETAPP.MkIndentString(String, Indent),
 		CLexer::TokenToString(Token),
 		CLexer::TokenToString(DocFileParseToken::VERTEX),
-		m_Poly.GetSize());
+		GetNumVerticies());
 
 	UINT i;
-	for (i = 0; i<m_Poly.GetSize(); ++i)
+	CCadPoint* pPoint;
+
+	for (i = 0; i< GetNumVerticies(); ++i)
 	{
-		m_Poly.GetPoints()[i].Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
+		pPoint = (CCadPoint*)FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			i + 1
+		);
+		pPoint->Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
 	}
 	m_Attrib.Save(pO, Indent + 1, flags);
 	delete[] String;
 }
 
-void CCadPolygon::SetVertex(int v, CDoubleSize sz)
+BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-	m_Poly.SetPoint(v, m_Poly.GetPoint(v) + sz);
-}
+	CCadPoint* pPoint, *pFirstPoint;
+	BOOL bFirstPoint = TRUE;
+	int VertexCount = 0;
+	BOOL rV = FALSE;
 
-int CCadPolygon::GrabPoint(CDoublePoint  point)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	point.....point to check for presence of a vertex
-	//	scale....scale factor
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	int loop, rV = -1;;
-	CDoublePoint p;
-	UINT i;
-
-	CScale Scale = GETVIEW()->GetGrid().GetInchesPerPixel();
-	double Inches = 20.0 * Scale.GetScaleX();
-	for (i = 0, loop = 1; (i<m_Poly.GetSize()) && loop; ++i)
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		++VertexCount
+	);
+	pFirstPoint = pPoint;
+	while (pPoint)
 	{
-		p = m_Poly.GetPoints()[i];
-		if (p.IsPointOnTarget(point))
+		if (bFirstPoint)
 		{
-			rV = i;
-			loop = 0;
+			bFirstPoint = FALSE;
+			pPoint->MoveTo(pDC, ULHC, Scale);
 		}
+		else
+		{
+			pPoint->LineTo(pDC, ULHC, Scale);
+		}
+		if (VertexCount == 3)
+			rV = TRUE;
+		pPoint = (CCadPoint*)FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			++VertexCount
+		);
 	}
+	if (pFirstPoint)
+		pFirstPoint->LineTo(pDC, ULHC, Scale);
 	return rV;
 }
 
-void CCadPolygon::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
+CCadPoint *CCadPolygon::GetCenter()
 {
-	//***************************************************
+	double x = 0.0, y = 0.0;
+	UINT i, n;
+	CCadPoint* pPoint = 0,*pResultPoint = 0;
+
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::CENTERPOINT,
+		0
+	);
+	if (pPoint)
+		pResultPoint = pPoint;
+	else
+	{
+		n = GetNumVerticies();
+		for (i = 0; i < n; ++i)
+		{
+			pPoint = (CCadPoint*)FindObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				i + 1
+			);
+			if (pPoint)
+			{
+				x += pPoint->GetX();
+				y += pPoint->GetY();
+			}
+			else
+			{
+				pResultPoint = 0;
+				goto exit;
+			}
+		}	//end of for loop
+		x /= double(n);
+		y /= double(n);
+		pResultPoint = new CCadPoint();
+		pResultPoint->Create();
+		pResultPoint->SetPoint(x, y);
+		pResultPoint->SetSubType(SubType::CENTERPOINT);
+		pResultPoint->SetSubSubType(0);
+		AddObjectAtTail(pResultPoint);	//Save that sucker for later
+	}
+exit:
+	return pResultPoint;
+}
+
+void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+{
+	CCadPoint* pCenter;
+
+	if (GetNumVerticies() >= 3 && GetAttributes().m_TransparentFill == FALSE)
+	{
+		pCenter = GetCenter();
+		if (pCenter)
+		{
+			pCenter->FloodFill(pDC, GetAttributes().m_colorFill, ULHC, Scale);
+		}
+	}
+}
+
+void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+{
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -167,63 +210,84 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	// return value:none
 	//--------------------------------------------------
 
-	if (CCadPolygon::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
-		CPen *oldpen;
+		CPen *oldpen, penLine;
 		int Lw;	//line width in pixels
-		if ((Lw = int(Scale.m_ScaleX * m_Attrib.m_LineWidth)) < 1) Lw = 1;
-		int i = 0;
-
-		if (!IsLastModeSame(mode) || IsDirty())
-		{
-			if (m_pPenLine) delete m_pPenLine;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pPenLine = new CPen(PS_SOLID, Lw, m_Attrib.m_colorLine);
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pPenLine = new CPen(PS_SOLID, Lw, RGB(200, 50, 50));
-				mode.LinesMode = SelectedLinesMode::BOTH;
-				mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pPenLine = new CPen(PS_DOT, 1, m_Attrib.m_colorLine);
-				mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
-				break;
-			}
-			SetDirty(FALSE);
-		}
+		if ((Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * m_Attrib.m_LineWidth)) < 1) Lw = 1;
 
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			oldpen = pDC->SelectObject(m_pPenLine);
-			m_Poly.Draw(pDC, mode, ULHC, Scale);
-			m_Poly.Fill(pDC, mode, ULHC, Scale, m_Attrib.m_colorFill);
+			oldpen = pDC->SelectObject(&penLine);
+			if (DrawPolygon(pDC, mode, ULHC, Scale))
+				FillPolygon(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(oldpen);
-			SetLastMode(mode);
 			break;
 		case ObjectDrawMode::SELECTED:
-			oldpen = pDC->SelectObject(m_pPenLine);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorFill);
+			oldpen = pDC->SelectObject(&penLine);
 			mode.LinesMode = SelectedLinesMode::HIGHLIGHT;
 			mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
-			m_Poly.Draw(pDC, mode, ULHC, Scale);
+			DrawPolygon(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(oldpen);
-			SetLastMode(mode);
 			break;
 		case ObjectDrawMode::SKETCH:
-			oldpen = pDC->SelectObject(m_pPenLine);
-			m_Poly.Draw(pDC, mode, ULHC, Scale);
-			SetLastMode(mode);
+			penLine.CreatePen(PS_DASH, 1, GetAttributes().m_colorSelect);
+			oldpen = pDC->SelectObject(&penLine);
+			DrawPolygon(pDC, mode, ULHC, Scale);
+			pDC->SelectObject(oldpen);
 			break;
 		}
 	}
 }
 
-int CCadPolygon::PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
+BOOL CCadPolygon::GetPoints(DOUBLEPOINT* pPolyPoints)
 {
-	//***************************************************
+	BOOL rV = FALSE;
+	int n = GetNumVerticies();
+	int i;
+	CCadPoint* pPoint;
+
+	for (i = 0; i < n; ++i)
+	{
+		pPoint = (CCadPoint*)FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			i + 1
+		);
+		if (pPoint)
+			pPolyPoints[i] = DOUBLEPOINT(*pPoint);
+		else
+			goto exit;
+	}
+	rV = TRUE;
+exit:
+	return rV;
+}
+
+BOOL CCadPolygon::PointInThisObject(DOUBLEPOINT point)
+{
+	DOUBLEPOINT* pPolyPoints;
+	int n = GetNumVerticies();
+	pPolyPoints = new DOUBLEPOINT[n];
+	BOOL rV = FALSE;
+
+	if (GetPoints(pPolyPoints))
+	{
+		rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, n);
+	}
+	return rV;
+}
+
+int CCadPolygon::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
+)
+{
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -234,106 +298,38 @@ int CCadPolygon::PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList 
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
-	//	returns ??
+	//	returns true if point is within object
+	//	otherwise, false
 	//--------------------------------------------------
-	if (index < n || n == 0)
+	int ix;
+
+	if (index < n)
 	{
 		//---------------------------------------
-		// is point in Ellipse
+		// is point in the Arc?
 		//---------------------------------------
-		if (PointEnclosed(p))
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[index++] = this;
-					break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						index = 1;
-					break;
-				}
-
-			}
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadPolygon::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_Poly.GetPoints()[0];
-}
-
-
-
 using namespace std;
-
-CDoubleRect& CCadPolygon::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	double MaxX = -numeric_limits<double>::infinity(), MinX = numeric_limits<double>::infinity();
-	double MaxY = -numeric_limits<double>::infinity(), MinY = numeric_limits<double>::infinity();
-	UINT i;
-
-	//Find the rectangle that encloses the figure
-	for (i = 0; i < m_Poly.GetSize(); ++i)
-	{
-		if (MaxX < m_Poly.GetPoints()[i].dX) MaxX = m_Poly.GetPoints()[i].dX;
-		if (MinX > m_Poly.GetPoints()[i].dX) MinX = m_Poly.GetPoints()[i].dX;
-		if (MaxY < m_Poly.GetPoints()[i].dY) MaxY = m_Poly.GetPoints()[i].dY;
-		if (MinY > m_Poly.GetPoints()[i].dY) MinY = m_Poly.GetPoints()[i].dY;
-	}
-	// Create a rectangle
-	rect = CDoubleRect(CDoublePoint(MinX, MinY), CDoublePoint(MaxX, MaxY));
-	return rect;
-}
 
 CString& CCadPolygon::GetTypeString()
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -345,26 +341,15 @@ CString& CCadPolygon::GetTypeString()
 	return Name;
 }
 
-CCadPolygon CCadPolygon::operator=(CCadPolygon &v)
+CString& CCadPolygon::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	CCadPolygon PolyResult;
-
-	PolyResult.Copy(&v);
-	return PolyResult;
+	GetDescription().Format(_T("Polygon:%d"),GetId());
+	return GetDescription();
 }
 
 CCadObject * CCadPolygon::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -373,53 +358,50 @@ CCadObject * CCadPolygon::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadPolygon *pP = new CCadPolygon;
-	pP->GetAttributes().CopyFrom(&m_Attrib);
-	pP->GetPoly()->Copy(&m_Poly);
+	pP->Create();
+	CCadObject::CopyObject(pP);
+	pP->GetAttributes().CopyFrom(GetPtrToAttributes());
+	pP->m_NumVertices = GetNumVerticies();
 	return pP;
 }
 
-void CCadPolygon::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
+BOOL CCadPolygon::GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& MaxY)
 {
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//	None
-	//--------------------------------------------------
+	UINT i, n;
+	CCadPoint* pPoint;
+	BOOL rV = FALSE;
+	double X, Y;
+
+	n = GetNumVerticies();
+	for (i = 0; i < n; ++i)
+	{
+		pPoint = (CCadPoint*)FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			i + 1
+		);
+		if (pPoint)
+		{
+			X = pPoint->GetX();
+			Y = pPoint->GetY();
+		}
+		else
+		{
+			goto exit;
+		}
+		if (MaxX < X) MaxX = X;
+		if (MinX > X) MinX = X;
+		if (MaxY < Y) MaxY = Y;
+		if (MinY > Y) MinY = Y;
+	}
+	rV = TRUE;
+exit:
+	return rV;
 }
 
-void CCadPolygon::RenderEnable(int e)
+CDoubleSize CCadPolygon::GetSize()
 {
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadPolygon::m_RenderEnable = e;
-}
-
-CDoublePoint CCadPolygon::GetCenter()
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	return GetPoly()->GetCenter();
-}
-
-
-CDoubleSize& CCadPolygon::GetSize(CDoubleSize& size)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -427,8 +409,14 @@ CDoubleSize& CCadPolygon::GetSize(CDoubleSize& size)
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	CDoubleRect rect = GetRect(rect);
-	size = rect.GetSize(size);
+	double MaxX = -numeric_limits<double>::infinity(), MinX = numeric_limits<double>::infinity();
+	double MaxY = -numeric_limits<double>::infinity(), MinY = numeric_limits<double>::infinity();
+	CDoubleSize size;
+
+	if (GetMinMaxXY(MinX, MaxX, MinY, MaxY))
+	{
+		size = CDoubleSize(MaxX - MinX, MaxY - MinY);
+	}
 	return size;
 }
 
@@ -438,7 +426,7 @@ DocFileParseToken CCadPolygon::Parse(
 	DocFileParseToken TypeToken 
 )
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -468,18 +456,20 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -496,31 +486,33 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		SetCurrentVertex(MousePos);
+		GETVIEW->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
+		m_FirstPoint = MousePos;
 		AddPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		SetCurrentVertex(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		if ((m_Poly.GetPoint(0) == MousePos) && m_Poly.GetPointCount())	//is figure closed?
+		if ((m_FirstPoint == MousePos) && (GetNumVerticies() >= 3))	//is figure closed?
 		{
+			CCadPolygon* pPoly;
 			//------
 			//done
 			//-----
-			GETVIEW()->EnableAutoScroll(FALSE);
-			GETVIEW()->AddObjectAtFrontIntoDoc(this);
-			GETVIEW()->SetObjectTypes(new CCadPolygon);
+			GETVIEW->EnableAutoScroll(FALSE);
+			GETVIEW->GetDocument()->AddObjectAtTail(this);
+			pPoly = new CCadPolygon;
+			pPoly->Create();
+			GETVIEW->SetObjectTypes(pPoly);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 			GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
-			GETVIEW()->Invalidate();
+			GETVIEW->Invalidate();
 		}
 		else
 		{
@@ -529,7 +521,8 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//----------------------------------
 			AddPoint(MousePos);
 			GETAPP.UpdateStatusBar(_T("Polygon:Place Next Point :End by Placing on First Point"));
-			GETVIEW()->Invalidate();
+			DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
+			GETVIEW->Invalidate();
 		}
 		break;
 	}
@@ -551,150 +544,87 @@ ObjectDrawState CCadPolygon::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	switch (DrawState)
 	{
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-			SetCurrentVertex(MousePos);
-			GETVIEW()->Invalidate();
-			break;
-			case ObjectDrawState::PLACE_LBUTTON_DOWN:
-			SetCurrentVertex(MousePos);
-			GETVIEW()->Invalidate();
-			break;
+	case ObjectDrawState::PLACE_LBUTTON_DOWN:
+		GETVIEW->Invalidate();
+		break;
 	}
 	return DrawState;
 }
 
-void CCadPolygon::Reset(void)
+CCadPoint* CCadPolygon::AddPoint(DOUBLEPOINT newPoint)
 {
-	m_Poly.Destroy();
-	SetSelected(0);	//initial not selected
+	//------------------------------------
+	// AddPoint
+	//
+	// Adds a new vertex to the polygon.
+	//
+	// parameters:
+	//	newPoint....point of the new vertex.
+	// Return: TRUE on success
+	//------------------------------------
+	CCadPoint* pPoint;
+
+	pPoint = new CCadPoint;
+	pPoint->Create();
+	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->SetSubSubType(++m_NumVertices);
+	pPoint->SetPoint(newPoint);
+	AddObjectAtTail(pPoint);
+	return pPoint;;
 }
 
-BOOL CCadPolygon::CompareToLast(CDoublePoint nP)
+BOOL CCadPolygon::PointEnclosed(CCadPoint point)
 {
-	/*********************************
-	** CompareToLast
-	**	This Method compares a point
-	** to the last point that was added
-	**to a polygon.
-	**
-	** parameter:
-	**	nP.....point to compare
-	**
-	** REtuns: TRUE if equal
-	**	       FALSE if not equal.
-	*********************************/
-	BOOL rV = FALSE;
-	if (nP == m_Poly.GetLastPoint())
-		rV = TRUE;
+	//----------------------------------------*
+	// PointEnclosed
+	//	This Method determines if a point
+	// is enclosed within a polygon.
+	//
+	// parameters:
+	//	point....point to test
+	// Returns: TRUE if point inside
+	//          FALSE if point is outside
+	//----------------------------------------*
+	DOUBLEPOINT *pPolyPoints;
+	BOOL rV;
+
+	pPolyPoints = new DOUBLEPOINT[GetNumVerticies()];
+	GetPoints(pPolyPoints);
+	rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, GetNumVerticies());
+	delete[] pPolyPoints;
 	return rV;
-}
-
-UINT CCadPolygon::DeleteLastPoint(void)
-{
-	/**********************************
-	** DeleteLastPoint
-	**	Deletes last point added to
-	** polygon.
-	** RETURNS:new vertex count.
-	**********************************/
-	return m_Poly.DeleteLastPoint();
-}
-
-int CCadPolygon::GetCount(void)
-{
-	/***********************************
-	** GetCount
-	**	Retturns the number of points
-	** (verticies) in the polygon
-	***********************************/
-	return m_Poly.GetSize();
-}
-
-BOOL CCadPolygon::AddPoint(CDoublePoint newPoint)
-{
-	/*************************************
-	** AddPoint
-	**
-	** Adds a new vertex to the polygon.
-	**
-	** parameters:
-	**	newPoint....point of the new vertex.
-	** Return: TRUE on success
-	*************************************/
-	return m_Poly.AddPoint(newPoint);
-}
-
-BOOL CCadPolygon::PointEnclosed(CDoublePoint point)
-{
-	/*****************************************
-	** PointEnclosed
-	**	This Method determines if a point
-	** is enclosed within a polygon.
-	**
-	** parameters:
-	**	point....point to test
-	** Returns: TRUE if point inside
-	**          FALSE if point is outside
-	*****************************************/
-	return m_Poly.PointInPolygon(point);
 }
 
 void CCadPolygon::CopyAttributesFrom(SPolyAttributes* pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 void CCadPolygon::CopyAttributesTo(SPolyAttributes* pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesTo
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an external attributes stucture
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
-	GetAttributes().CopyTo(pAttrib);
-}
-
-void CCadPolygon::Flip(CDoublePoint Pivot, Axis Direction)
-{
-	//-------------------------------------------------
-	// Flip
-	//		Flips the object along an axis
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
 	//
-	// parameters:
-	//	Origin.........specifies either x or y axis
-	//	Direction......0=X Axis, 1 = Y Axis
-	//-------------------------------------------------
-	UINT i;
-
-	for (i = 0; i < m_Poly.GetSize(); ++i)
-		m_Poly.GetPoint(i).Flip(Pivot, Direction);
-}
-
-BOOL CCadPolygon::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadPolygon::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
+	GetAttributes().CopyTo(pAttrib);
 }
 
 int CCadPolygon::EditProperties()
@@ -704,5 +634,13 @@ int CCadPolygon::EditProperties()
 
 	Dlg.SetPolygon(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
 }

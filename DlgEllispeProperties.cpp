@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgEllispeProperties, CDialog)
 CDlgEllispeProperties::CDlgEllispeProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ELLIPSE_PROPERTIES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pEllipse = 0;
 }
 
@@ -32,6 +33,7 @@ BEGIN_MESSAGE_MAP(CDlgEllispeProperties, CDialog)
 	ON_STN_CLICKED(IDC_STATIC_FILLCOLOR, &CDlgEllispeProperties::OnStnClickedStaticFillcolor)
 	ON_STN_CLICKED(IDC_STATIC_LINECOLOR, &CDlgEllispeProperties::OnStnClickedStaticLinecolor)
 	ON_BN_CLICKED(IDC_CHECK_ELLIPSE_NOFILL, &CDlgEllispeProperties::OnBnClickedCheckEllipseNofill)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgEllispeProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -61,10 +63,13 @@ void CDlgEllispeProperties::OnOK()
 	switch (Id)
 	{
 	case IDOK:
-		m_pEllipse->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
-		m_pEllipse->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-		m_pEllipse->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
-		m_pEllipse->GetAttributes().m_LineWidth = m_Edit_Width.GetValue();
+		if (IsDirty())
+		{
+			m_pEllipse->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
+			m_pEllipse->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+			m_pEllipse->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
+			m_pEllipse->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
+		}
 		CDialog::OnOK();
 		break;
 	}
@@ -100,12 +105,8 @@ void CDlgEllispeProperties::OnBnClickedCheckEllipseNofill()
 	}
 }
 
-int DoEllipsePropertiesDlg(CCadElispe* pCE)
+afx_msg LRESULT CDlgEllispeProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
 {
-	CDlgEllispeProperties Dlg;
-	int Id;
-
-	Dlg.SetEllipse(pCE);
-	Id = Dlg.DoModal();
-	return Id;
+	m_bDirty = TRUE;
+	return 0;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+class CCadPoint;
+
 class CCadBitmap :public CCadObject
 {
 	inline static BOOL m_AttributesDirty = FALSE;
@@ -8,41 +10,34 @@ class CCadBitmap :public CCadObject
 	inline static SBitmapAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CDoublePoint m_P1, m_P2;
 	CMyBitmap *m_pBM;
 	CString m_csBMFileName;
 	SBitmapAttributes m_Attributes;
 public:
 	CCadBitmap();
-	CCadBitmap(CCadBitmap &v);
 	virtual ~CCadBitmap();
+	void Create();
+	virtual BOOL Destroy(CCadObject* pDependentObject);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p, 
-		CCadObject ** ppSelList = 0, 
-		int index = 0, 
-		int n = 0, 
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject ** ppSelList, 
+		int index, 
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
-	CCadBitmap operator=(CCadBitmap &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
+	virtual CDoubleSize GetSize();
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//----------- Attribute Methodes ------------------
 	SBitmapAttributes& GetAttributes() { return m_Attributes; }
 	SBitmapAttributes* GetPtrToAttributes() { return &m_Attributes; }
 	void CopyAttributesTo(SBitmapAttributes* pAttrib);
 	void CopyAttributesFrom(SBitmapAttributes* pAttrib);
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	BOOL IsAspectRationMaintained() { return GetAttributes().m_MaintainAspectRatio; }
 	//---------------------------------------------
 	// Draw Object Methodes
@@ -53,12 +48,17 @@ public:
 	virtual int EditProperties();
 	void RestoreAspectRatio();
 	void LoadBitmapImage(CString csPath);
-	BOOL PtInBitmap(CDoublePoint p);
 	CString& GetBitMapFileName() { return m_csBMFileName; }
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static void RenderEnable(BOOL e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SBitmapAttributes* GetLastAttributes() const {
+	static SBitmapAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

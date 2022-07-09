@@ -19,6 +19,8 @@ CFrontCadChildFrame::~CFrontCadChildFrame()
 
 
 BEGIN_MESSAGE_MAP(CFrontCadChildFrame, CMDIChildWnd)
+	ON_WM_SIZE()
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 
@@ -72,4 +74,20 @@ void CFrontCadChildFrame::ShowRulers(int nShow)
 void CFrontCadChildFrame::ShowToolBar(int nShow)
 {
 //	m_ToolBarSplitter.ShowToolBar(nShow);
+}
+
+
+void CFrontCadChildFrame::OnSize(UINT nType, int cx, int cy)
+{
+	CMDIChildWnd::OnSize(nType, cx, cy);
+
+	// TODO: Add your message handler code here
+}
+
+
+void CFrontCadChildFrame::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	CMDIChildWnd::OnSizing(fwSide, pRect);
+
+	// TODO: Add your message handler code here
 }

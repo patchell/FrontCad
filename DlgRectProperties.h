@@ -5,6 +5,7 @@
 
 class CDlgRectProperties : public CDialog
 {
+	BOOL m_bDirty;
 	//------------------------------------------
 	// Data
 	//-------------------------------------------
@@ -22,16 +23,14 @@ public:
 	virtual ~CDlgRectProperties();
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
-	afx_msg void OnStnClickedStaticLineColor();
-	afx_msg void OnStnClickedStaticFillColor();
 	afx_msg void OnClickedIidcCheckRectNofill();
 	void SetRectangle(CCadRect* pCR) { m_pRect = pCR; }
+	BOOL IsDirty() { return m_bDirty; }
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_RECTPROPERTIES };
 #endif
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	DECLARE_MESSAGE_MAP()
+	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };
-
-extern int DoRectPropertiesDlg(CCadRect* pCR);

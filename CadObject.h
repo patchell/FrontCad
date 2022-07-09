@@ -1,5 +1,7 @@
 #pragma once
 
+class CCadPoint;
+
 class CCadObject
 {
 	//--------------------------------------
@@ -7,11 +9,13 @@ class CCadObject
 	//--------------------------------------
 
 	CString m_csName;
+	CString m_csDescription;
 	UINT m_Id;	//unique ID number
 	ObjectType m_Type;		//specifies the type of object
-	BOOL m_Dirty;	//flag that indicates object needs to be redrawn
+	SubType m_SubType;		//Specifies the subtype of the object
+	UINT m_SubSubType;		//Doffertiates between different objects of same subtype
 	BOOL m_Selected;	//indicates that object is in the selected state
-	MODE m_LastMode;	//last display mode object was in
+	BOOL m_bAttributesValid;
 	//------------ Links for Main List of Drawing Objects ------------------
 	CCadObject *m_pNext;	//next object in drawing
 	CCadObject *m_pPrev;	//previous object in drawing
@@ -43,32 +47,38 @@ class CCadObject
 	CCadObject* m_pNextOrigin;
 	CCadObject* m_pPrevOrigin;
 	//------------------------------------
-	// reference object
+	// Clipboard Linked List
 	//------------------------------------
-	CCadObject* m_pReferenceObj;
+	CCadObject* m_pNextClipBoard;
+	CCadObject* m_pPrevClipBoard;
+	//------------------------------------
+	// Parrent Object
+	//------------------------------------
+	CCadObject* m_pParentObject;
 public:
 	//-------------------------------------
 	// Object Creation/Destruction Methods
 	//-------------------------------------
 	CCadObject();
 	virtual ~CCadObject();
-	virtual BOOL OnCreate(CCadObject* pRefObj) {
-		m_pReferenceObj = pRefObj;
-		return TRUE;
-	}
 	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
-	CCadObject* GetReferenceObject() { return m_pReferenceObj; }
-	CString& GetName() { return m_csName; }
-	void SetName(CString& csName) { m_csName = csName; }
+	virtual void SetParent(CCadObject* pP) { m_pParentObject = pP; }
+	virtual CCadObject* GetParent() const { return m_pParentObject; }
 	UINT GetId() { return m_Id; }
 	ObjectType GetType(void) { return m_Type; }
 	void SetType(ObjectType type) { m_Type = type; }
+	SubType GetSubType() { return m_SubType; }
+	void SetSubType(SubType subtype) { m_SubType = subtype; }
+	UINT GetSubSubType() { return m_SubSubType; }
+	void SetSubSubType(UINT SST) { m_SubSubType = SST; }
+	BOOL AttributesAreValid() {
+		return m_bAttributesValid;
+	}
+	void SetAttributesValid() { m_bAttributesValid = TRUE; }
 	//------------------------------------
 	// Drawing Manipulation Methods
 	//------------------------------------
-	virtual void Move(CDoubleSize Diff) {}
-	virtual int GrabPoint(CDoublePoint p) { return -1; };
-	virtual void SetVertex(int VertexId, CDoublePoint p) {};
+	virtual void Move(CDoubleSize Diff);
 	//------------------------------------
 	// load and save files
 	//------------------------------------
@@ -83,67 +93,40 @@ public:
 	//-----------------------------------------
 	// Draw The Drawing
 	//-----------------------------------------
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
-	BOOL IsLastModeSame(MODE m) {
-		BOOL Result = FALSE;
-		if (m_LastMode.DrawMode == m.DrawMode &&
-			m_LastMode.LinesMode == m.LinesMode &&
-			m_LastMode.PointsMode == m.PointsMode
-			)
-		{
-			Result = TRUE;
-		}
-		return (Result);
-	}
-	void SetLastMode(MODE m) {
-		m_LastMode.DrawMode = m.DrawMode;
-		m_LastMode.LinesMode = m.LinesMode;
-		m_LastMode.PointsMode = m.PointsMode;
-	}
-	MODE GetLastMode(void) { return m_LastMode; }
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
 	//------------------------------------------
 	// Get things about the object
 	//------------------------------------------
+	virtual BOOL PointInThisObject(DOUBLEPOINT point) { return FALSE; }
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p, 
-		CCadObject** ppSelList = 0, 
-		int index = 0, 
-		int n = 0, 
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL) {
-		return index;
-	}
-	virtual CDoublePoint GetReference() { return CDoublePoint(0.0, 0.0); };
-	virtual BOOL IsDirty(void) { return m_Dirty; };
-	virtual void SetDirty(BOOL d) { m_Dirty = d; }
-	virtual BOOL IsSelected(void) { return m_Selected; }
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int index,
+		int n
+	);
+	virtual BOOL IsSelected(void) const { return m_Selected; }
 	virtual void SetSelected(BOOL Flag) { m_Selected = Flag; }
-	virtual CDoubleRect& GetRect(CDoubleRect& rect) {
-		return rect; 
-	}
+	CString& GetName() { return m_csName; }
+	void SetName(CString& csName) { m_csName = csName; }
+	CString& GetDescription() { return m_csDescription; }
 	virtual CString& GetTypeString(void);
-	CCadObject operator=(CCadObject &v);
-	virtual CCadObject * CopyObject(void);
-	virtual void Copy(CCadObject* pObj) {}
-	virtual CDoublePoint& GetCenter(CDoublePoint& point) { 
-		point = CDoublePoint(0.0, 0.0);
-		return point; 
-	};
-	virtual CDoubleSize& GetSize(CDoubleSize& size) { 
-		size = CDoubleSize(0.0, 0.0);
-		return size; 
+	virtual CString& GetObjDescription();
+	void CopyObject(CCadObject* pObjDestination);
+	virtual CCadObject* CopyObject() { return NULL; }
+	virtual CDoubleSize GetSize() { 
+		return CDoubleSize(0.0, 0.0);
 	};
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState) { return DrawState; }
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState) { return DrawState; }
-	virtual void Flip(CDoublePoint Pivot, int Direction){}
+	virtual void Flip(CCadPoint* Pivot, int Direction){}
+	virtual void ProcessZoom(CScale& InchesPerPixel) {}
 	//--------------------------------------------------------
 	// Methods for managing object properites
 	//--------------------------------------------------------
 	virtual int EditProperties(void) { return IDCANCEL; }
-	virtual BOOL NeedsAttributes() { return FALSE; }
-	virtual void ClearNeedsAttributes() {}
 	//------------------------------------------
 	// Linked List Methods
 	// -----------------------------------------
@@ -169,7 +152,18 @@ public:
 	void AddObjectAtHead(CCadObject* pObj);
 	void AddObjectAtTail(CCadObject* pObj);
 	void RemoveObject(CCadObject* pObj);
-	//------- Manage List of Dependent Children ------------
+	CCadObject* DeleteObject(CCadObject* pObj) {
+		CCadObject* pObjNext;
+
+		pObjNext = pObj->GetNext();
+		Destroy(pObj);
+		delete pObj;
+		return pObjNext;
+	}
+	CCadObject* FindObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
+	//-------------------------------------------------------------
+	//				List of Dependent Children ------------
+	//-------------------------------------------------------------
 	CCadObject* GetDependentChildrenHead() { return m_pHeadDependentChildren; }
 	void SetDependentChildrenHead(CCadObject* pObj) { m_pHeadDependentChildren = pObj; }
 	CCadObject* GetDependentChildrenTail() { return m_pTailDependentChildren; }
@@ -183,7 +177,10 @@ public:
 	void AddDepChildObjectAtHead(CCadObject* pObj);
 	void AddDepChildObjectAtTail(CCadObject* pObj);
 	void RemoveDepChildObject(CCadObject* pObj);
-	//------- Manage list of dependent parents ------------------------
+	CCadObject* FindDepChildObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
+	//-----------------------------------------------------------------
+	//			List of dependent parents 
+	//-----------------------------------------------------------------
 	CCadObject* GetDependentParentsHead() { return m_pHeadDependentParents; }
 	void SetDependentParentHead(CCadObject* pH) { m_pHeadDependentParents = pH; }
 	CCadObject* GetDependentParrentsTail() { return m_pTailDependentParents; }
@@ -197,9 +194,17 @@ public:
 	void AddDepParentObjectAtHead(CCadObject* pObj);
 	void AddDepParentObjectAtTail(CCadObject* pObj);
 	void RemoveDepParentObject(CCadObject* pObj);
+	CCadObject* FindDepParentObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
 	//---------------- Origin List Links -----------------------
 	void SetNextOrigin(CCadObject* pObj) { m_pNextOrigin = pObj; }
 	CCadObject* GetNextOrigin() { return m_pNextOrigin; }
 	void SetPrevOrigin(CCadObject* pObj) { m_pPrevOrigin = pObj; }
 	CCadObject* GetPrevOrigin() { return m_pPrevOrigin; }
+	//---------------------------------------------------
+	// Clip Board Linked List Methods
+	//--------------------------------------------------
+	CCadObject* GetNextClipBoard() { return m_pNextClipBoard; }
+	void SetNextClipBoard(CCadObject* pObj) { m_pNextClipBoard = pObj; }
+	CCadObject* GetPrevClipBoard() { return m_pPrevClipBoard; }
+	void SetPrevClipBoard(CCadObject* pObj) { m_pPrevClipBoard = pObj; }
 };

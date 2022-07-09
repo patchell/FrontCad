@@ -10,7 +10,6 @@ CRulerView::CRulerView()
 {
 	m_pRulerInfo = 0;
 	m_rulerType = RT_HORIZONTAL;
-	m_OriginOffset = 0;
 }
 
 CRulerView::~CRulerView()
@@ -152,7 +151,7 @@ void CRulerView::DrawTicker(
 	CBrush brushBK, * oldBrush;
 	int AddLableEvery = 1;
 	int LabelCount = 1;
-	CDoublePoint pointCent;
+	CCadPoint pointCent;
 
 	//-------------------------------------------
 	// Create Drawing Objects, pens, brushes etc
@@ -177,7 +176,7 @@ void CRulerView::DrawTicker(
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCX;
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)
 		FirstTick = GETAPP.RoundUpToNearest(
-			GetRulersInfo()->GetUpperLeft().dX - GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dX,
+			GetRulersInfo()->GetUpperLeft().dX - GetRulersInfo()->GetOrigin()->GetCenterPoint().dX,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCX
 		);
 		AxisType = Axis::X;
@@ -197,9 +196,9 @@ void CRulerView::DrawTicker(
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)		break;
 		printf("DocSize = %6.3lf\n", GetRulersInfo()->GetDocSize().dCY);
 		printf("Upper Left = %6.3lf\n", GetRulersInfo()->GetUpperLeft().dY);
-		printf("Origin X = %6.3lf  Y = %6.3lf\n", GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dX, GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY);
+		printf("Origin X = %6.3lf  Y = %6.3lf\n", GetRulersInfo()->GetOrigin()->GetCenterPoint().dX, GetRulersInfo()->GetOrigin()->GetCenterPoint().dY);
 		FirstTick = GETAPP.RoundUpToNearest(
-			GetRulersInfo()->GetOrigin()->GetCenter(pointCent).dY -
+			GetRulersInfo()->GetOrigin()->GetCenterPoint().dY -
 			GetRulersInfo()->GetUpperLeft().dY,
 			GetRulersInfo()->GetGrid()->GetSnapGrid().dCY
 		);
@@ -379,7 +378,7 @@ void CRulerView::DrawTicker(
 	}// (End of if bShowPos)
 }
 
-void CRulerView::DrawCursorPos(CDC* pDC, CDoublePoint NewPos)
+void CRulerView::DrawCursorPos(CDC* pDC, DOUBLEPOINT NewPos)
 {
 	//----------------------------------
 	// set the map mode right
@@ -389,13 +388,14 @@ void CRulerView::DrawCursorPos(CDC* pDC, CDoublePoint NewPos)
 	CRect clientRect;
 	CPoint Point;
 	CPen CursorPen, * oldPen;
-	CDoublePoint dblPt;
+	CCadPoint dblPt;
 
 	GetClientRect(&clientRect);
-	Point = (NewPos + -GetRulersInfo()->GetUpperLeft()).ToPixelPoint(
+	Point = (NewPos + -(GetRulersInfo()->GetUpperLeft())).ToPixelPoint(
 		dblPt,
-		GetRulersInfo()->GetGrid()->GetPixelsPerInch()
-	);
+		GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleX(),
+		GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY()
+		);
 	CursorPen.CreatePen(PS_SOLID, 5, GetRulersInfo()->GetCursorColor());
 	oldPen = pDC->SelectObject(&CursorPen);
 	switch (GetRulerType())

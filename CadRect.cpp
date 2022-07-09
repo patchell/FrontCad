@@ -2,38 +2,249 @@
 
 CCadRect::CCadRect():CCadObject()
 {
-	m_pPenLine = 0;
-	m_pBrFill = 0;
 	SetType(ObjectType::RECT);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetRectangleAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-	m_csName.Format(_T("Rectangle_%d"), ++CCadRect::m_RectCount);
-}
-
-CCadRect::CCadRect(CCadRect &r) :CCadObject()
-{
-	m_Rect = r.GetRect(m_Rect);
-	m_pPenLine = 0;
-	m_pBrFill = 0;
-	GetAttributes().CopyFrom(&r.GetAttributes());
-	SetType(ObjectType::RECT);
-	m_csName.Format(_T("Rectangle_%d"), ++CCadRect::m_RectCount);
+	GetName().Format(_T("Rectangle_%d"), ++CCadRect::m_RectCount);
 }
 
 CCadRect::~CCadRect()
 {
-	if (m_pPenLine) delete m_pPenLine;
-	if (m_pBrFill) delete m_pBrFill;
+	CCadObject* pObj, *pNextObj;
+
+	pObj = GetHead();
+	while (pObj)
+	{
+		pNextObj = pObj->GetNext();
+		pObj->DeleteObject(pObj);
+		pObj = pNextObj;
+	}
+}
+
+BOOL CCadRect::Destroy(CCadObject* pDependentObject)
+{
+	CCadObject* pObj;
+	BOOL rV = TRUE;
+
+	if (GetDependentChildrenHead())
+	{
+		pObj = GetDependentChildrenHead();
+		while (pObj)
+		{
+			//------------------------------
+			// Go up the chain of dependent
+			// children and prepare them
+			//-----------------------------
+			pObj->Destroy(this);
+			pObj = DeleteObject(pObj);
+		}
+	}
+	return rV;
+}
+
+void CCadRect::Create()
+{
+	//---------------------------------------
+	// Create
+	// add initial child objects
+	//---------------------------------------
+	int i;
+	CCadPoint* pPoint;
+
+	for (i = 0; i < 4; ++i)
+	{
+		pPoint = new CCadPoint;
+		pPoint->Create();
+		pPoint->SetSubType(SubType::VERTEX);
+		pPoint->SetSubSubType(i + 1);
+		AddObjectAtTail(pPoint);
+	}
+	pPoint = new CCadPoint;
+	pPoint->Create();
+	pPoint->SetSubType(SubType::CENTERPOINT);
+	pPoint->SetSubSubType(0);
+	AddObjectAtTail(pPoint);
+	pPoint = new CCadPoint;
+	pPoint->Create();
+	pPoint->SetSubType(SubType::PIVOTPOINT);
+	AddObjectAtTail(pPoint);
+}
+
+void CCadRect::SetPoints(DOUBLEPOINT P1, DOUBLEPOINT P2, DOUBLEPOINT RotDef)
+{
+	//----------------------------------------------
+	// Set the points on a boring rectangle defined
+	// by points P1 and P2
+	// 
+	// parameters:
+	//	P1.......Upper Left hand corner
+	//	P2.......Lower Right hand corner
+	//----------------------------------------------
+	CDoubleSize Diff;
+
+	Diff = P2 - P1;
+	SetPoints(Diff, P1, RotDef);
+}
+
+void CCadRect::SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT pointRot)
+{
+	//----------------------------------------
+	// Calculate the points on the rectangle
+	// tgat us rotated around p1 defined
+	// at an angle defined by pointRot
+	//
+	// parameters:
+	// sz........size of the rectangle
+	// p1........origin of the rectangle
+	// pointRot..rotation definition point
+	//---------------------------------------
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjCenter;
+	double m, W,H, Rise, Run;
+
+	//--------------------------------------
+	// Get the objects to set
+	//--------------------------------------
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 4);
+	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	Run = pointRot.dX - p1.dX;	//run
+	Rise = p1.dY - pointRot.dY;	//rise
+	W = sz.dCX;
+	H = sz.dCY;
+
+	if (pointRot == p1)
+	{
+		//--------------------------------
+		// No Rotation
+		//--------------------------------
+		ObjP1.pCadPoint->SetPoint(p1);
+		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
+		ObjP3.pCadPoint->SetPoint(p1 + sz);
+		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
+	}
+	else if (Rise == 0.0)
+	{
+		//--------------------------------
+		// Horizontal Rectangle
+		//--------------------------------
+		ObjP1.pCadPoint->SetPoint(p1);
+		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
+		ObjP3.pCadPoint->SetPoint(p1 + sz);
+		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
+	}
+	else if (Run == 0.0)
+	{
+		//-------------------------------
+		// Vertical Rectangle
+		//-------------------------------
+		ObjP1.pCadPoint->SetPoint(p1);
+		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
+		ObjP3.pCadPoint->SetPoint(p1 + sz);
+		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
+	}
+	else
+	{
+		//---------------------------------
+		// Non orthogonal Rotation
+		//---------------------------------
+		m = Rise / Run;	//rise/run
+		ObjP1.pCadPoint->SetPoint(p1);
+		ObjP4.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, m, W);
+		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, -1.0 / m, H);
+		ObjP3.pCadPoint->PointOnLineAtDistance(ObjP4.pCadPoint, -1.0 / m, H);
+	}
+	ObjCenter.pCadPoint->SetPoint(GETAPP.CalcCenter(ObjP1.pCadPoint, ObjP3.pCadPoint));
+}
+
+CCadRect& CCadRect::SetSecondPoint(DOUBLEPOINT P2)
+{
+	CDoubleSize Diff;
+	CADObjectTypes ObjP1;
+	DOUBLEPOINT P1;
+
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	P1 = DOUBLEPOINT(*ObjP1.pCadPoint);
+	SetPoints(P1, P2,P1);
+	return *this;
+}
+
+CCadRect& CCadRect::SetPointsFromCenter(DOUBLEPOINT P1)
+{
+	CDoubleSize Diff;
+	CADObjectTypes ObjCenter;
+	DOUBLEPOINT Center;
+
+	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	Center = DOUBLEPOINT(*ObjCenter.pCadPoint);
+	Diff = (Center - P1) * 2.0;
+
+	SetPoints(Diff,P1,P1);
+	return *this;
+}
+
+CCadRect& CCadRect::SetPointsFromCenter(double halfWidth, double halfHeight)
+{
+	CDoubleSize Diff;
+	CCadPoint* pPoint;
+	DOUBLEPOINT Center;
+
+	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	Center = DOUBLEPOINT(*(CCadPoint*)pPoint);
+	Diff = CDoubleSize(halfWidth, halfHeight);
+
+	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	pPoint->SetPoint(Center - Diff);
+	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	pPoint->SetPoint(Center + CDoubleSize(Diff.dCX, -Diff.dCY));
+	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 3);
+	pPoint->SetPoint(Center + Diff);
+	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 4);
+	pPoint->SetPoint(Center + CDoubleSize(-Diff.dCX, Diff.dCY));
+	return *this;
+}
+
+CCadRect& CCadRect::SetCenterPoint(DOUBLEPOINT newCenter)
+{
+	CDoubleSize Diff;
+	CCadPoint* pCenter, *pPoint;
+	int i;
+
+	pCenter = (CCadPoint*)FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	Diff = newCenter - DOUBLEPOINT(*pCenter);
+	pCenter->SetPoint(newCenter);
+	for (i = 0; i < 4; ++i)
+	{
+		pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, i + 1);
+		pPoint->SetPoint(DOUBLEPOINT(*pPoint) + Diff);
+	}
+	return *this;
+}
+
+CRect CCadRect::ToCRect(DOUBLEPOINT ULHC, CScale& Scale)
+{
+	CRect rect;
+	CADObjectTypes ObjP1, ObjP2;
+	CPoint P1, P2;
+
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 3);
+	P1 = ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale);
+	P2 = ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale);
+	rect.SetRect(P1, P2);
+	rect.NormalizeRect();
+	return rect;
 }
 
 void CCadRect::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -43,12 +254,12 @@ void CCadRect::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_Rect.AdjustReference(Diff);
+	CCadObject::Move(Diff);
 }
 
 void CCadRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -57,73 +268,117 @@ void CCadRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	// return value:none
 	//--------------------------------------------------
 	char* psIndent = new char[256];
-	GETAPP.MkIndentString(psIndent, Indent, ' ');
+	CADObjectTypes Obj;
 
+	GETAPP.MkIndentString(psIndent, Indent, ' ');
+	Obj.pCadObject = GetHead();
 	fprintf(pO, "%s%s(\n",
 		psIndent,
 		CLexer::TokenToString(DocFileParseToken::RECT)
 	);
-	m_Rect.Save(
-		pO,
-		DocFileParseToken::DOUBLERECT,
-		Indent + 1,
-		flags
+	fprintf(pO, "%s%s(\n",
+		psIndent,
+		CLexer::TokenToString(Token)
 	);
+	while (Obj.pCadObject)
+	{
+		if (Obj.pCadObject->GetType() == ObjectType::POINT)
+			Obj.pCadPoint->Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
+		Obj.pCadObject = Obj.pCadObject->GetNext();
+	}
+	fprintf(pO, "%s)\n", psIndent);
+
+
 	GetAttributes().Save(pO, Indent + 1, flags);
 	fprintf(pO, "%s}\n", psIndent);
 	delete []psIndent;
 }
 
-int CCadRect::GrabPoint(CDoublePoint p)
+void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BOOL bFill)
 {
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	int rV = -1;
-	int i,loop;
-	CDoublePoint Corner;
+	int i;
+	CCadPoint* pPoint;
 
-	for (i = 0, loop = 1; (i < 4) && loop; ++i)
+	for (i = 0; i < 4; ++i)
 	{
-		Corner = m_Rect.GetDoublePoints()[i];
-		if (Corner.IsPointOnTarget(p))
+		if (i == 0)
 		{
-			rV = i;
-			loop = 0;
+			pPoint = (CCadPoint*)FindObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				i + 1);
+			if (pPoint)
+				pPoint->MoveTo(pDC, ULHC, Scale);
+			else
+				goto exit;
 		}
+		else
+		{
+			pPoint = (CCadPoint*)FindObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				i + 1
+			);
+			if (pPoint)
+			{
+				pPoint->LineTo(pDC, ULHC, Scale);
+				pPoint->Draw(pDC, mode, ULHC, Scale);
+			}
+			else
+				goto exit;
+		}
+		pPoint = (CCadPoint*)FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		if (pPoint)
+		{
+			pPoint->LineTo(pDC, ULHC, Scale);
+			pPoint->Draw(pDC, mode, ULHC, Scale);
+		}
+		else
+			goto exit;
+	}	//end of for loop
+
+	if (bFill)
+	{
+		((CCadPoint*)(FindObject(
+			ObjectType::POINT,
+			SubType::CENTERPOINT,
+			SUBSUBTYPE_ANY)))->FloodFill(
+				pDC,
+				GetAttributes().m_colorLine,
+				ULHC,
+				Scale
+			);
 	}
-	return rV;
+exit:
+	return;
 }
 
-
-void CCadRect::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
+void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
 	//	pDC.....pointer to the device context
 	//	mode....drawing mode
-	//	Offset..Offset to draw objects at
+	//	ULHC....Offset to draw objects at
 	//	Scale..Scale factor to draw objects at
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOld;
-	CBrush *pOldBr;
-	int Lw;
-	CSize rectLWcomp;
 
-	if (CCadRect::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
+		CPen* ppenOld, penLine;;
+		CBrush* pbrushOld, brushFill;
+		int Lw;
+		CSize rectLWcomp;
+		MODE pointMode = mode;;
+
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
 		if (Lw < 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
 		{
@@ -132,84 +387,89 @@ void CCadRect::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 		}
 		else
 			rectLWcomp = CSize(Lw / 2, Lw / 2);
-		if (!IsLastModeSame(mode) || IsDirty())
-		{
-			if (m_pPenLine) delete m_pPenLine;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pPenLine = new CPen(PS_SOLID, Lw, GetLineColor());
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pPenLine = new CPen(PS_SOLID, Lw, RGB(200, 50, 50));
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pPenLine = new CPen(PS_DOT, 1, GetLineColor());
-				break;
-			}
-		}
-
-		if (m_pBrFill == 0 || IsDirty())
-		{
-			if (m_pBrFill) delete m_pBrFill;
-			if (GetTransparent())
-			{
-				m_pBrFill = new CBrush();
-				m_pBrFill->CreateStockObject(NULL_BRUSH);
-			}
-			else
-				m_pBrFill = new CBrush(GetFillColor());
-			SetDirty(FALSE);
-		}
 		//SetRect(rect, P1, P2, rectLWcomp);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			m_Rect.Draw(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOld);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
+			ppenOld = pDC->SelectObject(&penLine);
+			pbrushOld = pDC->SelectObject(&brushFill);
+			DrawRect(pDC, mode, ULHC, Scale, GetAttributes().m_TransparentFill == FALSE);
+			pDC->SelectObject(pbrushOld);
+			pDC->SelectObject(ppenOld);
 			break;
 		case ObjectDrawMode::SELECTED:
-		{
-			CPen SelPen;
-			CBrush SelBrush;
-			SelPen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-			SelBrush.CreateSolidBrush(RGB(255, 0, 0));
-			pOld = pDC->SelectObject(m_pPenLine);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			m_Rect.Draw(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(&SelPen);
-			pDC->SelectObject(&SelBrush);
-			mode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
-			m_Rect.GetPoint(RectPoint::LOWERLEFT).Draw(pDC, mode, ULHC, Scale);
-			m_Rect.GetPoint(RectPoint::UPPERLEFT).Draw(pDC, mode, ULHC, Scale);
-			m_Rect.GetPoint(RectPoint::LOWERRIGHT).Draw(pDC, mode, ULHC, Scale);
-			m_Rect.GetPoint(RectPoint::UPPERRIGHT).Draw(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOld);
-		}
-		break;
-		case ObjectDrawMode::SKETCH:
-			pOld = pDC->SelectObject(m_pPenLine);
-			m_Rect.Draw(pDC,mode, ULHC,Scale);
-			pDC->SelectObject(pOld);
+			pointMode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			ppenOld = pDC->SelectObject(&penLine);
+			DrawRect(pDC, pointMode, ULHC, Scale, FALSE);
+			pDC->SelectObject(ppenOld);
 			break;
+		case ObjectDrawMode::SKETCH:
+			pointMode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
+			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSketch);
+			ppenOld = pDC->SelectObject(&penLine);
+			DrawRect(pDC, pointMode, ULHC, Scale,FALSE);
+			pDC->SelectObject(ppenOld);
+			break;
+		}	//end of switch draw mode
+	}	//end of if render
+}
+
+CCadPoint* CCadRect::GetRectPoints(CCadPoint** ppPointDest, int n)
+{
+	CADObjectTypes Obj;
+	int index = 0;
+	BOOL loop = TRUE;
+
+	Obj.pCadObject = GetHead();
+
+	while (Obj.pCadObject && loop)
+	{
+		if (Obj.pCadObject->GetType() == ObjectType::POINT)
+		{
+			ppPointDest[index++] = Obj.pCadPoint;
+			if (index == 4)
+				loop = FALSE;
 		}
-		SetLastMode(mode);
+		Obj.pCadObject = Obj.pCadObject->GetNext();
 	}
+	return ppPointDest[0];
+}
+
+BOOL CCadRect::PointInThisObject(DOUBLEPOINT point)
+{
+	DOUBLEPOINT pointsRect[4];
+	CADObjectTypes Vertex;
+	int i;
+	BOOL rV = FALSE;
+
+	for (i = 0; i < 4; ++i)
+	{
+		Vertex.pCadObject =FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			i + 1
+		);
+		if (Vertex.pCadObject)
+			pointsRect[i] = DOUBLEPOINT(*Vertex.pCadPoint);
+		else
+			goto exit;
+	}
+	rV = GETAPP.PtEnclosedInPolygon(point, pointsRect, 4);
+exit:
+	return rV;
 }
 
 int CCadRect::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList, 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -220,89 +480,36 @@ int CCadRect::PointInObjectAndSelect(
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	int rV = index;
-	if (index < n || n==0)
-	{
-		if (m_Rect.PointInRectangle(p))
-		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						ppSelList[rV++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if(!IsSelected())
-							ppSelList[rV++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if(IsSelected())
-							ppSelList[rV++] = this;
-						break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						rV = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if (!IsSelected())
-							rV = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if (IsSelected())
-							rV = 1;
-						break;
-				}
+	int ix;
 
-			}
+	if (index < n)
+	{
+		//---------------------------------------
+		// is point in the Arc?
+		//---------------------------------------
+		if (PointInThisObject(p))
+		{
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
-	return rV;
-}
-
-CDoublePoint CCadRect::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_Rect.GetPoint(RectPoint::LOWERLEFT);
-}
-
-
-CDoubleRect& CCadRect::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	rect = m_Rect;
-	return rect;
+	return index;
 }
 
 CString& CCadRect::GetTypeString(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -314,26 +521,33 @@ CString& CCadRect::GetTypeString(void)
 	return csName;
 }
 
-CCadRect CCadRect::operator=(CCadRect &v)
+CString& CCadRect::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	CCadRect rect;
-	rect.m_Rect = v.m_Rect;
-	rect.GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	return rect;
+	CCadPoint* pP1, * pP2;
+	DOUBLEPOINT P1, P2;
+
+	pP1 = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		1
+	);
+	pP2 = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		3
+	);
+	P1 = DOUBLEPOINT(*pP1);
+	P2 = DOUBLEPOINT(*pP2);
+	GetDescription().Format(_T("Rect((%6.3lf,%6.3lf),(%6.3lf,%6.3lf))"),
+		P1.dX,P1.dY,
+		P2.dX,P2.dY
+	);
+	return GetDescription();
 }
 
 CCadObject * CCadRect::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy.
@@ -349,38 +563,9 @@ CCadObject * CCadRect::CopyObject(void)
 	return pRect;
 }
 
-void CCadRect::RenderEnable(int e)
+CDoubleSize CCadRect::GetSize()
 {
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadRect::m_RenderEnable = e;
-}
-
-CDoublePoint& CCadRect::GetCenter(CDoublePoint& Center)
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	Center = m_Rect.GetCenter(Center);
-	return Center;
-}
-
-CDoubleSize& CCadRect::GetSize(CDoubleSize& size)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -388,13 +573,65 @@ CDoubleSize& CCadRect::GetSize(CDoubleSize& size)
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	size = m_Rect.GetSize(size);
-	return size;
+	
+	return CDoubleSize(GetWidth(), GetHeight());
+}
+
+double CCadRect::GetWidth()
+{
+	double Result;
+	CCadPoint* pP1, * pP2;
+	CCadObject *pObj;
+
+	pObj = GetHead();
+	pP1 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	pP2 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Result = pP2->GetX() - pP1->GetX();
+	return Result;
+}
+
+void CCadRect::SetWidth(double width)
+{
+	CADObjectTypes Obj;
+	double Xref;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	Xref = Obj.pCadPoint->GetX();
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Obj.pCadPoint->SetX(Xref + width);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UR);
+	Obj.pCadPoint->SetX(Xref + width);
+}
+
+double CCadRect::GetHeight()
+{
+	double Result;
+	CCadPoint* pP1, * pP2;
+	CCadObject* pObj;
+
+	pObj = GetHead();
+	pP1 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	pP2 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Result = pP2->GetY() - pP1->GetY();
+	return Result;
+}
+
+void CCadRect::SetHeight(double Height)
+{
+	CADObjectTypes Obj;
+	double Yref;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	Yref = Obj.pCadPoint->GetY();
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Obj.pCadPoint->SetY(Yref + Height);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LL);
+	Obj.pCadPoint->SetY(Yref + Height);
 }
 
 DocFileParseToken CCadRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -409,7 +646,7 @@ DocFileParseToken CCadRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 	//--------------------------------------------------
 	Token = pLex->Accept (Token, DocFileParseToken::RECT);
 	Token = pLex->Expect(Token, DocFileParseToken('('));
-	Token = pLex->DoubleRect(DocFileParseToken::DOUBLERECT, m_Rect, Token);
+	Token = pLex->CadRect(DocFileParseToken::RECT, *this, Token);
 	Token = GetAttributes().Parse(Token, pLex);
 	Token = pLex->Expect(Token, DocFileParseToken(')') );
 	return Token;
@@ -417,32 +654,32 @@ DocFileParseToken CCadRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 
 void CCadRect::CopyAttributesTo(SRectAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesTo
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an external attributes stucture
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 
 void CCadRect::CopyAttributesFrom(SRectAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
@@ -459,18 +696,23 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
+
+	CPoint MouseScreenCoordinate;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -479,34 +721,70 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
+		GETVIEW->GetCursorPosition(&MouseScreenCoordinate);
 		Id = EditProperties();
 		if (IDOK == Id)
 		{
-			CopyAttributesTo(&m_CurrentAttributes);
+			if (m_AttributesDirty)
+				CopyAttributesTo(&m_CurrentAttributes);
+			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+			GETVIEW->EnableAutoScroll(1);
 		}
+		GETVIEW->SetCursorPosition(MouseScreenCoordinate);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		m_Rect.SetPoints(MousePos, MousePos);
+		GETVIEW->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_Rect.SetPoints(MousePos, MousePos);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_Rect.SetSecondPoint(MousePos);
+		SetSecondPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		m_Rect.SetSecondPoint(MousePos);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadRect);
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		SetSecondPoint(MousePos);
+		if (GETVIEW->IsR_KeyDown())
+		{
+			//-----------------------------------
+			// Rotate Rectangle
+			//-----------------------------------
+
+			DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN;
+			GETAPP.UpdateStatusBar(_T("Rectangle:Select Pivot Point"));
+		}
+		else
+		{
+			//----------------------------------------------
+			// Just a regular orthoganol Rectangle
+			//---------------------------------------------
+			GETVIEW->GetDocument()->AddObjectAtTail(this);
+			Obj.pCadRect = new CCadRect;
+			Obj.pCadRect->Create();
+			GETVIEW->EnableAutoScroll(FALSE);
+			GETVIEW->SetObjectTypes(Obj.pCadObject);
+			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+			GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
+		}
+		GETVIEW->Invalidate();
+		break;
+	case ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN:
+		DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_UP;
+		break;
+	case ObjectDrawState::SELECT_PIVOT_LBUTTON_UP:
+		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
+		GETAPP.UpdateStatusBar(_T("Rectangle:Set Angle Definition Point"));
+		break;
+	case ObjectDrawState::ROTATE_LBUTTON_DOWN:
+		DrawState = ObjectDrawState::ROTATE_LBUTTON_UP;
+		break;
+	case ObjectDrawState::ROTATE_LBUTTON_UP:
+		DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
-		GETVIEW()->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -526,18 +804,15 @@ ObjectDrawState CCadRect::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Rect.SetPoints(MousePos, MousePos);
-		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_Rect.SetSecondPoint(MousePos);
-	break;
+		SetSecondPoint(MousePos);
+		break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
 }
 
@@ -548,15 +823,13 @@ int CCadRect::EditProperties()
 
 	Dlg.SetRectangle(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
-}
-
-BOOL CCadRect::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadRect::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
 }

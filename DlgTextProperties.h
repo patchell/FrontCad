@@ -4,6 +4,7 @@
 
 class CDlgTextProperties : public CDialogEx
 {
+	BOOL m_bDirty;
 	//----------------------------------------
 	// Data
 	//----------------------------------------
@@ -30,6 +31,7 @@ public:
 	afx_msg void OnStnClickedStaticTextColor();
 	afx_msg void OnStnClickedStaticBackgroundColor();
 	void SetTextObject(CCadText* pCT) { m_pText = pCT; }
+	BOOL IsDirty() { return m_bDirty; }
 
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_TEXT_PROPERTIES };
@@ -40,6 +42,6 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnSelchangeComboFontweight();
+protected:
+	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };
-
-extern int DoTextPropertiesDlg(CCadText* pCT);

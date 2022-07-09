@@ -4,12 +4,11 @@
 
 CCadDimension::CCadDimension():CCadObject()
 {
-	m_nTotalObjects = 0;
 	SetType(ObjectType::DIMENSION);
 	GetName().Format(_T("Dimension_%d"), ++m_DimensionCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetDimensionAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
@@ -28,7 +27,7 @@ CCadDimension::~CCadDimension()
 
 void CCadDimension::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//--------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -38,11 +37,12 @@ void CCadDimension::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
+	CCadObject::Move(Diff);
 }
 
 void CCadDimension::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -52,42 +52,9 @@ void CCadDimension::Save(FILE * pO, DocFileParseToken Token, int Indent, int fla
 	//--------------------------------------------------
 }
 
-void CCadDimension::SetVertex(int v, CDoubleSize sz)
+void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
 	//--------------------------------------------------
-}
-
-
-int CCadDimension::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return 0;
-}
-
-
-void CCadDimension::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -98,7 +65,7 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	if (IsRenderDimensionEnabled())
+	if (IsRenderEnabled())
 	{
 		if (GetHead())
 		{
@@ -112,9 +79,19 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	}
 }
 
-BOOL CCadDimension::PointInObjectAndSelect(CPoint p, CSize Offset, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
+BOOL CCadDimension::PointInThisObject(DOUBLEPOINT point)
 {
-	//***************************************************
+	return 0;
+}
+
+int CCadDimension::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
+)
+{
+	//--------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -125,46 +102,36 @@ BOOL CCadDimension::PointInObjectAndSelect(CPoint p, CSize Offset, CCadObject **
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	return 0;
-}
+	int ix;
 
-CDoublePoint CCadDimension::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return CDoublePoint();
-}
-
-CDoubleRect& CCadDimension::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	rect = CDoubleRect();
-	return rect;
+	if (index < n || n == 0)
+	{
+		//---------------------------------------
+		// is point in the Arc?
+		//---------------------------------------
+		if (PointInThisObject(p))
+		{
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
+		}
+	}
+	return index;
 }
 
 CString& CCadDimension::GetTypeString(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -176,23 +143,15 @@ CString& CCadDimension::GetTypeString(void)
 	return csType;
 }
 
-CCadDimension CCadDimension::operator=(CCadDimension &v)
+CString& CCadDimension::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	return CCadDimension();
+	GetDescription().Format(_T("Base Obj Class"));
+	return GetDescription();
 }
 
 CPoint CCadDimension::ScalePoint(CPoint p, int Scale, int ScaleDiv)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// parameters:
 	//
 	// return value:
@@ -202,7 +161,7 @@ CPoint CCadDimension::ScalePoint(CPoint p, int Scale, int ScaleDiv)
 
 CCadObject * CCadDimension::CopyObject(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -215,45 +174,9 @@ CCadObject * CCadDimension::CopyObject(void)
 	return pCD;
 }
 
-void CCadDimension::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
-{
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
-CDoublePoint CCadDimension::GetCenter()
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	return CDoublePoint();
-}
-
-
-CDoubleSize CCadDimension::GetSize()
-{
-	//***************************************************
-	// GetSize
-	//	Get the size of the object.  Reutrns the size
-	// of the enclosing rectangle.
-	// parameters:
-	//
-	// return value:returns size of the object
-	//--------------------------------------------------
-	return CSize();
-}
-
 DocFileParseToken CCadDimension::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -271,42 +194,46 @@ DocFileParseToken CCadDimension::Parse(DocFileParseToken Token, CLexer *pLex, Do
 
 void CCadDimension::CopyAttributesFrom(SCadDimAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrib.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 void CCadDimension::CopyAttributesTo(SCadDimAttributes* pAttrib)
 {
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
-}
-
-BOOL CCadDimension::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadDimension::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
 }
 
 int CCadDimension::EditProperties()
 {
 	CDlgDimensionPropertiex Dlg;
-	int ID;
+	int Id;
 
 	Dlg.SetDimension(this);
-	ID = Dlg.DoModal();
-	return ID;
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+			m_AttributesDirty = TRUE;
+	}
+	return Id;
 }
 
 ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
@@ -323,17 +250,19 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -351,7 +280,7 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN:
 
-		GETVIEW()->EnableAutoScroll(TRUE);
+		GETVIEW->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_UP;
 		GETAPP.UpdateStatusBar(_T("DRAG to Extend"));
 		break;
@@ -364,11 +293,11 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::EXTENSION_LINES_LBUTTON_UP:
 		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
-		GETVIEW()->EnableAutoScroll(FALSE);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadDimension);
+		GETVIEW->EnableAutoScroll(FALSE);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GETVIEW->SetObjectTypes(new CCadDimension);
 		GETAPP.UpdateStatusBar(_T("Dimension:Select Line To Dimension"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -389,7 +318,7 @@ ObjectDrawState CCadDimension::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
@@ -401,184 +330,69 @@ ObjectDrawState CCadDimension::MouseMove(ObjectDrawState DrawState)
 	return DrawState;
 }
 
-void CCadDimension::AddDimObjectToTail(CCadObject* pObj)
-{
-	if (GetHead() == 0)
-	{
-		SetHead(pObj);
-		SetTail(pObj);;
-	}
-	else
-	{
-		pObj->SetNext(GetHead());
-		GetHead()->SetPrev(pObj);
-		SetHead(pObj);
-	}
-	++m_nTotalObjects;
-}
-
-void CCadDimension::RemoveDimObject(CCadObject* pObj)
-{
-	if (pObj == GetHead())
-	{
-		SetHead(pObj->GetNext());
-		if (GetHead())
-			GetHead()->SetPrev(0);
-		else
-			SetTail(0);
-	}
-	else if (pObj == GetTail())
-	{
-		SetTail(pObj->GetPrev());
-		if (GetTail())
-			GetTail()->SetNext(0);
-		else
-			SetHead(0);
-	}
-	else
-	{
-		pObj->GetNext()->SetPrev(pObj->GetPrev());
-		pObj->GetPrev()->SetNext(pObj->GetNext());
-	}
-}
-
-void CDimLine::Create(CDoublePoint P1, CDoublePoint P2, UINT LineType)
+void CDimLine::Create(CCadPoint P1, CCadPoint P2, UINT LineType)
 {
 }
 
-/*****************************************************************
-* CDimLine, Derived from CCadLine
-*****************************************************************/
-void CDimLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
+//----------------------------------------------------------------
+// CDimLine, Derived from CCadLine
+//----------------------------------------------------------------
+
+void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
 	//	pDC.....pointer to the device context
 	//	mode....drawing mode
-	//	Offset..Offset to draw objects at
+	//	ULHC....Offset to draw objects at
 	//	Scale..Scale factor to draw objects at
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen* pOld;
-	CPoint P1, P2, Diff;
+	CPen* pOld, penLine;
 	int Lw;
 	CRect rect;
 
-	if (CCadLine::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
-		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(ULHC, Scale);
-		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(ULHC, Scale);
 		Lw = int(Scale.m_ScaleX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
-		if (!IsLastModeSame(mode) || IsDirty())
-		{
-			//----------------------------------
-			// If mode changed, get rid of pen
-			// and make a new one
-			//----------------------------------
-			if (m_pLinePen) delete m_pLinePen;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pLinePen = new CPen(PS_SOLID, Lw, GetLineColor());
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pLinePen = new CPen(PS_SOLID, 1, GetLineColor() ^ 0x00f0f0f0);
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pLinePen = new CPen(PS_DOT, 1, GetLineColor());
-				break;
-			}
-			SetLastMode(mode);
-			SetDirty(FALSE);
-		}
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			pOld = pDC->SelectObject(m_pLinePen);
-			pDC->MoveTo(P1);
-			pDC->LineTo(P2);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			pOld = pDC->SelectObject(&penLine);
+			if (GetHead())
+			{
+				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+			}
 			pDC->SelectObject(pOld);
 			break;
 		case ObjectDrawMode::SELECTED:
-			pOld = pDC->SelectObject(m_pLinePen);
-			Diff = CPoint(4, 4);
-
-			rect.SetRect(P1 + (-Diff), P1 + Diff);
-			pDC->Rectangle(&rect);
-			rect.SetRect(P2 + (-Diff), P2 + Diff);
-			pDC->Rectangle(&rect);
-			pDC->SelectObject(m_pLinePen);
-			pDC->MoveTo(P1);
-			pDC->LineTo(P2);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			pOld = pDC->SelectObject(&penLine);
+			if (GetHead())
+			{
+				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+			}
 			pDC->SelectObject(pOld);
 			break;
 		case ObjectDrawMode::SKETCH:
-			Diff = CPoint(4, 4);
-			pOld = pDC->SelectObject(m_pLinePen);
-			pDC->MoveTo(P1);
-			pDC->LineTo(P2);
+			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
+			pOld = pDC->SelectObject(&penLine);
+			if (GetHead())
+			{
+				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+			}
 			pDC->SelectObject(pOld);
 			break;
 		}	//end of switch(mode)
 	}	//end of if(rederEnabled)
 }
 
-double CDimLine::Slope(CDoublePoint P1, CDoublePoint P2)
-{
-	//-----------------------------------
-	// Get the slope of the line defined
-	// by m_P1, m_P2
-	//-----------------------------------
-	double m = 0.0;
-	if (P1.dX != P2.dX)
-		m = (P1.dY - P2.dY) / (P1.dX - P2.dX);
-	return m;
-}
 
-double CDimLine::OrthogonalSlope(CDoublePoint P1, CDoublePoint P2)
-{
-	//-----------------------------------
-	// Get the slope of the line defined
-	// by m_P1, m_P2 that is perpendicular
-	//-----------------------------------
-	double m = 0.0;
-	if (P1.dY != P2.dY)
-		m = (P1.dX - P2.dX) / (P1.dY - P2.dY);
-	return m;
-}
-
-UINT CDimLine::LineIs(CDoublePoint P1, CDoublePoint P2)
-{
-	UINT rV = 0;	//line is whatever
-
-	if (P1.dY == P2.dY)
-		rV = DIMLINE_HORIZONTAL;
-	else if (P1.dX == P2.dX)
-		rV = DIMLINE_VERTICAL;
-	return rV;
-}
-
-double CDimLine::YIntercept(double m, CDoublePoint p)
-{
-	//-----------------------------
-	// finds the Y intercept fopr
-	// a line that goes through
-	// point p with slope m
-	//
-	// y = mx + b or
-	// b = y - mx
-	// parameters:
-	//	m.......slope of the line
-	//	p.......point the line
-	//          goes through
-	// Return Vaule: the Y intercept
-	//-----------------------------
-	double b;
-
-	b = p.dY - m * p.dX;
-	return b;
-}

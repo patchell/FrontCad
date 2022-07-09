@@ -187,7 +187,6 @@
   <ItemGroup>
     <ClInclude Include="BaseDocument.h" />
     <ClInclude Include="CadArc.h" />
-    <ClInclude Include="CadArcAngle.h" />
     <ClInclude Include="CadArcCent.h" />
     <ClInclude Include="CadArrow.h" />
     <ClInclude Include="CadBitmap.h" />
@@ -207,6 +206,7 @@
     <ClInclude Include="CadText.h" />
     <ClInclude Include="ChildFrameBase.h" />
     <ClInclude Include="ChildViewBase.h" />
+    <ClInclude Include="Clipboard.h" />
     <ClInclude Include="ComboBoxFontWeight.h" />
     <ClInclude Include="DlgArcCentProperies.h" />
     <ClInclude Include="DlgArcProperties.h" />
@@ -219,6 +219,7 @@
     <ClInclude Include="DlgNewName.h" />
     <ClInclude Include="DlgObjectEnable.h" />
     <ClInclude Include="DlgOriginAttributes.h" />
+    <ClInclude Include="DlgPointProperties.h" />
     <ClInclude Include="DlgPolygonProperties.h" />
     <ClInclude Include="DlgRectProperties.h" />
     <ClInclude Include="DlgRndHole1Flat.h" />
@@ -228,15 +229,9 @@
     <ClInclude Include="DlgSelectOrigin.h" />
     <ClInclude Include="DlgSquareHoleProp.h" />
     <ClInclude Include="DlgTextProperties.h" />
-    <ClInclude Include="DoubleArc.h" />
-    <ClInclude Include="DoubleEllipse.h" />
-    <ClInclude Include="DoubleLine.h" />
-    <ClInclude Include="DoublePoint.h" />
-    <ClInclude Include="DoublePolygon.h" />
-    <ClInclude Include="DoubleRect.h" />
-    <ClInclude Include="DoubleRndRectangle.h" />
     <ClInclude Include="DoubleSize.h" />
     <ClInclude Include="EditDecimal.h" />
+    <ClInclude Include="EditText.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FrontCad.h" />
     <ClInclude Include="FrontCadChildFrame.h" />
@@ -246,7 +241,6 @@
     <ClInclude Include="Grid.h" />
     <ClInclude Include="Lexer.h" />
     <ClInclude Include="MainFrm.h" />
-    <ClInclude Include="MoveObjects.h" />
     <ClInclude Include="MyBitmap.h" />
     <ClInclude Include="MyEvent.h" />
     <ClInclude Include="MyToolBarSplitter.h" />
@@ -268,7 +262,6 @@
   <ItemGroup>
     <ClCompile Include="BaseDocument.cpp" />
     <ClCompile Include="CadArc.cpp" />
-    <ClCompile Include="CadArcAngle.cpp" />
     <ClCompile Include="CadArcCent.cpp" />
     <ClCompile Include="CadArrow.cpp" />
     <ClCompile Include="CadBitmap.cpp" />
@@ -288,6 +281,7 @@
     <ClCompile Include="CadText.cpp" />
     <ClCompile Include="ChildFrameBase.cpp" />
     <ClCompile Include="ChildViewBase.cpp" />
+    <ClCompile Include="Clipboard.cpp" />
     <ClCompile Include="ComboBoxFontWeight.cpp" />
     <ClCompile Include="DlgArcCentProperies.cpp" />
     <ClCompile Include="DlgArcProperties.cpp" />
@@ -300,6 +294,7 @@
     <ClCompile Include="DlgNewName.cpp" />
     <ClCompile Include="DlgObjectEnable.cpp" />
     <ClCompile Include="DlgOriginAttributes.cpp" />
+    <ClCompile Include="DlgPointProperties.cpp" />
     <ClCompile Include="DlgPolygonProperties.cpp" />
     <ClCompile Include="DlgRectProperties.cpp" />
     <ClCompile Include="DlgRndHole1Flat.cpp" />
@@ -309,15 +304,9 @@
     <ClCompile Include="DlgSelectOrigin.cpp" />
     <ClCompile Include="DlgSquareHoleProp.cpp" />
     <ClCompile Include="DlgTextProperties.cpp" />
-    <ClCompile Include="DoubleArc.cpp" />
-    <ClCompile Include="DoubleEllipse.cpp" />
-    <ClCompile Include="DoubleLine.cpp" />
-    <ClCompile Include="DoublePoint.cpp" />
-    <ClCompile Include="DoublePolygon.cpp" />
-    <ClCompile Include="DoubleRect.cpp" />
-    <ClCompile Include="DoubleRndRectangle.cpp" />
     <ClCompile Include="DoubleSize.cpp" />
     <ClCompile Include="EditDecimal.cpp" />
+    <ClCompile Include="EditText.cpp" />
     <ClCompile Include="FrontCad.cpp" />
     <ClCompile Include="FrontCadChildFrame.cpp" />
     <ClCompile Include="FrontCadDoc.cpp" />
@@ -325,7 +314,6 @@
     <ClCompile Include="Grid.cpp" />
     <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="MainFrm.cpp" />
-    <ClCompile Include="MoveObjects.cpp" />
     <ClCompile Include="MyBitmap.cpp" />
     <ClCompile Include="MyEvent.cpp" />
     <ClCompile Include="MyToolBarSplitter.cpp" />

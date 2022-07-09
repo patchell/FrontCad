@@ -8,34 +8,26 @@ class CCadElispe:public CCadObject
 	inline static SEllipseAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CDoublePoint m_P1;
-	CDoublePoint m_P2;
-	CPen *	m_pPenLine;
-	CBrush *m_pBrFill;
 	SEllipseAttributes m_Attrib;
 public:
 	CCadElispe();
-	CCadElispe(CCadElispe &e);
 	virtual ~CCadElispe();
+	void Create();
+	virtual BOOL Destroy(CCadObject* pDependentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p,
-		CCadObject** ppSelList = 0,
-		int index = 0,
-		int n = 0,
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int index,
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
-	CCadElispe operator=(CCadElispe &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
+	virtual CDoubleSize GetSize();
 	virtual DocFileParseToken Parse(
 		DocFileParseToken Token, 
 		CLexer *pLex, 
@@ -48,7 +40,6 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-	BOOL PtInElipse(CDoublePoint p);
 	//----------------------------------
 	// attributes Methods
 	//----------------------------------
@@ -63,12 +54,16 @@ public:
 	void SetLineWidth(int v) { GetAttributes().m_LineWidth = v; }
 	int GetTransparent(void) { return GetAttributes().m_TransparentFill; }
 	void SetTransparent(int t) { GetAttributes().m_TransparentFill = t; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static void RenderEnable(BOOL e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SEllipseAttributes* GetLastAttributes() const {
+	static SEllipseAttributes* GetLastAttributes() {
 		return &m_LastAttributes;
 	}
 };

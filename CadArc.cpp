@@ -4,10 +4,9 @@ CCadArc::CCadArc():CCadObject()
 {
 	SetType(ObjectType::ARC);
 	GetName().Format(_T("ARC_%d"), ++m_ArcCount);
-	m_pPenLine = 0;
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetArcAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
@@ -16,16 +15,47 @@ CCadArc::CCadArc():CCadObject()
 
 CCadArc::~CCadArc()
 {
-	if (m_pPenLine) delete m_pPenLine;
 }
 
-void CCadArc::Create(CRect Shape, CPoint ptStart, CPoint ptEnd)
+void CCadArc::Create()
 {
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
+	Obj.pCadPoint->SetSubSubType(1);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
+	Obj.pCadPoint->SetSubSubType(2);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadArc::Destroy(CCadObject* pDependentObjects)
+{
+	return 0;
 }
 
 void CCadArc::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//--------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -35,13 +65,12 @@ void CCadArc::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_pointStart += Diff;
-	m_pointStart += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadArc::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -51,54 +80,20 @@ void CCadArc::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 	char* pIndentString1 = new char[256];
 
-	fprintf(pO, "%s%s(%s(%8.3lf,%8.3lf),%s(%8.3lf,%8.3lf))\n",
-		GETAPP.MkIndentString(pIndentString1, Indent, ' '),
-		CLexer::TokenToString(DocFileParseToken::ARC),
-		CLexer::TokenToString(DocFileParseToken::POINT),
-		m_pointStart.dX, m_pointStart.dY,
-		CLexer::TokenToString(DocFileParseToken::POINT),
-		m_pointEnd.dX, m_pointEnd.dY
-	);
+//	fprintf(pO, "%s%s(%s(%8.3lf,%8.3lf),%s(%8.3lf,%8.3lf))\n",
+//		GETAPP.MkIndentString(pIndentString1, Indent, ' '),
+//		CLexer::TokenToString(DocFileParseToken::ARC),
+//		CLexer::TokenToString(DocFileParseToken::POINT),
+//		m_pointStart.dX, m_pointStart.dY,
+//		CLexer::TokenToString(DocFileParseToken::POINT),
+//		m_pointEnd.dX, m_pointEnd.dY
+//	);
 	GetAttributes().Save(pO,Indent+1,flags);
 }
 
-void CCadArc::SetVertex(int v, CPoint p)
+void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
 	//--------------------------------------------------
-}
-
-
-int CCadArc::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//	scale....scale factor
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	int rV = -1;
-	return rV;
-}
-
-void CCadArc::Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale)
-{
-	//***************************************************
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -109,109 +104,113 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CDoublePoint ULHC, CScale Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOld;
+	CPen *pOldPen = 0, penLine;
 	CRect rect;
-	CSize rectLWcomp;
-	CPoint Center;
-	CPoint P1, P2, Start, End;
+	CADObjectTypes ObjP1, ObjP2, ObjStart, ObjEnd, ObjCenter;
 	int Lw;
 
-	if (CCadArc::IsRenderEnabled())
+	if (IsRenderEnabled())
 	{
-		Start = m_pointStart.ToPixelPoint(ULHC, Scale);
-		End = m_pointEnd.ToPixelPoint(ULHC, Scale);
-		P1 = m_rectShape.GetPoint(RectPoint::UPPERLEFT).ToPixelPoint(ULHC,Scale);
-		P2 = m_rectShape.GetPoint(RectPoint::LOWERRIGHT).ToPixelPoint(ULHC, Scale);
 		Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.m_ScaleX);
-		if (Lw <= 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
-		{
+		if (Lw < 1)
 			Lw = 1;
-			rectLWcomp = CSize(0, 0);
-		}
-		else
-			rectLWcomp = CSize(Lw / 2, Lw / 2);
-		rect.SetRect(P1,P2);
-		rect.DeflateRect(rectLWcomp);
-		if ((!IsLastModeSame(mode)) || IsDirty())
-		{
-			if (m_pPenLine) delete m_pPenLine;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pPenLine = new CPen(PS_SOLID, Lw, GetLineColor());
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pPenLine = new CPen(PS_SOLID, Lw, RGB(200, 50, 50));
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pPenLine = new CPen(PS_DOT, 1, GetLineColor());
-				break;
-			case ObjectDrawMode::ARCSTART:
-			case ObjectDrawMode::ARCEND:
-				m_pPenLine = new CPen(PS_DOT, 1, GetLineColor());
-				break;
-			}
-			SetDirty(FALSE);
-		}
+		ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		ObjStart.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+		ObjEnd.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pDC->Arc(&rect, Start, End);
-			pDC->SelectObject(pOld);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			pOldPen = pDC->SelectObject(&penLine);
+			rect.SetRect(
+				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
+				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
+			);
+			pDC->Arc(
+				&rect, 
+				ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale),
+				ObjEnd.pCadPoint->ToPixelPoint(ULHC,Scale)
+			);
+			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::SELECTED:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pDC->Arc(&rect, Start, End);
-			pDC->SelectObject(pOld);
+			pOldPen = pDC->SelectObject(&penLine);
+			rect.SetRect(
+				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
+				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
+			);
+			pDC->Arc(
+				&rect,
+				ObjStart.pCadPoint->ToPixelPoint(ULHC, Scale),
+				ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale)
+			);
+			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::SKETCH:
-			pOld = pDC->SelectObject(m_pPenLine);
+			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Rectangle(&rect);
-			pDC->SelectObject(pOld);
+			pDC->Ellipse(&rect);
+			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::ARCSTART:
-			pOld = pDC->SelectObject(m_pPenLine);
+			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Ellipse(&rect);
-			Center = rect.CenterPoint();
-			pDC->MoveTo(Center);
-			pDC->LineTo(Start);
-			pDC->SelectObject(pOld);
+			pDC->MoveTo(rect.CenterPoint());
+			pDC->LineTo(ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale));
+			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::ARCEND:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pDC->Arc(&rect, Start, End);
-			Center = rect.CenterPoint();
-			pDC->MoveTo(Center);
-			pDC->LineTo(End);
-			pDC->SelectObject(pOld);
+			pOldPen = pDC->SelectObject(&penLine);
+			pDC->Arc(
+				&rect, 
+				ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale),
+				ObjEnd.pCadPoint->ToPixelPoint(ULHC,Scale)
+			);
+			pDC->MoveTo(rect.CenterPoint());
+			pDC->LineTo(ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale));
+			pDC->SelectObject(pOldPen);
 			break;
 		}
-		SetLastMode(mode);
 	}
 }
 
-BOOL CCadArc::PtInArc(CDoublePoint p)
+BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
 {
 	BOOL rV = FALSE;
-	double StartAngle;
-	double EndAngle;
-	double Angle;
-	CDoublePoint Center;
+	double StartAngle, EndAngle, Angle;
+	CCadRect* pRect;
+	CADObjectTypes P1, P2, ObjCenter;
+
 	//------------------------------
 	// See if the point is in the
 	// shape rectangle
 	//------------------------------
-	if (m_rectShape.PointInRectangle(p))
+	P1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	P2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	pRect = new CCadRect;
+	pRect->Create();
+	pRect->SetPoints(DOUBLEPOINT(*P1.pCadPoint), DOUBLEPOINT(*P2.pCadPoint), DOUBLEPOINT(*P1.pCadPoint));
+	if (pRect->PointInThisObject(point))
 	{
 		//------------------------------
 		// Is the angle between the
 		// Start and End anble?
 		//------------------------------
-		Center = m_rectShape.GetCenter(Center);
-		StartAngle = GETAPP.ArcTan((double(m_pointStart.dX) - Center.dX), -(double(m_pointStart.dY) - Center.dY));
-		EndAngle = GETAPP.ArcTan((double(m_pointEnd.dX) - Center.dX), -(double(m_pointEnd.dY) - Center.dY));
-		Angle = GETAPP.ArcTan(double(p.dX) - Center.dX, -(double(p.dX) - Center.dY));
+		StartAngle = GETAPP.ArcTan(
+			P1.pCadPoint->GetX() - ObjCenter.pCadPoint->GetX(),
+			ObjCenter.pCadPoint->GetY() - P1.pCadPoint->GetY()
+		);
+		EndAngle = GETAPP.ArcTan(
+			P2.pCadPoint->GetX() - ObjCenter.pCadPoint->GetX(),
+			ObjCenter.pCadPoint->GetY() - P2.pCadPoint->GetY()
+		);
+		Angle = GETAPP.ArcTan(
+			point.dX - ObjCenter.pCadPoint->GetX(),
+			ObjCenter.pCadPoint->GetY() - point.dX
+		);
 		if (GETAPP.CheckAngle(StartAngle, EndAngle, Angle))
 		{
 			//----------------------------
@@ -222,19 +221,24 @@ BOOL CCadArc::PtInArc(CDoublePoint p)
 			// 1 = x^2/A^2 + y^2/B^2
 			//----------------------------
 			double A, B;
-			CDoublePoint Center;
 
-			A = m_rectShape.GetWidth()/2.0;
-			B = m_rectShape.GetHeight() / 2.0;
-			rV = GETAPP.TestEllipsePoint(A, B, p, m_rectShape.GetCenter(Center), TOLERANCE_10_PERCENT);
+			A = pRect->GetWidth() / 2.0;
+			B = pRect->GetHeight() / 2.0;
+			rV = GETAPP.TestEllipsePoint(A, B, point, DOUBLEPOINT(*ObjCenter.pCadPoint), TOLERANCE_10_PERCENT);
 		}
 	}
+	delete pRect;
 	return rV;
 }
 
-BOOL CCadArc::PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList , int index, int n, DrawingCheckSelectFlags flag)
+int CCadArc::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject ** ppSelList , 
+	int index, 
+	int n
+)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -245,90 +249,37 @@ BOOL CCadArc::PointInObjectAndSelect(CDoublePoint p, CCadObject ** ppSelList , i
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
+	int ix;
+
 	if (index < n || n == 0)
 	{
 		//---------------------------------------
-		// is point in Ellipse
+		// is point in the Arc?
 		//---------------------------------------
-		if (PtInArc(p))
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[index++] = this;
-					break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						index = 1;
-					break;
-				}
-			}
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadArc::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_rectShape.GetReference();
-}
-
-
-CDoubleRect& CCadArc::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	m_rectShape = rect;
-	return rect;
-}
 
 CString& CCadArc::GetTypeString(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -340,27 +291,15 @@ CString& CCadArc::GetTypeString(void)
 	return csTypeName;
 }
 
-CCadArc CCadArc::operator=(CCadArc &v)
+CString& CCadArc::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	m_rectShape = v.GetRect(m_rectShape);
-	m_pointStart = v.GetStartPoint();
-	m_pointEnd = v.GetEndPoint();
-	CopyAttributesFrom(&v.GetAttributes());
-	return *this;
+	GetDescription().Format(_T("Base Obj Class"));
+	return GetDescription();
 }
 
 CCadObject * CCadArc::CopyObject(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -368,27 +307,17 @@ CCadObject * CCadArc::CopyObject(void)
 	//
 	// return value:a new copy of this
 	//--------------------------------------------------
-	CCadArc *pArc = new CCadArc;
-	*pArc = *this;
-	return pArc;
+	CADObjectTypes newObj;
+	newObj.pCadArc = new CCadArc;
+	newObj.pCadArc->Create();
+	CCadObject::CopyObject(newObj.pCadObject);
+	newObj.pCadArc->CopyAttributesFrom(GetPtrToAttributes());
+	return newObj.pCadObject;
 }
 
-CDoublePoint& CCadArc::GetCenter(CDoublePoint& Center)
+CDoubleSize CCadArc::GetSize()
 {
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
 	//--------------------------------------------------
-	Center = m_rectShape.GetCenter(Center);
-	return Center;
-}
-
-CDoubleSize& CCadArc::GetSize(CDoubleSize& size)
-{
-	//***************************************************
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -396,7 +325,15 @@ CDoubleSize& CCadArc::GetSize(CDoubleSize& size)
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	size = m_rectShape.GetSize(size);
+	CADObjectTypes P1, P2;
+	CDoubleSize size;
+
+	P1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	P2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	size = CDoubleSize(
+		P1.pCadPoint->GetX() - P2.pCadPoint->GetX(),
+		P2.pCadPoint->GetY() - P1.pCadPoint->GetY()
+	);
 	return size;
 }
 
@@ -415,55 +352,36 @@ DocFileParseToken CCadArc::Parse(DocFileParseToken Token, CLexer *pLex, DocFileP
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pLex->Expect( Token, TypeToken);
-	Token = pLex->Expect(Token, DocFileParseToken('('));
-	Token = pLex->DoubleRect(DocFileParseToken::SHAPE, m_rectShape, Token);
-	Token = pLex->Expect(Token, DocFileParseToken(','));
-	Token = pLex->Point(DocFileParseToken::START, m_pointStart, Token);
-	Token = pLex->Expect(Token, DocFileParseToken(','));
-	Token = pLex->Point(DocFileParseToken::END, m_pointEnd, Token);
-	Token = pLex->Expect(Token, DocFileParseToken(')'));
-	Token = GetAttributes().Parse(Token, pLex);
 	return Token;
 }
 
 void CCadArc::CopyAttributesTo(SArcAttributes *pAttrib)
 {
-	/***************************************************
-	*	GetAttributes
-	*		This Method is used to copy the
-	*	attributes from this object into one pointed 
-	*	to by the parameter.
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy into
-	***************************************************/
+	//---------------------------------------------------
+	//	GetAttributes
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed 
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//----------------------------------------------------
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadArc::CopyAttributesFrom(SArcAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	m_AttributesGood = TRUE;
-}
-
-BOOL CCadArc::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadArc::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
@@ -480,24 +398,29 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj1, Obj2, Center;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place First Corner of Circle Shape"));
+		GETVIEW->EnableAutoScroll(TRUE);
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
 			}
 			m_AttributesDirty = FALSE;
 		}
+		GETVIEW->EnableAutoScroll(FALSE);
 		GETAPP.UpdateStatusBar(_T(""));
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
@@ -509,51 +432,63 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		m_rectShape.SetPoints(MousePos, MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_rectShape.SetPoints(MousePos, MousePos);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		Obj1.pCadPoint->SetPoint(MousePos);
+		Obj2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj2.pCadPoint->SetPoint(MousePos);
+		Center.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Center.pCadPoint ->SetPoint(
+			GETAPP.CalcCenter(
+				DOUBLEPOINT(*Obj1.pCadPoint), 
+				DOUBLEPOINT(*Obj2.pCadPoint)
+			)
+		);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Place Second Corner of Circle"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_rectShape.SetSecondPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		m_rectShape.SetSecondPoint(MousePos);
+		Obj2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj2.pCadPoint->SetPoint(MousePos);
+		Center.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Center.pCadPoint->SetPoint(
+			GETAPP.CalcCenter(
+				DOUBLEPOINT(*Obj1.pCadPoint),
+				DOUBLEPOINT(*Obj2.pCadPoint)
+			)
+		);
 		DrawState = ObjectDrawState::ARCSTART_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place Begining of ARC"));
 		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
-		SetStartPoint(MousePos);
 		DrawState = ObjectDrawState::ARCSTART_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_UP:
-		SetStartPoint(MousePos);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+		Obj1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ARCEND_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place End of ARC"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_DOWN:
-		SetEndPoint(MousePos);
 		DrawState = ObjectDrawState::ARCEND_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		SetEndPoint(MousePos);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadArc);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+		Obj1.pCadPoint->SetPoint(MousePos);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		Obj1.pCadArc = new CCadArc;
+		Obj1.pCadArc->Create();
+		GETVIEW->SetObjectTypes(Obj1.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place First Corner of Circle Shape"));
-		GETVIEW()->Invalidate();
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_DOWN:
-		break;
-	case ObjectDrawState::SECOND_POINT_LBUTTON_UP:
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -574,28 +509,125 @@ ObjectDrawState CCadArc::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CDoubleSize MousePosDiff;
+	CADObjectTypes Obj1, Obj2, Center;
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::SET_ATTRIBUTES:
-		m_rectShape.SetPoints(MousePos, MousePos);
-		break;
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_rectShape.SetPoints(MousePos, MousePos);
-		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_rectShape.SetSecondPoint(MousePos);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		Obj2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj2.pCadPoint->SetPoint(MousePos);
+		Center.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Center.pCadPoint->SetPoint(
+			GETAPP.CalcCenter(
+				DOUBLEPOINT(*Obj1.pCadPoint),
+				DOUBLEPOINT(*Obj2.pCadPoint)
+			)
+		);
 		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
-		SetStartPoint(MousePos);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+		Obj1.pCadPoint->SetPoint(MousePos);
 		break;
 	case ObjectDrawState::ARCEND_LBUTTON_DOWN:
-		SetEndPoint(MousePos);
+		Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+		Obj1.pCadPoint->SetPoint(MousePos);
 		break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
+}
+
+
+/*
+void CCadArc::DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+{
+	//------------------------------
+	// For right now, going to use
+	// brute force and ignorance
+	//-----------------------------
+
+	int RadiusX, RadiusY;
+	double A, B, x, y;
+	CPoint Point, lastPoint;
+	CDoubleSize SlopeIsOne;
+
+	A = m_Shape.dCX;
+	A *= A;
+	B = m_Shape.dCY;
+	B *= B;
+	SlopeIsOne = SlopeIsOneAt(A, B);
+	RadiusX = GETAPP.RoundDoubleToInt(SlopeIsOne.dCX * PixelsPerInch);
+	RadiusY = GETAPP.RoundDoubleToInt(SlopeIsOne.dCY * PixelsPerInch);
+	printf("Start\n");
+	for (int i = 0; i < RadiusX; i++)
+	{
+		x = double(i) * 0.01;
+		y = CalcY(x, A, B);
+		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
+		printf("<%4d>Point(%4d,%4d)\n", i, Point.x, Point.y);
+		pDC->SetPixel(Point, RGB(2550, 64, 255));
+	}
+	printf("End\n");
+	for (int i = 0; i < RadiusY; i++)
+	{
+		y = double(i) * 0.01;
+		x = CalcY(y, B, A);
+		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
+		printf("<%4d>Point(%4d,%4d)\n", i, Point.x, Point.y);
+		pDC->SetPixel(Point, RGB(2550, 64, 255));
+	}
+}
+*/
+double CCadArc::CalcY(double x, double A, double B)
+{
+	//-------------------------------------
+	// CalcY
+	// Calculate the y position for x
+	// 
+	// x....x coordinate
+	// A....Major Axis Squared
+	// B....Minor Axis Squared
+	// reutrns:
+	// y
+	//-------------------------------------
+
+	double Y;
+	Y = sqrt(B * (1.0 - x * x / A));
+	return Y;
+}
+
+BadDelta CCadArc::DeltaIsBad(CPoint P1, CPoint P2)
+{
+	BadDelta rV = BadDelta::GOOD;
+	CSize diff = P1 - P2;
+	if (abs(diff.cx) > 1)
+		rV = BadDelta::X;
+	else if (abs(diff.cy) > 1)
+		rV = BadDelta::Y;
+	return rV;
+}
+
+CDoubleSize CCadArc::SlopeIsOneAt(double Asquared, double Bsquared)
+{
+	//------------------------------
+	// SlopeIsOneAt
+	//	This method is to find the
+	// place on the curve where the
+	// slope is one
+	// parameters:
+	//	Asquared.....Major Axis Squared
+	//	Bsquared.....Minor Axis Squared
+	//------------------------------
+
+	double x;
+	double y;
+
+	x = Asquared * sqrt(1.0 / (Asquared + Bsquared));
+	y = Bsquared * sqrt(1.0 / (Asquared + Bsquared));
+	return CDoubleSize(x, y);
 }
 
 int CCadArc::EditProperties(void)
@@ -605,5 +637,13 @@ int CCadArc::EditProperties(void)
 
 	Dlg.SetArc(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
 }

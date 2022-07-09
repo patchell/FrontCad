@@ -104,22 +104,10 @@
     <ClInclude Include="ObjectAttributs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CadArcAngle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoublePoint.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoubleRect.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DoubleSize.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BaseDocument.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MoveObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DlgArcCentProperies.h">
@@ -188,28 +176,13 @@
     <ClInclude Include="DlgObjectEnable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DoublePolygon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DlgDimensionPropertiex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoubleLine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyBitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Primitives.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoubleRndRectangle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoubleEllipse.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DoubleArc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FrontCadChildFrame.h">
@@ -258,6 +231,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StaticDouble.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EditText.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgPointProperties.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Clipboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -328,12 +310,6 @@
     <ClCompile Include="CadText.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CadArcAngle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DoubleRect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DoubleSize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -343,13 +319,7 @@
     <ClCompile Include="Lexer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DoublePoint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BaseDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MoveObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DlgArcCentProperies.cpp">
@@ -415,25 +385,10 @@
     <ClCompile Include="DlgObjectEnable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DoublePolygon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DlgDimensionPropertiex.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DoubleLine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MyBitmap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DoubleRndRectangle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DoubleEllipse.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DoubleArc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FrontCadChildFrame.cpp">
@@ -482,6 +437,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StaticDouble.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EditText.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgPointProperties.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Clipboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

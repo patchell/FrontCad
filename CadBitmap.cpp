@@ -5,24 +5,13 @@ CCadBitmap::CCadBitmap():CCadObject()
 	m_pBM = 0;
 	SetType(ObjectType::BITMAP);
 	GetName().Format(_T("Bitmap_%d"), ++m_BitmapCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetBitmapAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
-}
-
-CCadBitmap::CCadBitmap(CCadBitmap &v) :CCadObject()
-{
-	m_pBM = 0;
-	m_P1 = v.m_P1;
-	m_P2 = v.m_P2;
-	m_csBMFileName = v.m_csBMFileName;
-	GetAttributes().m_MaintainAspectRatio = TRUE;
-//	LoadImageW(m_csBMFileName);
-	SetType(ObjectType::BITMAP);
 }
 
 CCadBitmap::~CCadBitmap()
@@ -30,9 +19,25 @@ CCadBitmap::~CCadBitmap()
 	if (m_pBM) delete m_pBM;
 }
 
+void CCadBitmap::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadRect = new CCadRect;
+	Obj.pCadRect->Create();
+	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadBitmap::Destroy(CCadObject* pDependentObject)
+{
+	BOOL rV = TRUE;
+	return rV;
+}
+
 void CCadBitmap::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//--------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -42,13 +47,12 @@ void CCadBitmap::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_P1 += Diff;
-	m_P2 += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadBitmap::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -56,74 +60,12 @@ void CCadBitmap::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//
 	// return value:none
 	//--------------------------------------------------
-	char* Indent_1 = new char[256];
-	char* String = new char[256];
-	fprintf(pO, "%s%s(\n",
-		GETAPP.MkIndentString(Indent_1, Indent, ' '),
-		CLexer::TokenToString(DocFileParseToken::BITMAP)
-	);
-	m_P1.Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
-	fprintf(pO, ",");
-	m_P2.Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
-	fprintf(pO, ",\n");
-	fprintf(pO, "%s(\"%s\"))\n",
-		CLexer::TokenToString(DocFileParseToken::STRING),
-		GETAPP.ConvertCStringToChar(String, GetBitMapFileName())
-	);
-	m_Attributes.Save(
-		pO, 
-		DocFileParseToken::ATTRIB_BITMAP,
-		Indent + 1,
-		flags
-	);
 }
 
-void CCadBitmap::SetVertex(int Vi, CDoubleSize sz)
+
+void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// Vi.....index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
 	//--------------------------------------------------
-	if (Vi)
-		m_P2 += sz;
-	else
-		m_P1 += sz;
-	if (IsAspectRationMaintained())
-		RestoreAspectRatio();
-}
-
-
-int CCadBitmap::GrabPoint(CDoublePoint  point)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	point.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	int rV = -1;
-
-	if (m_P1.IsPointOnTarget(point)) rV = 0;
-	else if (m_P1.IsPointOnTarget(point)) rV = 1;
-	return rV;
-}
-
-
-void CCadBitmap::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -134,33 +76,26 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen pen, *oldpen;
+	CADObjectTypes Obj;
+	CPen penLine, *ppenOld;
+	CBrush brushFill, * pbrushOld;
 	CRect rect;
-	CPoint P1, P2;
+	CDC bmDC;
+	CBitmap *bitmapOld;
 
-	if (CCadBitmap::IsRenderEnabled())
+	if (IsRenderEnabled())
 	{
-		if (mode.DrawMode == ObjectDrawMode::SKETCH || GetLastMode().DrawMode == ObjectDrawMode::SKETCH)
-		{
-			double AspectRatioBM;
-			AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
-			m_P2.dY = AspectRatioBM * abs(m_P2.dX - m_P1.dX) + m_P1.dY;
-		}
-		P1 = m_P1.ToPixelPoint(ULHC, Scale);
-		P2 = m_P1.ToPixelPoint(ULHC, Scale);
-		rect.SetRect(P1, P2);
+		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE,0);
+		rect = Obj.pCadRect->ToCRect(ULHC, Scale);
 
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-		{
-			CDC bmDC;
-			CBitmap *pOld;
 			bmDC.CreateCompatibleDC(pDC);
-			pOld = bmDC.SelectObject(this->m_pBM);
+			bitmapOld = bmDC.SelectObject(this->m_pBM);
 			pDC->StretchBlt(
-				P1.x, 
-				P1.y, 
+				rect.left,
+				rect.top, 
 				rect.Width(), 
 				rect.Height(), 
 				&bmDC, 
@@ -170,24 +105,19 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 				GetAttributes().m_BitmapSize.ToCSize().cy, 
 				SRCCOPY
 			);
-			bmDC.SelectObject(pOld);
-		}
-		break;
+			bmDC.SelectObject(bitmapOld);
+			break;
 		case ObjectDrawMode::SELECTED:
-		{
-			CPen bPen;
-			CRect Vrect;
-			bPen.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-			pen.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
-			oldpen = pDC->SelectObject(&pen);
-			CDC bmDC;
-			CBitmap *pOld;
+			penLine.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+			ppenOld = pDC->SelectObject(&penLine);
+			brushFill.CreateStockObject(NULL_BRUSH);
+			pbrushOld = pDC->SelectObject(&brushFill);
 			bmDC.CreateCompatibleDC(pDC);
-			pOld = bmDC.SelectObject(this->m_pBM);
+			bitmapOld = bmDC.SelectObject(this->m_pBM);
 			pDC->StretchBlt(
-				P1.x, 
-				P1.y, 
-				rect.Width(), 
+				rect.left,
+				rect.top,
+				rect.Width(),
 				rect.Height(), 
 				&bmDC, 
 				0, 
@@ -196,48 +126,39 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 				GetAttributes().m_BitmapSize.ToCSize().cy,
 				SRCCOPY
 			);
-			pDC->MoveTo(P1);
-			pDC->LineTo(P1.x, P2.y);
-			pDC->LineTo(P2);
-			pDC->LineTo(P2.x, P1.y);
-			pDC->LineTo(P1);
-			pDC->SelectObject(&bPen);
-			Vrect.SetRect(P1 + CSize(6, 6), P1 + CSize(-6, -6));
-			pDC->Rectangle(Vrect);
-			Vrect.SetRect(P2 + CSize(6, 6), P2 + CSize(-6, -6));
-			pDC->Rectangle(Vrect);
-			bmDC.SelectObject(pOld);
-			pDC->SelectObject(oldpen);
-		}
-		break;
+			bmDC.SelectObject(bitmapOld);
+			pDC->Rectangle(&rect);
+			pDC->SelectObject(pbrushOld);
+			pDC->SelectObject(ppenOld);
+			break;
 		case ObjectDrawMode::SKETCH:
-			pen.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-			oldpen = pDC->SelectObject(&pen);
+			penLine.CreatePen(PS_DOT, 1, RGB(255, 0, 0));
+			ppenOld = pDC->SelectObject(&penLine);
 			pDC->DrawDragRect(&rect, CSize(1, 1), NULL, CSize(1, 1));
-			pDC->SelectObject(oldpen);
+			pDC->SelectObject(ppenOld);
 			break;
 		}
-		SetLastMode(mode);
 	}
 }
 
-BOOL CCadBitmap::PtInBitmap(CDoublePoint p)
+BOOL CCadBitmap::PointInThisObject(DOUBLEPOINT point)
 {
 	BOOL rV;
+	CADObjectTypes Obj;
 
-	rV = CDoubleRect(m_P1, m_P2).PointInRectangle(p);
+	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
 
 int CCadBitmap::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList , 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//--------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -248,91 +169,36 @@ int CCadBitmap::PointInObjectAndSelect(
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
+	int ix;
+
 	if (index < n || n == 0)
 	{
 		//---------------------------------------
-		// is point in Ellipse
+		// is point in the Arc?
 		//---------------------------------------
-		if (PtInBitmap(p))
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[index++] = this;
-					break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						index = 1;
-					break;
-				}
-
-			}
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadBitmap::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_P1;
-}
-
-
-CDoubleRect& CCadBitmap::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	rect = CDoubleRect(m_P1, m_P2);
-	return rect;
-}
-
 CString& CCadBitmap::GetTypeString(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -344,30 +210,15 @@ CString& CCadBitmap::GetTypeString(void)
 	return csName;
 }
 
-CCadBitmap CCadBitmap::operator=(CCadBitmap &v)
+CString& CCadBitmap::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	m_pBM = new CMyBitmap();
-	m_P1 = v.m_P1;
-	m_P2 = v.m_P2;
-	m_csBMFileName = v.GetBitMapFileName();
-	GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	m_pBM->LoadImageBitmap(m_csBMFileName);
-	GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	return *this;
+	GetDescription().Format(_T("Base Obj Class"));
+	return GetDescription();
 }
 
 CCadObject * CCadBitmap::CopyObject(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -381,24 +232,10 @@ CCadObject * CCadBitmap::CopyObject(void)
 	return pBM ;
 }
 
-CDoublePoint& CCadBitmap::GetCenter(CDoublePoint& Center)
+
+CDoubleSize CCadBitmap::GetSize()
 {
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
 	//--------------------------------------------------
-	CDoubleRect rect = CDoubleRect(m_P1, m_P2);
-	Center = rect.GetCenter(Center);
-	return Center;
-}
-
-
-CDoubleSize& CCadBitmap::GetSize(CDoubleSize& size)
-{
-	//***************************************************
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -406,13 +243,16 @@ CDoubleSize& CCadBitmap::GetSize(CDoubleSize& size)
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	size = CDoubleRect(m_P1, m_P2).GetSize(size);
-	return size;
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+
+	return Obj.pCadRect->GetSize();
 }
 
 DocFileParseToken CCadBitmap::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -430,41 +270,31 @@ DocFileParseToken CCadBitmap::Parse(DocFileParseToken Token, CLexer *pLex, DocFi
 
 void CCadBitmap::CopyAttributesTo(SBitmapAttributes*pAttrib)
 {
-	/***************************************************
-	*	GetAttributes
-	*		This Method is used to copy the
-	*	attributes from this object into one pointed to 
-	*	by the parameter 
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadBitmap::CopyAttributesFrom(SBitmapAttributes*pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
-}
-
-BOOL CCadBitmap::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadBitmap::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
@@ -481,17 +311,19 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -508,7 +340,7 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
+		GETVIEW->EnableAutoScroll(TRUE);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
@@ -519,11 +351,11 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
+		GETVIEW->EnableAutoScroll(FALSE);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -544,21 +376,36 @@ ObjectDrawState CCadBitmap::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos;
+	DOUBLEPOINT MousePos;
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_P2 = MousePos;
+		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+		Obj.pCadRect->SetSecondPoint(MousePos);
 		break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
 }
 
 int CCadBitmap::EditProperties()
 {
-	return 0;
+	CDlgBitmapProperties Dlg;
+	int Id;
+
+	Dlg.SetBitmapData(this);
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
+	return Id;
 }
 
 
@@ -575,9 +422,11 @@ void CCadBitmap::LoadBitmapImage(CString csPath)
 
 void CCadBitmap::RestoreAspectRatio()
 {
-	CPoint P1, P2;
+	CADObjectTypes Obj;
 	double AspectRatioBM;
+
+	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
-	m_P2.dY = AspectRatioBM * abs(m_P2.dX - m_P1.dX) + m_P1.dY;
+	Obj.pCadRect->SetHeight(AspectRatioBM * Obj.pCadRect->GetWidth());
 	GetAttributes().m_MaintainAspectRatio = TRUE;
 }

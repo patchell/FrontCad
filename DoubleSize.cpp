@@ -3,7 +3,7 @@
 CDoubleSize::CDoubleSize(CSize szSize)
 {
     double InchesX,InchesY;
-    double Scale = GETVIEW()->GetGrid().GetInchesPerPixel().GetScaleX();
+    double Scale = GETVIEW->GetGrid().GetInchesPerPixel().GetScaleX();
     InchesX = Scale * double(szSize.cx);
     InchesY = Scale * double(szSize.cy);
     dCX = InchesX;
@@ -50,4 +50,12 @@ CSize CDoubleSize::ToPixelSize(CScale Scale)
     cx = GETAPP.RoundDoubleToInt(dCX * Scale.GetScaleX());
     cy = GETAPP.RoundDoubleToInt(dCY * Scale.GetScaleY());
     return CSize(cx,cy);
+}
+
+CDoubleSize::operator CPoint() const
+{
+    return CPoint(
+        GETAPP.RoundDoubleToInt(dCX),
+        GETAPP.RoundDoubleToInt(dCY)
+    );
 }

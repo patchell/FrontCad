@@ -41,12 +41,14 @@ public:
 	{
 		GetToolBarView()->SetDebug(csString);
 	}
-	void ToolBarSetPosition(CDoublePoint pos)
+	void ToolBarSetPosition(DOUBLEPOINT pos)
 	{
 		GetToolBarView()->SetToolBarPosition(pos);
 	}
 	void InitToolBar(CWnd* pWnd, CRulerInfo *pRI);
 	void ShowToolBar(int nShow);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 };
 
 

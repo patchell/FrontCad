@@ -1,6 +1,6 @@
 #pragma once
 
-class CCadPolygon :	public CCadObject
+class CCadPolygon : public CCadObject
 {
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_PolygonCount;
@@ -8,65 +8,48 @@ class CCadPolygon :	public CCadObject
 	inline static SPolyAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CDoublePolygon m_Poly;
+	UINT m_NumVertices;
+	DOUBLEPOINT m_FirstPoint;
 	SPolyAttributes m_Attrib;
-	UINT m_PolyID;
-	CPen *m_pPenLine;
 public:
 	CCadPolygon();
-	CCadPolygon(int nVertex);
-	CCadPolygon(CCadPolygon &v);
 	virtual ~CCadPolygon();
+	void Create();
+	virtual BOOL Destroy(CCadObject *pDendentObjects);
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
+	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	CCadPoint* GetCenter();
+	void FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	BOOL GetPoints(DOUBLEPOINT* pPoints);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p, 
-		CCadObject ** ppSelList = 0, 
-		int index = 0, 
-		int n = 0, 
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject** ppSelList,
+		int index,
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
-	CCadPolygon operator=(CCadPolygon &v);
-	virtual CCadObject * CopyObject(void);
-	virtual void Copy(CCadObject* pObj) {
-		CCadPolygon* CadPoly = (CCadPolygon*)pObj;
-		m_Poly.Copy(CadPoly->GetPoly());
-		m_Attrib.CopyFrom(CadPoly->GetPtrToAttributes());
-		m_PolyID = GETAPP.GetUniqueID();
-	}
-	virtual void SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint GetCenter();
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
+	virtual CString& GetObjDescription();
+	virtual CCadObject* CopyObject(void);
+	BOOL GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& MaxY);
+	virtual CDoubleSize GetSize();
+	UINT GetNumVerticies() { return m_NumVertices; }
+	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	//---------------------------------------
 	// Other methodes
 	//---------------------------------------
-	CDoublePolygon* GetPoly() { return &m_Poly; }
-	void Reset(void);
-	BOOL CompareToLast(CDoublePoint nP);
-	UINT DeleteLastPoint(void);
-	int GetCount(void);
-	BOOL AddPoint(CDoublePoint nP);
-	BOOL PointEnclosed(CDoublePoint p);
+	CCadPoint *AddPoint(DOUBLEPOINT Point);
+	BOOL PointEnclosed(CCadPoint p);
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-	virtual void Flip(CDoublePoint Pivot, Axis Direction);
 	virtual int EditProperties();
-	void SetPolySize(int sz) { m_Poly.SetSize( sz); }
-	int GetPolySize(void) { return m_Poly.GetSize(); }
-	void CopyAttributesFrom(SPolyAttributes *pPA);
-	void CopyAttributesTo(SPolyAttributes *pA);
-	void SetCurrentVertex(CDoublePoint p) { m_Poly.SetPoint(p); }
+	void CopyAttributesFrom(SPolyAttributes* pPA);
+	void CopyAttributesTo(SPolyAttributes* pA);
 	//------------------------------------------
 	// Attribute Methods
 	//-----------------------------------------
@@ -80,12 +63,16 @@ public:
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	UINT GetTransparent(){ return GetAttributes().m_TransparentFill; }
 	void SetTransparent(UINT t) { GetAttributes().m_TransparentFill = t; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static void RenderEnable(int e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SPolyAttributes* GetLastAttributes() const {
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static SPolyAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

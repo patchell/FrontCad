@@ -22,4 +22,22 @@ public:
 	virtual ~CScale() {}
 	double GetScaleX() { return m_ScaleX; }
 	double GetScaleY() { return m_ScaleY; }
+	operator SCALE() const  {
+		SCALE Result;
+
+		Result.m_ScaleX = m_ScaleX;
+		Result.m_ScaleY = m_ScaleY;
+		return Result;
+	}
 };
+
+/*
+inline DOUBLEPOINT operator * (DOUBLEPOINT const pt, CScale const &scale)
+{
+	DOUBLEPOINT result;
+
+	result.dX = pt.dX * scale.m_ScaleX;
+	result.dX = pt.dX * scale.m_ScaleY;
+	return result;
+}
+*/

@@ -9,7 +9,6 @@ class CRulerView : public CWnd
 	CRulerInfo* m_pRulerInfo;
 	UINT   m_rulerType;
 	CPoint m_lastPos;
-	int m_OriginOffset;
 	CFont m_Font;
 	CBitmap m_RulerBackground;
 protected:
@@ -23,7 +22,6 @@ public:
 	void SetRulersInfo(CRulerInfo* pRulerInfo) { m_pRulerInfo = pRulerInfo; }
 	CRulerInfo* GetRulersInfo() { return m_pRulerInfo; }
 	BOOL IsBackGroundValid(CSize czClient);
-	void SetOriginOffset(int o) { m_OriginOffset = o; }
 	void SetRulerType(UINT rulerType = RT_HORIZONTAL);
 	int GetRulerType(void) { return m_rulerType; }
 	CFont& GetFont() { return m_Font; }
@@ -36,7 +34,7 @@ public:
 		CDC* pDC,
 		CRect& rulerRect
 	);
-	void DrawCursorPos(CDC* pDC, CDoublePoint NewPos);
+	void DrawCursorPos(CDC* pDC, DOUBLEPOINT NewPos);
 protected:
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);

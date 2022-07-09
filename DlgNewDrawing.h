@@ -14,7 +14,7 @@ class CDlgNewDrawing : public CDialogEx
 	CEditDecimal m_Edit_DrawingSizeW;
 	CEditDecimal m_Edit_PaperSizeH;
 	CEditDecimal m_Edit_PaperSizeW;
-	CEdit m_Edit_DrawingName;
+	CEditText m_Edit_DrawingName;
 	DECLARE_DYNAMIC(CDlgNewDrawing)
 
 public:

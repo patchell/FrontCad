@@ -29,13 +29,13 @@ public:
 	void SetScale(CScale scale) { m_Scale = scale; }
 	void SetOffsetMode(StaticPreivewMode m) { m_OffsetMode = m; }
 	void Init();
-	void AutoScale(CDoubleRect &rect);
+	void AutoScale();
 	void SetViewOffset(CPoint Point);
 	virtual BOOL Create(LPCTSTR lpszText, DWORD dwStyle, const RECT& rect, CWnd* pParentWnd, UINT nID = 0xffff);
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	void SetPreviewObject(CCadObject* pObj) { m_pObj = pObj; }
 	CCadObject* GetPreviewObject() { return m_pObj; }
-	CScale CalculateScale(CRect& Client, CDoubleSize& ObjSize);
+	CScale CalculateScale(CDoubleSize& ObjSize);
 protected:
 	afx_msg void OnPaint();
 	DECLARE_MESSAGE_MAP()

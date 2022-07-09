@@ -3,38 +3,52 @@
 
 CCadElispe::CCadElispe():CCadObject()
 {
-	m_pPenLine = 0;
-	m_pBrFill = 0;
 	SetType(ObjectType::ELIPSE);
 	GetName().Format(_T("Elipse_%d"), ++m_ElipseCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetEllipseAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
-CCadElispe::CCadElispe(CCadElispe &e) :CCadObject()
-{
-	m_P1 = e.m_P1;
-	m_P2 = e.m_P2;
-	GetAttributes().CopyFrom(e.GetPtrToAttributes());
-	m_pPenLine = 0;
-	m_pBrFill = 0;
-	SetType(ObjectType::ELIPSE);
-}
-
 CCadElispe::~CCadElispe()
 {
-	if (m_pPenLine) delete m_pPenLine;
-	if (m_pBrFill) delete m_pBrFill;
+}
+
+void CCadElispe::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
+	Obj.pCadPoint->SetSubSubType(0);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
+	Obj.pCadPoint->SetSubSubType(1);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
+	Obj.pCadPoint->SetSubSubType(2);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+
+BOOL CCadElispe::Destroy(CCadObject* pDependentObjects)
+{
+	BOOL rV = TRUE;
+	return rV;
 }
 
 void CCadElispe::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//-----------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -44,13 +58,12 @@ void CCadElispe::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_P1 += Diff;
-	m_P2 += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadElispe::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -58,78 +71,11 @@ void CCadElispe::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//
 	// return value:none
 	//--------------------------------------------------
-	char* IndentString = new char[256];
-
-	fprintf(pO, "%s%s(%s(\n",
-		GETAPP.MkIndentString(IndentString, Indent, ' '),
-		CLexer::TokenToString(DocFileParseToken::ELIPSE),
-		CLexer::TokenToString(DocFileParseToken::POINT)
-	);
-	m_P1.Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
-	fprintf(pO, ",");
-	m_P2.Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
-	fprintf(pO, ")\n");
-	GetAttributes().Save(pO, Indent, flags);
-	delete[] IndentString;
 }
 
-void CCadElispe::SetVertex(int v, CDoubleSize sz)
+void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
 	//--------------------------------------------------
-	if (v)
-		m_P2 += sz;
-	else
-		m_P1 += sz;
-}
-
-
-int CCadElispe::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//	return 0 for P1
-	//  return 1 for P2
-	//--------------------------------------------------
-	int rV = -1;
-	CScale Scale = GETVIEW()->GetGrid().GetInchesPerPixel();
-	double Inches = Scale.GetScaleX() * 10.0 /* Pixels */;
-	//------ A 10 pixel target sounds good
-	CDoubleSize Diff(Inches, Inches);
-	CDoubleRect rect;
-	rect.SetPoints(m_P1 + Diff, m_P1 - Diff);
-	if (rect.PointInRectangle(p))
-		rV = 0;
-	else
-	{
-		rect.SetPoints(m_P2 + Diff, m_P2 - Diff);
-		if (rect.PointInRectangle(p))
-			rV = 1;
-	}
-	return rV;
-}
-
-
-void CCadElispe::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -140,136 +86,80 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOld;
-	CBrush *pOldBr;
+	CPen *pOldPen,penLine;
+	CBrush *pOldBr, brushFill;
 	CRect rect;
-	CSize rectLWcomp;
-	CPoint P1, P2;
+	CADObjectTypes ObjP1, ObjP2;
 	int Lw;
 
-	if (IsRenderEnabled())
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * GetLineWidth());
+	if (Lw < 1) Lw = 1;
+
+	rect.SetRect(
+		ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
+		ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale)
+	);
+	switch (mode.DrawMode)
 	{
-		P1 = m_P1.ToPixelPoint(ULHC, Scale);;
-		P2 = m_P2.ToPixelPoint(ULHC, Scale);
-		if ((Lw = int(Scale.m_ScaleX * GetLineWidth())) < 1) Lw = 1;
-		if (Lw <= 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
-		{
-			Lw = 1;
-			rectLWcomp = CSize(0, 0);
-		}
+	case ObjectDrawMode::FINAL:
+		penLine.CreatePen(PS_SOLID, Lw, GetLineColor());
+		if (GetTransparent())
+			brushFill.CreateStockObject(NULL_BRUSH);
 		else
-			rectLWcomp = CSize(Lw / 2, Lw / 2);
-		if ((!IsLastModeSame(mode) )|| IsDirty())
-		{
-			if (m_pPenLine) delete m_pPenLine;
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				m_pPenLine = new CPen(PS_SOLID, Lw,GetAttributes().m_colorLine);
-				break;
-			case ObjectDrawMode::SELECTED:
-				m_pPenLine = new CPen(PS_SOLID, Lw, GetAttributes().m_colorLine ^0x00f0f0f0);
-				break;
-			case ObjectDrawMode::SKETCH:
-				m_pPenLine = new CPen(PS_DOT, 1, GetAttributes().m_colorLine);
-				break;
-			}
-		}
-		if (m_pBrFill == 0 || IsDirty())
-		{
-			if (m_pBrFill) delete m_pBrFill;
-			if (GetTransparent())
-			{
-				m_pBrFill = new CBrush();
-				m_pBrFill->CreateStockObject(NULL_BRUSH);
-			}
-			else
-				m_pBrFill = new CBrush(GetFillColor());
-			SetDirty(FALSE);
-		}
-		rect = CDoubleRect(m_P1, m_P2).ToCRect(ULHC, Scale);
-		switch (mode.DrawMode)
-		{
-		case ObjectDrawMode::FINAL:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Ellipse(&rect);
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOld);
-			break;
-		case ObjectDrawMode::SELECTED:
-		{
-			CPen SelPen;
-			CBrush SelBrush;
-			SelPen.CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-			SelBrush.CreateSolidBrush(RGB(255, 0, 0));
-			pOld = pDC->SelectObject(m_pPenLine);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Ellipse(&rect);
-			pDC->SelectObject(&SelPen);
-			pDC->SelectObject(&SelBrush);
-			CRect rect;
-			CSize p = CSize(4, 4);
-			rect.SetRect(P1 - p, P1 + p);
-			pDC->Rectangle(&rect);
-			rect.SetRect(P2 - p, P2 + p);
-			pDC->Rectangle(&rect);
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOld);
-		}
+			brushFill.CreateSolidBrush(GetFillColor());
+		pOldPen = pDC->SelectObject(&penLine);
+		pOldBr = pDC->SelectObject(&brushFill);
+		pDC->Ellipse(&rect);
+		pDC->SelectObject(pOldBr);
+		pDC->SelectObject(pOldPen);
 		break;
-		case ObjectDrawMode::SKETCH:
-			pOld = pDC->SelectObject(m_pPenLine);
-			pDC->Ellipse(&rect);
-			pDC->SelectObject(pOld);
-			break;
-		}
-		SetLastMode(mode);
+	case ObjectDrawMode::SELECTED:
+		penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
+		brushFill.CreateStockObject(NULL_BRUSH);
+		pOldPen = pDC->SelectObject(&penLine);
+		pOldBr = pDC->SelectObject(&brushFill);
+		pDC->Ellipse(&rect);
+		pDC->SelectObject(pOldBr);
+		pDC->SelectObject(pOldPen);
+		break;
+	case ObjectDrawMode::SKETCH:
+		penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorLineSelected);
+		brushFill.CreateStockObject(NULL_BRUSH);
+		pOldPen = pDC->SelectObject(&penLine);
+		pOldBr = pDC->SelectObject(&brushFill);
+		pDC->Ellipse(&rect);
+		pDC->Rectangle(&rect);
+		pDC->SelectObject(pOldBr);
+		pDC->SelectObject(pOldPen);
+		break;
 	}
 }
 
-BOOL CCadElispe::PtInElipse(CDoublePoint p)
+BOOL CCadElispe::PointInThisObject(DOUBLEPOINT point)
 {
-	double a, b, v;
-	BOOL rV;
-	
-	CDoublePoint Center = CDoubleRect(m_P1, m_P2).GetCenter(Center);
+	BOOL rV = FALSE;
+	double a, b;
+	CADObjectTypes ObjP1, ObjP2, ObjCenter;
 
-	a = (m_P2.dX - m_P1.dX) / 2.0;
-	b = (m_P2.dY - m_P1.dY) / 2.0;
-	v = GETAPP.Ellipse(a, b, p, Center);
-	if (v < 1.0) rV = TRUE;
-	else rV = FALSE;
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	a = ObjP1.pCadPoint->GetX() - ObjCenter.pCadPoint->GetX();
+	b = ObjP1.pCadPoint->GetY() - ObjCenter.pCadPoint->GetY();
+	rV = GETAPP.PointInEllipse(a, b, point, DOUBLEPOINT(*ObjCenter.pCadPoint));
 	return rV;
 }
 
-int CCadElispe::EditProperties()
-{
-	CDlgEllispeProperties Dlg;
-
-	Dlg.SetEllipse(this);
-	return Dlg.DoModal();
-}
-
-BOOL CCadElispe::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadElispe::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
-}
-
-BOOL CCadElispe::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList , 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+int CCadElispe::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//--------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -280,91 +170,37 @@ BOOL CCadElispe::PointInObjectAndSelect(
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	if (index < n || n == 0)
+	int ix;
+
+	if (index < n)
 	{
 		//---------------------------------------
-		// is point in Ellipse
+		// is point in the Arc?
 		//---------------------------------------
-		if (PtInElipse(p))
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[index++] = this;
-					break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						index = 1;
-					break;
-				}
-
-			}
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadElispe::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_P1;
-}
-
-
-CDoubleRect& CCadElispe::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	rect = CDoubleRect(m_P1, m_P2);
-	return rect;
-}
 
 CString& CCadElispe::GetTypeString(void)
 {
-	//***************************************************
+	//----------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -376,28 +212,15 @@ CString& CCadElispe::GetTypeString(void)
 	return csName;
 }
 
-CCadElispe CCadElispe::operator=(CCadElispe &v)
+CString& CCadElispe::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	CCadElispe returnEllipse;
-
-	returnEllipse.m_P1 = v.m_P1;
-	returnEllipse.m_P2 = v.m_P2;
-	returnEllipse.GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	return returnEllipse;
+	GetDescription().Format(_T("Base Obj Class"));
+	return GetDescription();
 }
 
 CCadObject * CCadElispe::CopyObject(void)
 {
-	//***************************************************
+	//-----------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -409,22 +232,10 @@ CCadObject * CCadElispe::CopyObject(void)
 	*pCE = *this;
 	return pCE;
 }
-	
-CDoublePoint& CCadElispe::GetCenter(CDoublePoint& Center)
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	return CDoubleRect(m_P1,m_P2).GetCenter(Center);
-}
 
-CDoubleSize& CCadElispe::GetSize(CDoubleSize& size)
+CDoubleSize CCadElispe::GetSize()
 {
-	//***************************************************
+	//---------------------------------------------
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -432,8 +243,10 @@ CDoubleSize& CCadElispe::GetSize(CDoubleSize& size)
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	CDoubleRect rect;
-	return GetRect(rect).GetSize(size);
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	return Obj.pCadRect->GetSize();
 }
 
 DocFileParseToken CCadElispe::Parse(
@@ -442,7 +255,7 @@ DocFileParseToken CCadElispe::Parse(
 	DocFileParseToken TypeToken
 )
 {
-	//***************************************************
+	//--------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -456,44 +269,37 @@ DocFileParseToken CCadElispe::Parse(
 	//	returns lookahead token on success, or
 	//			throws an exception
 	//--------------------------------------------------
-	Token = pLex->Accept(Token, TypeToken);
-	Token = pLex->Accept(Token, DocFileParseToken('('));
-	Token = pLex->Point(DocFileParseToken::POINT, m_P1, Token);
-	Token = pLex->Accept(Token, DocFileParseToken(','));
-	Token = pLex->Point(DocFileParseToken::POINT, m_P2, Token);
-	Token = pLex->Accept(Token, DocFileParseToken(')'));
-	Token = GetAttributes().Parse(Token, pLex);
 	return Token;
 }
 
 void CCadElispe::CopyAttributesTo(SEllipseAttributes *pAttrib)
 {
-	/***************************************************
-	*	GetAttributes
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an extern attribute structure
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy into
-	***************************************************/
+	//---------------------------------------------------
+	//	GetAttributes
+	//		This Method is used to copy the
+	//	attributes from this object into
+	//	an extern attribute structure
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//---------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 
 void CCadElispe::CopyAttributesFrom(SEllipseAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
@@ -510,24 +316,30 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
+	CCadPoint* pP1, * pP2;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Ellipse::Place First Point Defining Shape"));
+		GETVIEW->EnableAutoScroll(TRUE);
+		GETAPP.UpdateStatusBar(_T("Ellipse::Place First Point Defining Rectangle Shape"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
 			}
 			m_AttributesDirty = FALSE;
 		}
+		GETVIEW->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -538,27 +350,34 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		m_P1 = m_P2 = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_P1 = m_P2 = MousePos;
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		Obj.pCadPoint->SetPoint(MousePos);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Ellipse:Place Second Point Defining Shape"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_P2 = MousePos;
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		m_P2 = MousePos;
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadElispe);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		pP2 = Obj.pCadPoint;
+		Obj.pCadPoint->SetPoint(MousePos);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		pP1 = Obj.pCadPoint;
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadPoint->SetPoint(GETAPP.CalcCenter(pP1, pP2));
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		Obj.pCadElispe = new CCadElispe;
+		Obj.pCadElispe->Create();
+		GETVIEW->SetObjectTypes(Obj.pCadElispe);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Ellipse::Place First Point Defining Shape"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -579,17 +398,40 @@ ObjectDrawState CCadElispe::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj1, Obj2,ObjCenter;
 
 	switch (DrawState)
 	{
 		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-			m_P1 = m_P2 = MousePos;
 			break;
 		case ObjectDrawState::PLACE_LBUTTON_DOWN:
-			m_P2 = MousePos;
+			Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+			Obj2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+			ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			Obj2.pCadPoint->SetPoint(MousePos);
+			ObjCenter.pCadPoint->SetPoint(GETAPP.CalcCenter(Obj1.pCadPoint, Obj2.pCadPoint));
 			break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
+}
+
+
+int CCadElispe::EditProperties()
+{
+	CDlgEllispeProperties Dlg;
+	int Id;
+
+	Dlg.SetEllipse(this);
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
+	return Id;
 }

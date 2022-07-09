@@ -226,21 +226,21 @@ DocFileParseToken CLexer::LookUp(const char *pKW)
 
 DocFileParseToken CLexer::Accept(DocFileParseToken LookaHead, DocFileParseToken Token)
 {
-	/********************************************
-	** Accept
-	**
-	** this Method is used to match
-	** the token with the current
-	** Lookahead token.  If they match, get the
-	** next token.
-	**
-	** parameter:
-	**	LookAHead...Look Ahead Token
-	**	Token..expected token
-	**	pDoc....pointer to document instance
-	**
-	** Returns:Next token, or ERROR on error
-	********************************************/
+	//--------------------------------------------
+	//** Accept
+	//**
+	//** this Method is used to match
+	//** the token with the current
+	//** Lookahead token.  If they match, get the
+	//** next token.
+	//**
+	//** parameter:
+	//**	LookAHead...Look Ahead Token
+	//**	Token..expected token
+	//**	pDoc....pointer to document instance
+	//**
+	//** Returns:Next token, or ERROR on error
+	//--------------------------------------------/
 	DocFileParseToken rV;
 
 	if ( LookaHead == Token)
@@ -379,7 +379,7 @@ DocFileParseToken CLexer::Lex()
 
 DocFileParseToken CLexer::Point(
 	DocFileParseToken TypeToken, 
-	CDoublePoint &p, 
+	CCadPoint &p, 
 	DocFileParseToken LookAheadToken
 )
 {
@@ -393,7 +393,7 @@ DocFileParseToken CLexer::Point(
 	y = atof(m_LexBuff);
 	LookAheadToken = Expect(LookAheadToken, DocFileParseToken::NUM);
 	LookAheadToken = Expect(LookAheadToken, DocFileParseToken(')'));
-	p = CDoublePoint(x, y);
+	p = CCadPoint(x, y);
 	return LookAheadToken;
 }
 
@@ -523,13 +523,13 @@ DocFileParseToken CLexer::String(
 	return Token;
 }
 
-DocFileParseToken CLexer::DoubleRect(
+DocFileParseToken CLexer::CadRect(
 	DocFileParseToken TypeToken, 
-	CDoubleRect& DoubleRect, 
+	CCadRect& Rect, 
 	DocFileParseToken LookaheadToken
 )
 {
-	CDoublePoint P[4];
+	CCadPoint P[4];
 
 	LookaheadToken = Expect(LookaheadToken, TypeToken);
 	LookaheadToken = Expect(LookaheadToken, DocFileParseToken('('));
@@ -541,7 +541,7 @@ DocFileParseToken CLexer::DoubleRect(
 	LookaheadToken = Expect(LookaheadToken, DocFileParseToken(','));
 	LookaheadToken = Point(DocFileParseToken::POINT, P[3], LookaheadToken);
 	LookaheadToken = Expect(LookaheadToken, DocFileParseToken(')'));
-	DoubleRect.SetPoints(P);
+//	DoubleRect.SetPoints(P);
 	return LookaheadToken;
 }
 

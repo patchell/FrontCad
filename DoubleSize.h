@@ -33,10 +33,22 @@ public:
 			rv = FALSE;
 		return rv;
 	}
+	CDoubleSize operator - (CDoubleSize v) {
+		CDoubleSize Result;
+		Result.dCX = dCX - v.dCX;
+		Result.dCY = dCY - v.dCY;
+		return Result;
+	}
 	CDoubleSize operator * (CScale Scale) {
 		CDoubleSize Result;
 		Result.dCX = dCX * Scale.GetScaleX();
 		Result.dCY = dCY * Scale.GetScaleY();
+		return Result;
+	}
+	CDoubleSize operator * (double Scaler) {
+		CDoubleSize Result;
+		Result.dCX = dCX * Scaler;
+		Result.dCY = dCY * Scaler;
 		return Result;
 	}
 	CDoubleSize operator/(double x) {
@@ -51,8 +63,39 @@ public:
 	double Magnitude() {
 		return sqrt(dCX * dCX + dCY * dCY);
 	}
+	double Slope() { return dCY / dCX;}
 	double Angle(BOOL DegreesMode = DOUBLESIZE_DEGREES);
 	CSize ToPixelSize(CScale Scale);
+	operator DOUBLEPOINT() const  {
+		DOUBLEPOINT result;
+		result.dX = dCX;
+		result.dY = dCY;
+		return result;
+	}
+	inline operator CPoint() const;
 };
 
+inline DOUBLEPOINT operator+(DOUBLEPOINT pt, CDoubleSize sz)
+{
+	DOUBLEPOINT ResultPoint;
+	ResultPoint.dX = pt.dX + sz.dCX;
+	ResultPoint.dY = pt.dY + sz.dCY;
+	return ResultPoint;
+}
 
+inline DOUBLEPOINT operator-(DOUBLEPOINT pt, CDoubleSize sz)
+{
+	DOUBLEPOINT ResultPoint;
+	ResultPoint.dX = pt.dX - sz.dCX;
+	ResultPoint.dY = pt.dY - sz.dCY;
+	return ResultPoint;
+}
+
+//I want this one
+inline CDoubleSize operator-(DOUBLEPOINT pt1, DOUBLEPOINT pt2)
+{
+	DOUBLEPOINT ResultPoint;
+	ResultPoint.dX = pt1.dX - pt2.dX;
+	ResultPoint.dY = pt1.dY - pt2.dY;
+	return ResultPoint;
+}

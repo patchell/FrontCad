@@ -11,6 +11,7 @@ IMPLEMENT_DYNAMIC(CDlgArcProperties, CDialog)
 CDlgArcProperties::CDlgArcProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ARCPROPERTIES, pParent)
 {
+	m_bDirty = FALSE;
 	m_pArc = 0;
 }
 
@@ -32,6 +33,7 @@ void CDlgArcProperties::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDlgArcProperties, CDialog)
 	ON_STN_CLICKED(IDC_STATIC_LINECOLOR, &CDlgArcProperties::OnStnClickedStaticLinecolor)
+	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgArcProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -53,7 +55,8 @@ void CDlgArcProperties::OnOK()
 	switch (Id)
 	{
 		case IDOK:
-			UpdateData();
+			if(IsDirty())
+				UpdateData();
 			CDialog::OnOK();
 			break;
 	}
@@ -70,14 +73,20 @@ void CDlgArcProperties::OnStnClickedStaticLinecolor()
 
 void CDlgArcProperties::UpdateControls()
 {
+	CADObjectTypes Obj;
+
 	m_Edit_EndX.SetDecimalPlaces(3);
-	m_Edit_EndX.SetDoubleValue(m_pArc->GetEndPoint().dX);
+	m_Edit_EndX.SetDecimalPlaces(3);
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	m_Edit_EndX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_EndY.SetDecimalPlaces(3);
-	m_Edit_EndY.SetDoubleValue(m_pArc->GetEndPoint().dY);
+	m_Edit_EndY.SetDoubleValue(Obj.pCadPoint->GetY());
+
 	m_Edit_StartX.SetDecimalPlaces(3);
-	m_Edit_StartX.SetDoubleValue(m_pArc->GetStartPoint().dX);
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	m_Edit_StartX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_StartY.SetDecimalPlaces(3);
-	m_Edit_StartY.SetDoubleValue(m_pArc->GetStartPoint().dY);
+	m_Edit_StartY.SetDoubleValue(Obj.pCadPoint->GetY());
 	m_Edit_Width.SetDecimalPlaces(3);
 	m_Edit_Width.SetDoubleValue(m_pArc->GetAttributes().m_LineWidth);
 	m_Static_Color.SetColor(m_pArc->GetAttributes().m_colorLine);
@@ -85,15 +94,26 @@ void CDlgArcProperties::UpdateControls()
 
 void CDlgArcProperties::UpdateData()
 {
-	double x, y;
+	CADObjectTypes Obj;
 
 	m_pArc->GetAttributes().m_colorLine = m_Static_Color.GetColor();
 	m_pArc->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
-	x = m_Edit_StartX.GetDoubleValue();
-	y = m_Edit_StartY.GetDoubleValue();
-	m_pArc->SetStartPoint(CDoublePoint(x, y));
-	x = m_Edit_EndX.GetDoubleValue();
-	y = m_Edit_EndY.GetDoubleValue();
-	m_pArc->SetEndPoint(CDoublePoint(x, y));
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	Obj.pCadPoint->SetPoint(
+		m_Edit_EndX.GetDoubleValue(),
+		m_Edit_EndY.GetDoubleValue()
+	);
+	Obj.pCadObject = m_pArc->FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	Obj.pCadPoint->SetPoint(
+		m_Edit_StartX.GetDoubleValue(),
+		m_Edit_StartY.GetDoubleValue()
+	);
 }
 
+
+
+afx_msg LRESULT CDlgArcProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
+{
+	m_bDirty = TRUE;
+	return 0;
+}

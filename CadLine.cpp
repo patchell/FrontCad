@@ -3,12 +3,11 @@
 CCadLine::CCadLine():CCadObject()
 {
 	m_Length = 0.0;
-	m_pLinePen = 0;
 	SetType(ObjectType::LINE);
 	GetName().Format(_T("Line_%d"), ++m_LineCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetLineAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
@@ -18,48 +17,60 @@ CCadLine::CCadLine():CCadObject()
 CCadLine::CCadLine(CCadLine &line) :CCadObject()
 {
 	CopyAttributesFrom(&line.GetAttributes());
-	m_pLinePen = 0;
-	m_Line = line.m_Line;
+	CCadPoint* pCP = (CCadPoint*)line.GetHead();
+	while (pCP)
+	{
+		AddObjectAtHead(pCP);
+		pCP = (CCadPoint * )pCP->GetNext();
+	}
 	SetType(ObjectType::LINE);
 }
 
 CCadLine::~CCadLine()
 {
-	if (m_pLinePen) delete m_pLinePen;
 }
 
-BOOL CCadLine::Create(CCadObject* pObjRef)
+BOOL CCadLine::Create()
 {
 	CCadPoint* pPoint;
-	int i;
-	
-	for (i = 0; i < 2; ++i)
-	{
-		pPoint = new CCadPoint;
-		pPoint->Create(pObjRef);
-		this->AddObjectAtTail(pPoint);
-	}
-	return OnCreate(pObjRef);
+	CCadRect* pRect;
+
+	pPoint = new CCadPoint;
+	pPoint->Create();
+	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->SetSubSubType(1);
+	AddObjectAtTail(pPoint);
+	pPoint = new CCadPoint;
+	pPoint->Create();
+	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->SetSubSubType(2);
+	AddObjectAtTail(pPoint);
+	pRect = new CCadRect;
+	pRect->Create();
+	pRect->SetSubType(SubType::RECTSHAPE);
+	AddObjectAtTail(pRect);
+	return TRUE;
 }
 
 void CCadLine::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
 	//
 	// parameters:
-	//	p.......amount to move the object by
+	//	Diff.......amount to move the object by
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_Line.Move(Diff);
+	CCadObject::Move(Diff);
 }
+
 
 void CCadLine::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -73,74 +84,20 @@ void CCadLine::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 		GETAPP.MkIndentString(pIndent,Indent, ' '),
 		CLexer::TokenToString(DocFileParseToken::LINE),
 		CLexer::TokenToString(DocFileParseToken::POINT),
-		m_Line.dP1.dX, m_Line.dP1.dY,
+		((CCadPoint*)GetHead())->GetX(),
+		((CCadPoint*)GetHead())->GetY(),
 		CLexer::TokenToString(DocFileParseToken::POINT),
-		m_Line.dP2.dX, m_Line.dP2.dY
+		((CCadPoint*)GetHead()->GetNext())->GetX(),
+		((CCadPoint*)GetHead()->GetNext())->GetY()
 	);
 	GetAttributes().Save(pO, Indent + 1, flags);
 	delete[] pIndent;
 }
 
 
-void CCadLine::SetVertex(int Vi, CDoubleSize sz)
+void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-	if (Vi)
-	{
-		m_Line.dP2 += sz;
-	}
-	else
-		m_Line.dP1 += sz;
-}
-
-
-int CCadLine::GrabPoint(CDoublePoint point)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	point.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	int rV = -1;
-	CDoubleRect rect;
-	CDoubleSize dR;
-	CDoublePoint P1, P2;
-	double Inches;
-
-	Inches = GETVIEW()->GetGrid().GetInchesPerPixel().GetScaleX() * 10.0;
-	dR = CDoubleSize(Inches, Inches);
-	rect.SetPointsFromCenter(P1, P1 + dR, P1);
-	if (rect.PointInRectangle(point))
-		rV = 0;
-	else
-	{
-		rect.SetPointsFromCenter(P2, P1 + dR, P1);
-		if (rect.PointInRectangle(point))
-			rV = 1;
-	}
-	return rV;
-}
-
-
-void CCadLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -151,151 +108,100 @@ void CCadLine::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOld;
-	CPoint P1, P2, Diff;
+	CPen *pOld, penLine;
 	int Lw;
 	CRect rect;
 
-	if (CCadLine::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
-		P1 = CDoublePoint(m_Line.dP1).ToPixelPoint(ULHC,Scale);
-		P2 = CDoublePoint(m_Line.dP2).ToPixelPoint(ULHC,Scale);
 		Lw = int(Scale.m_ScaleX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
-		if (!IsLastModeSame(mode) || IsDirty())
-		{
-			//----------------------------------
-			// If mode changed, get rid of pen
-			// and make a new one
-			//----------------------------------
-			if (m_pLinePen) delete m_pLinePen;
-			switch (mode.DrawMode)
-			{
-				case ObjectDrawMode::FINAL:
-					m_pLinePen = new CPen(PS_SOLID, Lw, GetLineColor());
-					break;
-				case ObjectDrawMode::SELECTED:
-					m_pLinePen = new CPen(PS_SOLID, 1, GetLineColor() ^ 0x00f0f0f0);
-					break;
-				case ObjectDrawMode::SKETCH:
-					m_pLinePen = new CPen(PS_DOT, 1, GetLineColor());
-					break;
-			}
-			SetLastMode(mode);
-			SetDirty(FALSE);
-		}
 		switch (mode.DrawMode)
 		{
 			case ObjectDrawMode::FINAL:
-				pOld = pDC->SelectObject(m_pLinePen);
-				pDC->MoveTo(P1);
-				pDC->LineTo(P2);
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+				pOld = pDC->SelectObject(&penLine);
+				if (GetHead())
+				{
+					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+				}
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SELECTED:
-				pOld = pDC->SelectObject(m_pLinePen);
-				Diff = CPoint(4, 4);
-
-				rect.SetRect(P1 + (-Diff), P1 + Diff);
-				pDC->Rectangle(&rect);
-				rect.SetRect(P2 + (-Diff), P2 + Diff);
-				pDC->Rectangle(&rect);
-				pDC->SelectObject(m_pLinePen);
-				pDC->MoveTo(P1);
-				pDC->LineTo(P2);
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+				pOld = pDC->SelectObject(&penLine);
+				if (GetHead())
+				{
+					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+				}
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SKETCH:
-				Diff = CPoint(4, 4);
-				pOld = pDC->SelectObject(m_pLinePen);
-				pDC->MoveTo(P1);
-				pDC->LineTo(P2);
+				penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
+				pOld = pDC->SelectObject(&penLine);
+				if (GetHead())
+				{
+					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+				}
 				pDC->SelectObject(pOld);
 				break;
 		}	//end of switch(mode)
 	}	//end of if(rederEnabled)
 }
 
-CDoubleRect& CCadLine::EncloseLineInRectangle(CDoubleRect& rect, int WidthInPixels)
+BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
 {
-	//-----------------------------
-	// enclose the line inside
-	// of a rectangle
-	// parameters:
-	//	w.....The amount that will
-	//		be added to the width
-	//		of the line to make
-	//		the rectangle.
-	//-----------------------------
-	return m_Line.EncloseLine(rect, WidthInPixels);
+	BOOL rV = FALSE;
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	rV = Obj.pCadRect->PointInThisObject(point);
+	return rV;
 }
 
 int CCadLine::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList , 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
 	//
 	// parameters:
 	//	p...........point to check at
+	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	if (index < n || n == 0)
-	{
-		//-----------------------------------------------
-		// is the point inside the polygon?
-		//-----------------------------------------------
-		if (m_Line.IsPointOnLine(p))
-		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						ppSelList[index++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if (!IsSelected())
-							ppSelList[index++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if (IsSelected())
-							ppSelList[index++] = this;
-						break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						index = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if (!IsSelected())
-							index = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if (IsSelected())
-							index = 1;
-						break;
-				}
+	int ix;
 
-			}
+	if (index < n)
+	{
+		//---------------------------------------
+		// is point in the Arc?
+		//---------------------------------------
+		if (PointInThisObject(p))
+		{
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
@@ -304,7 +210,7 @@ int CCadLine::PointInObjectAndSelect(
 
 CString& CCadLine::GetTypeString(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -316,26 +222,33 @@ CString& CCadLine::GetTypeString(void)
 	return csName;
 }
 
-CCadLine CCadLine::operator=(CCadLine &v)
+CString& CCadLine::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	m_Line.dP1 = v.m_Line.dP1;
-	m_Line.dP2 = v.m_Line.dP2;
-	GetAttributes().CopyFrom(v.GePtrTotAttributes());
-	return *this;
+	DOUBLEPOINT P1, P2;
+	CCadPoint* pPoint;
+
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		1
+	);
+	P1 = DOUBLEPOINT(*pPoint);
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		2
+	);
+	P2 = DOUBLEPOINT(*pPoint);
+	GetDescription().Format(_T("LINE((%6.3lf,%6.3lf),(%6.3lf,%6.3lf))"), 
+		P1.dX, P1.dY,
+		P2.dX, P2.dY
+	);
+	return GetDescription();
 }
 
 CCadObject * CCadLine::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -343,45 +256,18 @@ CCadObject * CCadLine::CopyObject(void)
 	//
 	// return value:a new copy of this
 	//--------------------------------------------------
-	CCadLine *pCL = new CCadLine;
-	*pCL = *this;
-	return pCL;
+	CADObjectTypes newObj;
+	newObj.pCadLine = new CCadLine;
+	CCadObject::CopyObject(newObj.pCadObject);
+	newObj.pCadLine->CopyAttributesFrom(GePtrTotAttributes());
+	newObj.pCadLine->m_Length = m_Length;
+	return newObj.pCadObject;
 }
 
-void CCadLine::RenderEnable(int e)
-{
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadLine::m_RenderEnable = e;
-}
-
-CDoublePoint CCadLine::GetCenter()
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	double x, y;
-	x = (m_Line.dP1.dX + m_Line.dP2.dX) / 2.0;
-	y = (m_Line.dP1.dY + m_Line.dP2.dY) / 2.0;
-	return CDoublePoint(x,y);
-}
 
 CDoubleSize CCadLine::GetSize()
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetSize
 	//	Get the size of the object.  Reutrns the size
 	// of the enclosing rectangle.
@@ -389,12 +275,27 @@ CDoubleSize CCadLine::GetSize()
 	//
 	// return value:returns size of the object
 	//--------------------------------------------------
-	return CDoubleSize(abs(m_Line.dP1.dX - m_Line.dP2.dX), abs(m_Line.dP1.dY - m_Line.dP2.dY));
+	DOUBLEPOINT P1, P2;
+	CCadPoint* pPoint;
+
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		1
+	);
+	P1 = DOUBLEPOINT(*pPoint);
+	pPoint = (CCadPoint*)FindObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		2
+	);
+	P2 = DOUBLEPOINT(*pPoint);
+	return CDoubleSize(abs(P1.dX - P2.dX), abs(P1.dY - P2.dY));
 }
 
 DocFileParseToken CCadLine::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -409,9 +310,9 @@ DocFileParseToken CCadLine::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 	//--------------------------------------------------
 	Token = pLex->Accept(Token, TypeToken);
 	Token = pLex->Accept(Token, DocFileParseToken('('));
-	Token = pLex->Point(DocFileParseToken::POINT, m_Line.GetPoint(LinePoint::P1), Token);
+//	Token = pLex->Point(DocFileParseToken::POINT, m_Line.GetPoint(LinePoint::P1), Token);
 	Token = pLex->Accept(Token, DocFileParseToken(','));
-	Token = pLex->Point(DocFileParseToken::POINT, m_Line.GetPoint(LinePoint::P2), Token);
+//	Token = pLex->Point(DocFileParseToken::POINT, m_Line.GetPoint(LinePoint::P2), Token);
 	Token = pLex->Accept(Token, DocFileParseToken(')'));
 	Token = GetAttributes().Parse(Token, pLex);
 	return Token;
@@ -419,41 +320,31 @@ DocFileParseToken CCadLine::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 
 void CCadLine::CopyAttributesTo(SLineAttributes*pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesTo
-	*		This Method is used to copy the
-	*	attributes from this object into
-	*	an external attributes stucture
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadLine::CopyAttributesFrom(SLineAttributes*pAtrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAtrib);
-	ClearNeedsAttributes();
-}
-
-BOOL CCadLine::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadLine::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
@@ -470,26 +361,30 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
+	CCadLine* pNewLine = 0;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
 			}
 			m_AttributesDirty = FALSE;
 		}
-		if(GETVIEW()->IsAutoScrollEnabled())
-			GETVIEW()->EnableAutoScroll(FALSE);
+		if(GETVIEW->IsAutoScrollEnabled())
+			GETVIEW->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -500,27 +395,36 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		m_Line.dP1 = m_Line.dP2 = DOUBLEPOINT(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_Line.dP1 = DOUBLEPOINT(MousePos);
+		Obj.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_Line.dP2 = DOUBLEPOINT(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		m_Line.dP2 = DOUBLEPOINT(MousePos);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadLine);
+		GETVIEW->EnableAutoScroll(FALSE);
+		Obj.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			2
+		);
+		Obj.pCadPoint->SetPoint(MousePos);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		pNewLine = new CCadLine;
+		pNewLine->Create();
+		GETVIEW->SetObjectTypes(pNewLine);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -541,19 +445,82 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Line.dP1 = m_Line.dP2 = DOUBLEPOINT(MousePos);
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		m_Line.dP2 = DOUBLEPOINT(MousePos);
+		Obj.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			2
+		);
+		Obj.pCadPoint->SetPoint(MousePos);
 		break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
+}
+
+void CCadLine::ProcessZoom(CScale& InchesPerPixel)
+{
+	//-------------------------------------
+	// ProcessZoom
+	// Makes changes nessesary when the
+	// drawing is zoomed, in this case,
+	// recalculate the enclosing
+	// rectangle
+	// 
+	// To find this rectangle, each end
+	// point of the line will be in the
+	// center of rectangle's sides that
+	// contain those endpoints.
+	// 
+	//-------------------------------------
+	CDoubleSize Inches, szRect;
+	CADObjectTypes ObjRect, ObjP1, ObjP2;
+	CDoubleSize rectSize;
+	double dist;
+	double m1;
+	CCadPoint p1,p2;
+
+	p1.Create();
+	p2.Create();
+	//--------------------------------------
+	// Get the objects that define the
+	// Enclosing rectangle
+	//--------------------------------------
+	ObjRect.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	//-------------------------------------
+	// Figure out how big the rectangle
+	// needs to be.  It needs to be at
+	// least 10 pixels, so that is what
+	// I am going to use
+	//-------------------------------------
+	Inches = CDoubleSize(10.0,10.0) * InchesPerPixel;
+	dist = Inches.Magnitude();
+	m1 = ObjP1.pCadPoint->Slope(ObjP2.pCadPoint);
+	//-------------------------------------
+	// Convert 10 x 10 pixels into inches
+	//-------------------------------------
+	p1.PointOnLineAtDistance(DOUBLEPOINT(*ObjP1.pCadPoint), m1, dist);
+	//-------------------------------------
+	// Calculate size of rectangle
+	//-------------------------------------
+	szRect = Inches * 2.0 + (*ObjP2.pCadPoint - *ObjP1.pCadPoint);
+	//-------------------------------------
+	// Calculate rotation point
+	//-------------------------------------
+	p2.PointOnLineAtDistance(DOUBLEPOINT(p1), m1, szRect.Magnitude());
+	//------------------------------------
+	// Update enclosing rectangle
+	//------------------------------------
+	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
 }
 
 int CCadLine::EditProperties(void)
@@ -562,5 +529,13 @@ int CCadLine::EditProperties(void)
 	int Id;
 	Dlg.SetLine(this);
 	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
 	return Id;
 }

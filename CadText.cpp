@@ -2,38 +2,47 @@
 
 CCadText::CCadText():CCadObject()
 {
-	m_pFont = 0;
-	m_pSelPen = 0;
-	m_LastScaleX = 0.0;
 	GetName().Format(_T("Text_%d"), ++m_TextCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetTextAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
-CCadText::CCadText(CCadText& v):CCadObject()
-{
-
-	m_pFont = 0;
-	m_pSelPen = 0;
-	m_P1 = v.m_P1;
-	GetAttributes().CopyFrom(v.GetPtrToAttributes());
-	m_rectSelect = v.m_rectSelect;
-	SetType(ObjectType::TEXT);
-}
-
 CCadText::~CCadText()
 {
-	if (m_pFont) delete m_pFont;
+}
+
+void CCadText::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::TEXT_LOCATION);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::TEXT_ROTATION);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadRect = new CCadRect;
+	Obj.pCadRect->Create();
+	Obj.pCadRect->SetSubType(SubType::TEXT_RECT);
+	AddObjectAtTail(Obj.pCadObject);
+}
+
+BOOL CCadText::Destroy(CCadObject* pDependentObject)
+{
+	BOOL rV = TRUE;
+	return rV;
 }
 
 void CCadText::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//---------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -43,14 +52,12 @@ void CCadText::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_P1 += Diff;
-	CDoubleRect rect = GetTextRectangle(rect);
-	Rotate(GetAngle(), rect);
+	CCadObject::Move(Diff);
 }
 
 void CCadText::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -58,56 +65,11 @@ void CCadText::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//
 	// return value:none
 	//--------------------------------------------------
-	char* pTempString = new char[256];
-
-	fprintf_s(pO, "%s%s(\"%s\",",
-		GETAPP.MkIndentString(pTempString, Indent),
-		CLexer::TokenToString(DocFileParseToken::TEXT),
-		GETAPP.ConvertCStringToChar(pTempString, m_csText)
-	);
-	m_P1.Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
-	GETAPP.SaveString(pO, Indent + 1, m_csText, DocFileParseToken::TEXT);
-	GetAttributes().Save(pO, Indent + 1, flags);
-
-	delete[]pTempString;
 }
 
-void CCadText::SetVertex(int v, CPoint p)
+void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// v......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
-	//--------------------------------------------------
-}
-
-
-int CCadText::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return 0;
-}
-
-
-void CCadText::Draw(CDC * pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
+	//---------------------------------------------------
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -118,74 +80,43 @@ void CCadText::Draw(CDC * pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CFont *pOldFont;
-	CPen *pOldPen;
+	CFont *pOldFont, Font;
+	CPen *pOldPen, penLine;
 	COLORREF OldColor, OldBk;
 	int FontHeight, FontWidth;
 	CPoint P1;
 	int OldMode;
+	CADObjectTypes LOC, RECT;
 
-	if (CCadText::m_RenderEnable)
+	if (IsRenderEnabled())
 	{
-		P1 = m_P1.ToPixelPoint(ULHC, Scale);
+		LOC.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+
+		P1 = LOC.pCadPoint->ToPixelPoint(ULHC, Scale);
 		FontHeight = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontHeight());
 		FontWidth = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontWidth());
-		if (IsLastModeSame(mode) || IsDirty() || (m_LastScaleX != Scale.GetScaleX()))
+		if (FontHeight > 8 && FontWidth > 8)
 		{
-			CDoubleRect rect = GetTextRectangle(pDC,rect,  Scale);
-			Rotate(GetAngle(), rect);
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::SELECTED:
-				if (m_pSelPen == 0)
-				{
-					m_pSelPen = new CPen;
-					m_pSelPen->CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-				}
-			case ObjectDrawMode::SKETCH:
-			case ObjectDrawMode::FINAL:
-				if (this->m_pFont) delete m_pFont;
-				m_pFont = new CFont;
-				if (Scale.GetScaleY() > 0.0)
-					m_pFont->CreateFontW(
-						GETAPP.RoundDoubleToInt(GetFontHeight() * Scale.GetScaleY()),
-						GETAPP.RoundDoubleToInt(GetFontWidth() * Scale.GetScaleX()),
-						GETAPP.RoundDoubleToInt(GetAngle() * 10.0),
-						GETAPP.RoundDoubleToInt(GetAngle() * 10.0),
-						GetFontWeight(),
-						0, 0, 0,
-						DEFAULT_CHARSET, 
-						OUT_CHARACTER_PRECIS,
-						CLIP_CHARACTER_PRECIS, 
-						PROOF_QUALITY, 
-						DEFAULT_PITCH,
-						GetFontName()
-					);
-				else
-					m_pFont->CreateFont(
-						GETAPP.RoundDoubleToInt(GetFontHeight() * Scale.GetScaleY()),
-						GETAPP.RoundDoubleToInt(GetFontWidth() * Scale.GetScaleX()),
-						GETAPP.RoundDoubleToInt(-GetAngle() * 10.0),
-						GETAPP.RoundDoubleToInt(-GetAngle() * 10.0),
-						GetFontWeight(),
-						0, 0, 0, 
-						DEFAULT_CHARSET, 
-						OUT_CHARACTER_PRECIS,
-						CLIP_CHARACTER_PRECIS,
-						PROOF_QUALITY, 
-						DEFAULT_PITCH,
-						GetFontName()
-					);
+			Font.CreateFontW(
+				GETAPP.RoundDoubleToInt(GetFontHeight() * Scale.GetScaleY()),
+				GETAPP.RoundDoubleToInt(GetFontWidth() * Scale.GetScaleX()),
+				GETAPP.RoundDoubleToInt(GetAngle() * 10.0),
+				GETAPP.RoundDoubleToInt(GetAngle() * 10.0),
+				GetFontWeight(),
+				0, 0, 0,
+				DEFAULT_CHARSET,
+				OUT_CHARACTER_PRECIS,
+				CLIP_CHARACTER_PRECIS,
+				PROOF_QUALITY,
+				DEFAULT_PITCH,
+				GetFontName()
+			);
 
-				break;
-			}
-			SetDirty(FALSE);
-			SetLastMode( mode);
-			m_LastScaleX = Scale.GetScaleX();
 		}
+
 		OldColor = pDC->SetTextColor(GetTextColor());
 		OldBk = pDC->SetBkColor(GetBackgroundColor());
-		pOldFont = pDC->SelectObject(m_pFont);
+		pOldFont = pDC->SelectObject(&Font);
 		if (GetTransparent())
 			OldMode = pDC->SetBkMode(TRANSPARENT);
 		else
@@ -194,8 +125,10 @@ void CCadText::Draw(CDC * pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 		pDC->SetBkMode(OldMode);
 		if (mode.DrawMode == ObjectDrawMode::SELECTED)
 		{
-			pOldPen = pDC->SelectObject(m_pSelPen);
-			m_rectSelect.Draw(pDC, mode, ULHC, Scale);
+			RECT.pCadObject = FindObject(ObjectType::RECT, SubType::TEXT_RECT, 0);
+			penLine.CreatePen(PS_SOLID, 2, GetAttributes().m_colorSelected);
+			pOldPen = pDC->SelectObject(&penLine);
+			RECT.pCadRect->Draw(pDC, mode, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
 		}
 		pDC->SetBkColor(OldBk);
@@ -204,105 +137,59 @@ void CCadText::Draw(CDC * pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	}
 }
 
-BOOL CCadText::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList , 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+BOOL CCadText::PointInThisObject(DOUBLEPOINT point)
+{
+	return 0;
+}
+
+int CCadText::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//---------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
 	//
 	// parameters:
 	//	p...........point to check at
+	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	if (index < n || n == 0)
-	{
-		if (m_rectSelect.PointInRectangle (p))
-		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						ppSelList[index++] = this;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						ppSelList[index++] = this;
-					break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-				case DrawingCheckSelectFlags::FLAG_ALL:
-					index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_UNSEL:
-					if (!IsSelected())
-						index = 1;
-					break;
-				case DrawingCheckSelectFlags::FLAG_SEL:
-					if (IsSelected())
-						index = 1;
-					break;
-				}
+	int ix;
 
-			}
+	if (index < n)
+	{
+		//---------------------------------------
+		// is point in the Arc?
+		//---------------------------------------
+		if (PointInThisObject(p))
+		{
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadText::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_P1;
-}
-
-CDoubleRect& CCadText::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	// the object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-
-	return GetTextRectangle(rect);
-}
-
 CString& CCadText::GetTypeString(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -314,28 +201,18 @@ CString& CCadText::GetTypeString(void)
 	return csTypeName;
 }
 
-CCadText CCadText::operator=(CCadText &v)
+CString& CCadText::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	m_pFont = 0;
-	m_pSelPen = 0;
-	m_P1 = v.m_P1;
-	CopyAttributesFrom(&v.GetAttributes());
-	m_rectSelect = v.m_rectSelect;
-	return *this;
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+	GetDescription().Format(_T("Text(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
+	return GetDescription();
 }
 
 CCadObject * CCadText::CopyObject(void)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -344,72 +221,14 @@ CCadObject * CCadText::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadText *pCT = new CCadText;
-	*pCT = *this;
+	pCT->Create();
+	CCadObject::CopyObject(pCT);
 	return pCT;
-}
-
-void CCadText::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
-{
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-
-void CCadText::RenderEnable(int e)
-{
-	//***************************************************
-	// RenderEnable
-	//	chhanges the state of the render enable flag.
-	// The base class does not contain this flag.
-	// The render enable flag is a static member of
-	// the derived class.
-	// parameters:
-	//	e......new state of enable flag
-	//
-	// return value:
-	//--------------------------------------------------
-	CCadText::m_RenderEnable = e;
-}
-
-CDoublePoint& CCadText::GetCenter(CDoublePoint& Center)
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	CDoubleRect rect;
-	rect = GetRect(rect);
-	Center = rect.GetCenter(Center);
-	return Center;
-}
-
-
-CDoubleSize& CCadText::GetSize(CDoubleSize& size)
-{
-	//***************************************************
-	// GetSize
-	//	Get the size of the object.  Reutrns the size
-	// of the enclosing rectangle.
-	// parameters:
-	//
-	// return value:returns size of the object
-	//--------------------------------------------------
-	CDoubleRect rect;
-
-	rect = GetRect(rect);
-	size = rect.GetSize(size);
-	return size;
 }
 
 DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//---------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -437,16 +256,24 @@ DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 			Token = pLex->Accept(Token, DocFileParseToken::STRING);
 			break;
 		case DocFileParseToken::POINT:
-			Token = pLex->Point(DocFileParseToken::POINT, m_P1, Token);
+//			Token = pLex->Point(DocFileParseToken::POINT, m_P1, Token);
 			break;
 		case DocFileParseToken::COLOR:
 			Token = pLex->Color(DocFileParseToken::COLOR, GetAttributes().m_colorText, Token);
 			break;
 		case DocFileParseToken::BKCOLOR:
-			Token = pLex->Color(DocFileParseToken::BKCOLOR, GetAttributes().m_colorBK, Token);
+			Token = pLex->Color(
+				DocFileParseToken::BKCOLOR, 
+				GetAttributes().m_colorBK, 
+				Token
+			);
 			break;
 		case DocFileParseToken::FONT:
-			Token = pLex->csString(DocFileParseToken::FONT, GetAttributes().m_csFontName, Token);
+			Token = pLex->csString(
+				DocFileParseToken::FONT, 
+				GetAttributes().m_csFontName, 
+				Token
+			);
 			break;
 		case DocFileParseToken::WEIGHT:
 			Token = pLex->ReadUINTDecimalValue(
@@ -470,7 +297,7 @@ DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 			);
 			break;
 		case DocFileParseToken::ANGLE:
-			Token = pLex->ReadDoubleValue(DocFileParseToken::ANGLE, GetAttributes().m_Angle, Token);
+			Token = pLex->ReadDoubleValue(DocFileParseToken::ANGLE, m_Angle, Token);
 			break;
 		case DocFileParseToken::TRANSPARENTToken:
 			Token = pLex->ReadUINTDecimalValue(
@@ -498,31 +325,31 @@ DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 
 void CCadText::CopyAttributesTo(STextAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesTo
-	*		This Method is used to copy the
-	*	attributes this object into an outside
-	*	desitination
-	*
-	* Parameters:
-	*	pAttrib.....pointer to attributes structure to copy to
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadText::CopyAttributesFrom(STextAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrib.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
@@ -539,18 +366,21 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
 		GETAPP.UpdateStatusBar(_T("TEXT:Enter Text Parameters"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
@@ -570,16 +400,23 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_P1 = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		m_P1 = MousePos;
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadText);
+		Obj.pCadObject = FindObject(ObjectType::POINT,SubType::TEXT_LOCATION,0);
+		Obj.pCadPoint->SetPoint(MousePos);
+		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
+		GETAPP.UpdateStatusBar(_T("TEXT:Define Text Angle"));
+		GETVIEW->Invalidate();
+		break;
+	case ObjectDrawState::ROTATE_LBUTTON_DOWN:
+		DrawState = ObjectDrawState::ROTATE_LBUTTON_UP;
+		break;
+	case ObjectDrawState::ROTATE_LBUTTON_UP:
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		GETAPP.UpdateStatusBar(_T("TEXT:Enter Text Parameters"));
-		GETVIEW()->Invalidate();
+		GETVIEW->SetObjectTypes(new CCadText);
 		break;
 	}
 	return DrawState;
@@ -601,142 +438,85 @@ ObjectDrawState CCadText::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-			m_P1 = MousePos;
-			GETVIEW()->Invalidate();
+		case ObjectDrawState::ROTATE_LBUTTON_DOWN:
+			Obj.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_ROTATION);
+			Obj.pCadPoint->SetPoint(MousePos);
+			GETVIEW->Invalidate();
 			break;
 	}
 	return DrawState;
 }
 
-void CCadText::Rotate(double Angle, CDoubleRect& rect)
+void CCadText::Rotate()
 {
-	///----------------------------------------------
-	/// Rotate
-	///		Thhis Method rotates the selection
-	/// rectangle.
-	///
-	///		parameters:
-	///			Angle....Angle to rotate by in degrees
-	///			rect.....Reference to an Arbitray Rect that
-	///						The rotated rectangle is put in
-	///----------------------------------------------
-	rect.Rotate(
-		rect.GetPoint(RectPoint::UPPERLEFT), 
-		Angle, 
-		RectPoint::UPPERLEFT
-	);
-}
+	//----------------------------------------------
+	// Rotate
+	//		Thhis Method calculates the angle that
+	// the text is to be rotated by, and also
+	// updates the rectangle that will be displayed
+	// when the text is selected.
+	//
+	//		parameters: None
+	//----------------------------------------------
+	CADObjectTypes LOC, ROT, RECT;
+	double X, Y;
+	CSize szTextRect;
+	CScale Scale;
+	CDoubleSize dszTextRect;
+	CFont Font, *pOldFont;
+	CDC* pDC;
 
-CDoubleRect& CCadText::GetTextRectangle(CDoubleRect& rect)
-{
-	///------------------------------------------
-	/// GetTextRectangle
-	///		This Method is used to get the
-	/// rectangle that surrounds the text displayed
-	/// bu the text object.
-	///------------------------------------------
-	CDC* pDC = GETVIEW()->GetDC();
-	CScale InchesPerPixel = GETVIEW()->GetGrid().GetInchesPerPixel();
-	rect = GetTextRectangle(pDC, rect, InchesPerPixel);
-	GETVIEW()->ReleaseDC(pDC);
-	return rect;
-}
-
-CDoubleRect& CCadText::GetTextRectangle(CDC *pDC, CDoubleRect& rect, CScale Scale)
-{
-	///------------------------------------------
-	/// GetTextRectangle
-	///		This Method is used to get the
-	/// rectangle that surrounds the text displayed
-	/// bu the text object.
-	///
-	///	parameters:
-	///		pDC.....pointer to the device context
-	///		Scale...Scale factor for display- PixelsPerInch
-	/// returns:
-	///		CdoubleRect that encloses the text t
-	///------------------------------------------
-	CFont font, *oldfont;
-	font.CreateFontW(
-		GETAPP.RoundDoubleToInt(GetFontHeight() * Scale.GetScaleX()),
-		GETAPP.RoundDoubleToInt(GetFontWidth() * Scale.GetScaleX()), 
-		0, 0,
-		GetFontWeight(), 
-		0, 0, 0, 
-		DEFAULT_CHARSET, 
+	//-------------------------------------
+	// Get objects that define text object
+	//-------------------------------------
+	LOC.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+	ROT.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_ROTATION, 0);
+	RECT.pCadObject = FindObject(ObjectType::RECT,SubType::TEXT_RECT,0);
+	X = ROT.pCadPoint->GetX() - LOC.pCadPoint->GetX();	// run
+	Y = LOC.pCadPoint->GetY() - ROT.pCadPoint->GetY();	// rise
+	m_Angle = GETAPP.ArcTan(X, Y);
+	pDC = GETVIEW->GetDC();
+	Scale = GETVIEW->GetGrid().GetPixelsPerInch();
+	Font.CreateFontW(
+		GETAPP.RoundDoubleToInt(GetFontHeight() * Scale.GetScaleY()),
+		GETAPP.RoundDoubleToInt(GetFontWidth() * Scale.GetScaleX()),
+		0,	//angle is 0 for this purpose
+		0,	//angle is 0 for this purpose
+		GetFontWeight(),
+		0, 0, 0,
+		DEFAULT_CHARSET,
 		OUT_CHARACTER_PRECIS,
-		CLIP_CHARACTER_PRECIS, 
-		PROOF_QUALITY, DEFAULT_PITCH,
+		CLIP_CHARACTER_PRECIS,
+		PROOF_QUALITY,
+		DEFAULT_PITCH,
 		GetFontName()
 	);
-	oldfont = pDC->SelectObject(&font);
-	CDoubleSize cz = CDoubleSize(pDC->GetTextExtent(GetText()));
-	pDC->SelectObject(oldfont);
-	rect.SetPoints(m_P1, m_P1 + cz);
-	return rect;
+	pOldFont = pDC->SelectObject(&Font);
+	szTextRect = pDC->GetTextExtent(m_csText);
+	dszTextRect = CDoubleSize(szTextRect);
+	RECT.pCadRect->SetPoints(dszTextRect,DOUBLEPOINT(*LOC.pCadPoint),DOUBLEPOINT(*ROT.pCadPoint));
 }
 
-BOOL CCadText::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadText::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
-}
-
-CDoublePoint CCadText::CalcTextShiftonRotation(
-	CDoublePoint Pivot, 
-	double Radius, 
-	double angle
-)
-{
-	///--------------------------------------------
-	///	CalcTextShiftonRotation
-	///		This Method is just a little complicated.
-	/// What this does is it calculates the point to
-	/// draw text at for a rotated text object.  This
-	/// makes it so the text apears to be centered
-	/// at point p1 at the given angle from the
-	/// center.
-	///
-	/// parameters:
-	///		Pivot......Point to rotate text about
-	///		Radius.....Distance to the Center of Text from Pivot
-	///		Angle......Angle in degree to rotate
-	///
-	/// returns:
-	///		point at wich to paint text.
-	///--------------------------------------------
-	CDoubleSize rP;	// resulting point
-	CDoubleRect TextRect = GetTextRectangle(TextRect);;
-	CDoublePoint Center = TextRect.GetCenter(Center);
-
-	TextRect.Rotate(Pivot, angle,RectPoint::UPPERLEFT);
-	rP.dCX = Radius * cos(angle - 90.0);
-	rP.dCY = Radius * sin(angle - 90.0);
-	return m_P1 - rP;
-}
-
-void CCadText::UpdateText(void)
-{
-	CDoubleRect rect;
-
-	rect = GetTextRectangle(rect);
-	Rotate(GetAngle(), rect);
-}
 
 int CCadText::EditProperties(void)
 {
-	int ID;
+	int Id;
 	CDlgTextProperties Dlg;
+
 	Dlg.SetTextObject(this);
-	ID = Dlg.DoModal();
-	return ID;
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
+	return Id;
 }

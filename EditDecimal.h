@@ -9,6 +9,7 @@
 
 class CEditDecimal : public CEdit
 {
+	BOOL m_Dirty;
 	int m_DecimalPlaces;
 	WMarrowSubMsg m_ObjMsg;
 	WindowsMsg m_WMsg;

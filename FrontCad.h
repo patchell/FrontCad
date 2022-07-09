@@ -3,6 +3,16 @@
 //
 #pragma once
 
+class CMoveObjects;
+
+//----------------------------------------------
+// Return Values for CFrontCadApp::Orientation()
+//----------------------------------------------
+
+constexpr auto ORIENTATION_COLINEAR = 0;
+constexpr auto ORIENTATION_CLOCKWISE = 1;
+constexpr auto ORIENTATION_COUNTERCLOCKWISE = 2;
+
 //-------------------------------------------------------
 // CFrontCadApp:
 // See FrontCad.cpp for the implementation of this class
@@ -14,7 +24,10 @@ class CFrontCadApp : public CWinApp
 	static UINT Id;
 	FILE* pConsol;
 	CMainFrame* m_pMainFrame;
-	CMoveObjects m_ClipBoard;
+	//----------------------------------
+	//	The Clip Bopard
+	//----------------------------------
+	CClipboard m_ClipBoard;
 	//-----------------------------------
 	// Default Attributes
 	//-----------------------------------
@@ -37,6 +50,7 @@ class CFrontCadApp : public CWinApp
 	SRndHole2FlatAttributes m_RoundHole2FlatsAttributes;
 	SGridAttributes m_GridAttributes;
 	SRullerAttributes m_RulerAttributes;
+	SPointAttributes m_PointAttributes;
 	double Pi;
 public:
 	CFrontCadApp() noexcept;
@@ -46,12 +60,7 @@ public:
 	void UpdateStatusBar(CString csS) { m_pMainFrame->SetStatusText(csS); }
 	afx_msg void OnAppAbout();
 	CMainFrame* GetMainFrame() { return m_pMainFrame; }
-	void CutCopy(CCadObject* pObj, int mode);
-	void CopyToClipBoard(CCadObject* pObjList);
-	void CutToClipboard(CCadObject* pSelList);
-	void SetClipboardRef(CDoublePoint p);
-	int IsClipboardReadyToPaste(void) { return m_ClipBoard.IsReadyToPaste(); }
-	CMoveObjects* GetClipBoard(void) { return &m_ClipBoard; }
+	void SetClipBoardRef(DOUBLEPOINT p);
 	void LoadSettings();
 	void SaveSettings();
 	void* GetObjectDefaultAttributes(ObjectType ObjectType);
@@ -77,6 +86,7 @@ public:
 	//-----------------------------------------
 	// Math Methods
 	//-----------------------------------------
+	BOOL QuadradicEquation(double a, double b, double c, double& X1, double& X2);
 	double GetPi() { return Pi; }
 	double ArcTan(double X, double Y);
 	double ArcSin(double X, double Y);
@@ -95,6 +105,7 @@ public:
 		return _wtof(csVal.GetString());
 	}
 	double RoundToNearset(double v, double roundto);
+	DOUBLEPOINT RoundToNearest(DOUBLEPOINT point, CDoubleSize roundto);
 	double RoundDownToNearest(double v, double roundupto);
 	double RoundUpToNearest(double v, double roundupto);
 	int RoundDoubleToInt(double dVal)
@@ -123,22 +134,60 @@ public:
 	//-----------------------------------------
 	// Ellipse Methods
 	//-----------------------------------------
-	BOOL PointInEllipse(double A, double B, CDoublePoint Point, CDoublePoint Center);
-	double Ellipse(double A, double B, CDoublePoint Point, CDoublePoint Center);
-	BOOL TestEllipsePoint(double A, double B, CDoublePoint pt, CDoublePoint Center, double Tolerance);
+	BOOL PointInEllipse(double A, double B, DOUBLEPOINT Point, DOUBLEPOINT Center);
+	double Ellipse(double A, double B, DOUBLEPOINT Point, DOUBLEPOINT Center);
+	BOOL TestEllipsePoint(double A, double B, DOUBLEPOINT pt, DOUBLEPOINT Center, double Tolerance);
 	//-----------------------------------------
 	// Polygon Methods
 	//-----------------------------------------
-	void ShiftDoublePointArray(CDoublePoint* pdptPoints, UINT nPoints, UINT Direction);
-	CPoint* MakePolygonFromDoublePolygon(
+
+	void GetPolyMinMax(
+		DOUBLEPOINT* pPoly, 
+		int n, 
+		double& MinX, 
+		double& MaxX, 
+		double& MinY, 
+		double& MaxY
+	);
+	void ShiftDoublePointArray(CCadPoint* pdptPoints, UINT nPoints, UINT Direction);
+	CPoint* MakeCPointPolygonFromDOUBLEPOINTS(
 		CPoint* dest, 
-		CDoublePoint* src, 
+		DOUBLEPOINT*src,
 		int n,
-		CDoublePoint& ULHC,
+		DOUBLEPOINT ULHC,
 		CScale& Scale
 	);
-	BOOL GeneratePointInPolygon(CDoublePoint* Poly, int n, CDoublePoint& point);
-	BOOL PtEnclosedInPolygon(CDoublePoint ptPoint, CDoublePoint* ptArray, UINT nVeticies);
+	BOOL IsOnSegment(
+		DOUBLEPOINT p, 
+		DOUBLEPOINT q, 
+		DOUBLEPOINT r
+	);
+	BOOL DoLinesIntersect(
+		DOUBLEPOINT p1, 
+		DOUBLEPOINT q1, 
+		DOUBLEPOINT p2, 
+		DOUBLEPOINT q2
+	);
+	int Orientation(
+		DOUBLEPOINT p, 
+		DOUBLEPOINT q, 
+		DOUBLEPOINT r
+	);
+	DOUBLEPOINT CalcCenter(DOUBLEPOINT p1, DOUBLEPOINT p2);
+	DOUBLEPOINT CalcCenter(CCadPoint* pP1, CCadPoint* pP2);
+	BOOL DoLinesIntersect(
+		DOUBLEPOINT L1P1, 
+		DOUBLEPOINT L1P2, 
+		DOUBLEPOINT L2P1, 
+		DOUBLEPOINT L2P2, 
+		DOUBLEPOINT& Intersection
+	);
+	DOUBLEPOINT GetPolygonCenter(DOUBLEPOINT* pPoly, int n);
+	int GetNumberOfIntersections(DOUBLEPOINT* pPoly, int n, DOUBLEPOINT L1P1, DOUBLEPOINT L1P2);
+	BOOL ValidatePolygon(DOUBLEPOINT* pPoly, int n);
+	BOOL GeneratePointInPolygon(DOUBLEPOINT* Poly, int n, DOUBLEPOINT &ThePoint);
+	BOOL PtEnclosedInPolygon(DOUBLEPOINT ptPoint, DOUBLEPOINT* ptArray, UINT nVeticies);
+	//--------------------------------------------------
 	CWnd* GetCurrentView();
 	UINT GetUniqueID() {
 		return ++Id;
@@ -165,6 +214,9 @@ public:
 	SRndHole2FlatAttributes* GetRoundHole2FlatAttributes(){ return &m_RoundHole2FlatsAttributes;}
 	SGridAttributes* GetGridAttributes() { return &m_GridAttributes; }
 	SRullerAttributes* GetRulerAttributes() { return &m_RulerAttributes; }
+	SPointAttributes*  GetPointAttributes() { return &m_PointAttributes; }
+	//--------------------------------------ClipBoard-----------------------
+	CClipboard& GetClipBoard(void) { return m_ClipBoard; }
 	//--------------------------------------Debug---------------------------
 	CString& DrawStateToString(ObjectDrawState State)
 	{

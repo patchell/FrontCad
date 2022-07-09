@@ -2,40 +2,57 @@
 
 CCadArrow::CCadArrow():CCadObject()
 {
-	m_pPen = 0;
-	m_pBrFill = 0;
-	m_RotationAngle = 0.0;
 	SetType(ObjectType::ARROW);
 	GetName().Format(_T("Arrow%d"), ++CCadArrow::m_ArrowCount);
-	if (!m_AttributesGood)
+	if (NeedsAttributes())
 	{
-		m_AttributesGood = TRUE;
+		ClearNeedsAttributes();
 		m_LastAttributes.CopyFrom(GETAPP.GetArrowAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
-CCadArrow::CCadArrow(CCadArrow &ca) :CCadObject()
-{
-	m_ArrowTip = ca.GetArrowTip();
-	m_DefineAngle = ca.GetDefineAnglePoint();
-	GetAttributes().CopyFrom(ca.GetAttributesPointer());
-	m_pPen = 0;
-	m_pBrFill = 0;
-	SetType(ObjectType::ARROW);
-	GetName().Format(_T("Arrow%d"), ++CCadArrow::m_ArrowCount);
-}
-
 CCadArrow::~CCadArrow()
 {
-	if (m_pPen) delete m_pPen;
-	if (m_pBrFill) delete m_pBrFill;
+}
+
+void CCadArrow::Create()
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ARROW_TIP);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ARROW_TOP);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ARROW_END);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ARROW_BOT);
+	AddObjectAtTail(Obj.pCadObject);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create();
+	Obj.pCadPoint->SetSubType(SubType::ARROW_ROTATION);
+	AddObjectAtTail(Obj.pCadObject);
+
+}
+
+BOOL CCadArrow::Destroy(CCadObject* pDependentObjects)
+{
+	BOOL rV = TRUE;
+	return rV;
 }
 
 void CCadArrow::Move(CDoubleSize Diff)
 {
-	//***************************************************
+	//--------------------------------------------------
 	//	Move
 	//		This Method is used to move the object
 	// by the amount that is passed.
@@ -45,13 +62,12 @@ void CCadArrow::Move(CDoubleSize Diff)
 	//
 	// return value: none
 	//--------------------------------------------------
-	m_ArrowTip += Diff;
-	m_DefineAngle += Diff;
+	CCadObject::Move(Diff);
 }
 
 void CCadArrow::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Save
 	//		This Method save the document
 	// parameters:
@@ -59,56 +75,11 @@ void CCadArrow::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//
 	// return value:none
 	//--------------------------------------------------
-	char* IndentString = new char[256];
-
-	GETAPP.MkIndentString(IndentString, Indent, ' ');
-	fprintf(pO, "%s%s(\n",
-		IndentString,
-		CLexer::TokenToString(DocFileParseToken::ARROW)
-	);
-	m_ArrowTip.Save(pO, DocFileParseToken::START, Indent + 1, flags);
-	m_DefineAngle.Save(pO, DocFileParseToken::END, Indent + 1, flags);
-	GetAttributes().Save(pO, DocFileParseToken::ARROW, Indent + 1, flags);
-	fprintf(pO, ")\n");
-	delete[] IndentString;
 }
 
-void CCadArrow::SetVertex(int Vi, CDoubleSize sz)
+void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
-	//***************************************************
-	// SetVertex
-	//	This Method is used to change the position of
-	// a vertex.
-	//
-	// parameters:
-	// Vi......index of the vertex
-	// p......Amnount to change the vertex by
-	//
-	// return value: none
 	//--------------------------------------------------
-}
-
-int CCadArrow::GrabPoint(CDoublePoint p)
-{
-	//***************************************************
-	// GrabPoint
-	//	This Method checks for a vertex at point p
-	//
-	// parameters:
-	//	p.....point to check for presence of a vertex
-	//	scale....scale factor
-	//
-	// return value:
-	//	returns index of vertex if succesful
-	//	returns -1 on fail
-	//--------------------------------------------------
-	return -1;
-}
-
-
-void CCadArrow::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
-{
-	//***************************************************
 	// Draw
 	//	This Method draws the document to the device
 	// parameters:
@@ -119,72 +90,83 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen *pOldPen;
-	CBrush *pOldBr;
+	CPen *pOldPen,penLine;
+	CBrush *pOldBr, brushFill;
 	CRect rect;
 	CPoint ArrowPoints[4];
+	CADObjectTypes TIP, TOP, END, BOT, ROT;
+	int Lw;
 
-	if (CCadArrow::IsRenderEnabled())
+	if (IsRenderEnabled())
 	{
-		if ((!IsLastModeSame(mode)) || IsDirty())
-		{
-			SetDirty(FALSE);
-			switch (mode.DrawMode)
-			{
-			case ObjectDrawMode::FINAL:
-				if (m_pPen) delete m_pPen;
-				m_pPen = new CPen();
-				m_pPen->CreatePen(PS_SOLID, 1, GetAttributes().m_colorLine);
-				if (m_pBrFill) delete m_pBrFill;
-				m_pBrFill = new CBrush(GetAttributes().m_colorFill);
-				break;
-			case ObjectDrawMode::SELECTED:
-				if (m_pPen) delete m_pPen;
-				m_pPen = new CPen();
-				m_pPen->CreatePen(PS_SOLID, 1, GetAttributes().m_colorLine ^ 0x00ff00);
-				if (m_pBrFill) delete m_pBrFill;
-				m_pBrFill = new CBrush(GetAttributes().m_colorFill ^ 0x00ff00);
-				break;
-			case ObjectDrawMode::SKETCH:
-				if (m_pPen) delete m_pPen;
-				m_pPen = new CPen();
-				m_pPen->CreatePen(PS_SOLID, 1, GetAttributes().m_colorLine);
-				if (m_pBrFill) delete m_pBrFill;
-				m_pBrFill = new CBrush(GetAttributes().m_colorFill);
-				break;
-			}
-		}
+		MakeCPointArray(ArrowPoints, pDC, mode, ULHC, Scale);
+		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
+		if (Lw < 1)
+			Lw = 1;
+		TIP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+		TOP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+		END.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+		BOT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+		ROT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
+			pOldPen = pDC->SelectObject(&penLine);
+			pOldBr = pDC->SelectObject(&brushFill);
+			pDC->Polygon(ArrowPoints, 4);
+			pDC->SelectObject(pOldPen);
+			pDC->SelectObject(pOldBr);
+			break;
 		case ObjectDrawMode::SELECTED:
-			pOldPen = pDC->SelectObject(m_pPen);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, ULHC, Scale), 4);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			brushFill.CreateStockObject(NULL_BRUSH);
+			pOldPen = pDC->SelectObject(&penLine);
+			pOldBr = pDC->SelectObject(&brushFill);
+			pDC->Polygon(ArrowPoints, 4);
 			pDC->SelectObject(pOldPen);
 			pDC->SelectObject(pOldBr);
 			break;
 		case ObjectDrawMode::SKETCH:
-			pOldPen = pDC->SelectObject(m_pPen);
-			pOldBr = pDC->SelectObject(m_pBrFill);
-			pDC->Polygon(GETAPP.MakePolygonFromDoublePolygon(ArrowPoints, GetArrowPoints(), 4, ULHC, Scale), 4);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
+			pOldPen = pDC->SelectObject(&penLine);
+			brushFill.CreateStockObject(NULL_BRUSH);
+			pOldBr = pDC->SelectObject(&brushFill);
+			pDC->Polygon(ArrowPoints, 4);
 			pDC->SelectObject(pOldPen);
 			pDC->SelectObject(pOldBr);
 			break;
 		}
-		SetLastMode(mode);
 	}
 }
 
-BOOL CCadArrow::PointInObjectAndSelect(
-	CDoublePoint p, 
-	CCadObject ** ppSelList , 
-	int index, 
-	int n, 
-	DrawingCheckSelectFlags flag
+BOOL CCadArrow::PointInThisObject(DOUBLEPOINT point)
+{
+	DOUBLEPOINT Points[4];
+	CADObjectTypes Obj;
+	BOOL rV;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	Points[ARROW_TIP] = DOUBLEPOINT(*Obj.pCadPoint);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	Points[ARROW_TOP] = DOUBLEPOINT(*Obj.pCadPoint);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	Points[ARROW_BACK] = DOUBLEPOINT(*Obj.pCadPoint);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	Points[ARROW_BOT] = DOUBLEPOINT(*Obj.pCadPoint);
+	rV = GETAPP.PtEnclosedInPolygon(point, Points,4);
+	return rV;
+}
+
+int CCadArrow::PointInObjectAndSelect(
+	DOUBLEPOINT p,
+	CCadObject** ppSelList,
+	int index,
+	int n
 )
 {
-	//***************************************************
+	//--------------------------------------------------
 	// PointInObjectAndSelect
 	//	This Method is used to see if an object can
 	// be selected at point p.
@@ -195,112 +177,36 @@ BOOL CCadArrow::PointInObjectAndSelect(
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
+	int ix;
 
 	if (index < n || n == 0)
 	{
 		//---------------------------------------
-		// is point in polygon/arrow
+		// is point in the Arc?
 		//---------------------------------------
-		if (GETAPP.PtEnclosedInPolygon(
-			p,
-			GetAttributes().m_PolyPointsShape.GetPoints(),
-			GetAttributes().m_PolyPointsShape.GetSize()
-			)
-		)
+		if (PointInThisObject(p))
 		{
-			if (ppSelList)
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						ppSelList[index++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if (!IsSelected())
-							ppSelList[index++] = this;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if (IsSelected())
-							ppSelList[index++] = this;
-						break;
-				}
-			}
-			else
-			{
-				switch (flag)
-				{
-					case DrawingCheckSelectFlags::FLAG_ALL:
-						index = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_UNSEL:
-						if (!IsSelected())
-							index = 1;
-						break;
-					case DrawingCheckSelectFlags::FLAG_SEL:
-						if (IsSelected())
-							index = 1;
-						break;
-				}
-
-			}
+			ppSelList[index++] = this;
+			ix = CCadObject::PointInObjectAndSelect(
+				p,
+				ppSelList,
+				index,
+				n
+			);
+			index += ix;
 		}
 	}
 	return index;
 }
 
-CDoublePoint CCadArrow::GetReference()
-{
-	//***************************************************
-	// GetReference
-	//	This Method returns the reference point for
-	// the object
-	// parameters:none
-	//
-	// return value:reference point
-	//--------------------------------------------------
-	return m_ArrowTip;
-}
-
-
-
-CDoubleRect& CCadArrow::GetRect(CDoubleRect& rect)
-{
-	//***************************************************
-	// GetRect
-	//	Returns the rectangle that will enclose the
-	//  object
-	// parameters:
-	//
-	// return value:Returns the rectangle that encloses
-	// the object
-	//--------------------------------------------------
-	double MinX = 1e6, MinY = 1e6, MaxX= -1e6, MaxY = -1e6;
-	CDoublePoint* PolyPoints = GetAttributes().m_PolyPointsShape.GetPoints();
-
-	for (UINT i = 0; i < GetAttributes().m_PolyPointsShape.GetSize(); ++i)
-	{
-		if (MinX > PolyPoints[i].dX) MinX = PolyPoints[i].dX;
-		if (MinY > PolyPoints[i].dY) MinY = PolyPoints[i].dY;
-		if (MaxX < PolyPoints[i].dX) MaxX = PolyPoints[i].dX;
-		if (MaxY < PolyPoints[i].dY) MaxY = PolyPoints[i].dY;
-	}
-	rect = CDoubleRect(
-		CDoublePoint(MinX, MinY) + m_ArrowTip,
-		CDoublePoint(MaxX, MaxY) + m_ArrowTip
-	);
-	rect.Rotate(m_ArrowTip, m_RotationAngle, RectPoint::CENTER_RIGHTLINE);
-	return rect;
-}
-
 CString& CCadArrow::GetTypeString(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// GetTypeString
 	//	returns a string that describes the type of
 	// object this is
@@ -312,28 +218,15 @@ CString& CCadArrow::GetTypeString(void)
 	return csName;
 }
 
-CCadArrow CCadArrow::operator=(CCadArrow &Ca)
+CString& CCadArrow::GetObjDescription()
 {
-	//***************************************************
-	// operator=
-	//		Provides the Methodality when one object
-	// value is assigned to another
-	// parameters:
-	//	v......reference to object to get value(s) from
-	//
-	// return value:this
-	//--------------------------------------------------
-	CCadArrow Result;
-
-	Result.SetArrowTip(Ca.GetArrowTip());
-	Result.SetDefineAnglePoint(Ca.GetDefineAnglePoint());
-	Result.GetAttributes().CopyFrom(&Ca.GetAttributes());
-	return Result;
+	GetDescription().Format(_T("Base Obj Class"));
+	return GetDescription();
 }
 
 CCadObject * CCadArrow::CopyObject(void)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// CopyObject
 	//	Creates a copy of this and returns a pointer
 	// to the copy
@@ -342,53 +235,31 @@ CCadObject * CCadArrow::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadArrow *pArrow = new CCadArrow;
-	*pArrow = *this;
+	pArrow->Create();
+	CCadObject::CopyObject(pArrow);
 	return pArrow;
 }
 
-void CCadArrow::SetRect(CRect & rect, CPoint P1, CPoint P2, CSize Lw)
+CDoubleSize CCadArrow::GetSize()
 {
-	//***************************************************
-	// parameters:
-	//
-	// return value:
-	//--------------------------------------------------
-
-}
-	
-CDoublePoint& CCadArrow::GetCenter(CDoublePoint& point)
-{
-	//***************************************************
-	// GetCenter
-	//	Get the point at the "center" of the object.
-	// parameters:
-	//
-	// return value:the center point
-	//--------------------------------------------------
-	CDoubleRect rect;
-	point = GetRect(rect).GetCenter(point);
-	return point;
-}
-
-
-CDoubleSize& CCadArrow::GetSize(CDoubleSize& size)
-{
-	//***************************************************
+	//---------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
-	// of the enclosing rectangle.
-	// parameters:
-	//
-	// return value:returns size of the object
-	//--------------------------------------------------
-	CDoubleRect rect;
-	size = GetRect(rect).GetSize(size);
-	return size;
+	// 
+	// Get the size of the rectangle that
+	// encloses the arrow
+	//---------------------------------------
+	double MinX, MaxX, MinY, MaxY;
+	CDoubleSize Size;
+
+	GETAPP.GetPolyMinMax(GetAttributes().m_aArrowShape, 4, MinX, MaxX, MinY, MaxY);
+	Size = CDoubleSize(MaxX - MinX, MinY - MaxY);
+	return Size;
 }
+
 
 DocFileParseToken CCadArrow::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
 {
-	//***************************************************
+	//--------------------------------------------------
 	// Parse
 	//	This Method is used to parse this 
 	// object out of an input stream
@@ -402,43 +273,36 @@ DocFileParseToken CCadArrow::Parse(DocFileParseToken Token, CLexer *pLex, DocFil
 	//	returns lookahead token on success, or
 	//			throws exception on error
 	//--------------------------------------------------
-	Token = pLex->Expect(Token, TypeToken);
-	Token = pLex->Expect(Token, DocFileParseToken('('));
-	Token = pLex->Point(DocFileParseToken::ARROW_TIP, m_ArrowTip, Token);
-	Token = pLex->Expect(Token, DocFileParseToken(','));
-	Token = pLex->Point(DocFileParseToken::ARROW_END, m_ArrowTip, Token);
-	Token = pLex->Expect(Token, DocFileParseToken(')'));
-	Token = GetAttributes().Parse(Token, pLex);
 	return Token;
 }
 
 void CCadArrow::CopyAttributesTo(SArrowAttributes *pAttrib)
 {
-	/***************************************************
-	*	GetAttributes
-	*		This Method is used to copy the
-	*	attributes from this object into an
-	*	attributes structure pointed to by the parameter
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy into
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesTo
+	//		This Method is used to copy the
+	//	attributes from this object into one pointed
+	//	to by the parameter.
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy into
+	//-------------------------------------------------/
 	GetAttributes().CopyTo(pAttrib);
 }
 
 void CCadArrow::CopyAttributesFrom(SArrowAttributes *pAttrib)
 {
-	/***************************************************
-	*	CopyAttributesFrom
-	*		This Method is used to copy the
-	*	attributes pointed to by the parameter into
-	*	this object
-	*
-	* Parameters:
-	*	pAttrb.....pointer to attributes structure to copy
-	***************************************************/
+	//---------------------------------------------------
+	//	CopyAttributesFrom
+	//		This Method is used to copy the
+	//	attributes pointed to by the parameter into
+	//	this object
+	//
+	// Parameters:
+	//	pAttrb.....pointer to attributes structure to copy
+	//---------------------------------------------------/
 	GetAttributes().CopyFrom(pAttrib);
-	ClearNeedsAttributes();
+	SetAttributesValid();
 }
 
 ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
@@ -455,24 +319,29 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::START_DRAWING:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		GETVIEW->EnableAutoScroll(TRUE);
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
 		if (m_AttributesDirty)
 		{
-			Id = GETVIEW()->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+			Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
 			if (IDYES == Id)
 			{
 				m_CurrentAttributes.CopyTo(&m_LastAttributes);
 			}
 			m_AttributesDirty = FALSE;
 		}
+		GETVIEW->EnableAutoScroll(FALSE);
 		break;
 	case ObjectDrawState::SET_ATTRIBUTES:
 		Id = EditProperties();
@@ -483,27 +352,28 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		GETVIEW()->EnableAutoScroll(TRUE);
-		m_ArrowTip = m_DefineAngle = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		SetArrowTip(MousePos);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+		Obj.pCadPoint->SetPoint(MousePos);
+		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
 		break;
 	case ObjectDrawState::ROTATE_LBUTTON_DOWN:
-		m_DefineAngle = MousePos;
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::ROTATE_LBUTTON_UP:
-		GETVIEW()->EnableAutoScroll(FALSE);
-		SetDefineAnglePoint(MousePos);
-		GETVIEW()->AddObjectAtFrontIntoDoc(this);
-		GETVIEW()->SetObjectTypes(new CCadArrow);
+		Rotate(MousePos);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		Obj.pCadArrow = new CCadArrow;
+		Obj.pCadArrow->Create();
+		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
-		GETVIEW()->Invalidate();
+		GETVIEW->Invalidate();
 		break;
 	}
 	return DrawState;
@@ -526,91 +396,150 @@ ObjectDrawState CCadArrow::MouseMove(ObjectDrawState DrawState)
 	//	Returns:
 	//		Next Draw State
 	//-------------------------------------------------------
-	CDoublePoint MousePos = GETVIEW()->GetCurrentMousePosition();
+	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 
 	switch (DrawState)
 	{
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-			SetArrowTip(MousePos);
-			break;
 		case ObjectDrawState::ROTATE_LBUTTON_DOWN:
-			SetDefineAnglePoint(MousePos);
+			Rotate(MousePos);
 			break;
 	}
-	GETVIEW()->Invalidate();
+	GETVIEW->Invalidate();
 	return DrawState;
+}
+
+void CCadArrow::Rotate(DOUBLEPOINT MousePos)
+{
+	CADObjectTypes TIP, TOP, END, BOT, ROT;
+	DOUBLEPOINT R,T,TP, BP;
+	double m,x,y, Er;
+	double x1, y1;
+	double x2, y2;
+
+
+	TIP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	TOP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	END.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	BOT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	//------------------------------------------------------------
+	// This point defines the angle that the arrow is 
+	ROT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+	ROT.pCadPoint->SetPoint(MousePos);
+	Er = GetAttributes().m_aArrowShape[ARROW_BACK].dX;
+	R = DOUBLEPOINT(*ROT.pCadPoint);
+	T = DOUBLEPOINT(*TIP.pCadPoint);
+	//------------------------------------
+	// rotate the End point
+	//------------------------------------
+	if (0 == (R.dX - T.dX))
+	{
+		//------------------------------------
+		// This is a vertical line
+		//-----------------------------------
+		END.pCadPoint->SetPoint(T + GetAttributes().m_aArrowShape[ARROW_BACK]);
+	}
+	else
+	{
+		m = (R.dY - T.dY) / (R.dX - T.dX);
+		x = sqrt(Er * Er / (1 + m * m));
+		y = m * x;
+		END.pCadPoint->SetPoint(T + DOUBLEPOINT(x, y));
+		//------------------------------------------
+		// Rotate the top and bottom points
+		// These two points will be on a line that
+		// goes through a point that is on the axis
+		// of the arrow.  Confused?  So am I
+		//------------------------------------------
+		Er = GetAttributes().m_aArrowShape[ARROW_TOP].dX;
+		if (m == 0)
+		{
+			TP = GetAttributes().m_aArrowShape[ARROW_TOP];
+			TOP.pCadPoint->SetPoint(TP);
+			BP = GetAttributes().m_aArrowShape[ARROW_BOT];
+			BOT.pCadPoint->SetPoint(BP);
+		
+		}
+		else
+		{
+			x = sqrt(Er * Er / (1 + m * m));
+			y = m * x;
+			m = -1.0 / m;
+			Er = GetAttributes().m_aArrowShape[ARROW_TOP].dY;
+			x1 = sqrt(Er * Er / (1 + m * m));
+			y1 = m * x1;
+			x2 = -x1;
+			y2 = -y1;
+			TOP.pCadPoint->SetPoint(T + DOUBLEPOINT(x + x1, y + y1));
+			BOT.pCadPoint->SetPoint(T + DOUBLEPOINT(x + x2, y + y2));
+		}
+
+	}
 }
 
 int CCadArrow::EditProperties()
 {
-	int ID;
+	int Id;
 	CDlgArrowProperties Dlg;
 
 	Dlg.SetArrow(this);
-	ID = Dlg.DoModal();
-	return ID;
+	Id = Dlg.DoModal();
+	if (IDOK == Id)
+	{
+		if (Dlg.IsDirty())
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+		}
+	}
+	return Id;
+}
+void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	PolyPoints[ARROW_TIP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	PolyPoints[ARROW_TOP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	PolyPoints[ARROW_BACK] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	PolyPoints[ARROW_BOT] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
 }
 
+//-------------------------------------------
+// Methods used to edit the arrow shape
+// in the object attributes
+//-------------------------------------------
 double CCadArrow::GetL1()
 {
 	double L1;
-
-	L1 = GetArrowPoint(Arrow::TIP).dX - GetArrowPoint(Arrow::TOP).dX;
+	double TipX, TopX;
+	TipX = GetAttributes().m_aArrowShape[ARROW_TIP].dX;
+	TopX = GetAttributes().m_aArrowShape[ARROW_TOP].dX;
+	L1 = TipX - TopX;
 	return fabs(L1);
 }
 
 double CCadArrow::GetL2()
 {
 	double L2;
-
-	L2 = GetArrowPoint(Arrow::TIP).dX - GetArrowPoint(Arrow::END).dX;
+	double TipX, EndX;
+	TipX = GetAttributes().m_aArrowShape[ARROW_TIP].dX;
+	EndX = GetAttributes().m_aArrowShape[ARROW_BACK].dX;
+	L2 = TipX - EndX;
 	return fabs(L2);
 }
 
 double CCadArrow::GetW()
 {
 	double W;
+	double TopY, BotY;
 
-	W = GetArrowPoint(Arrow::TOP).dY - GetArrowPoint(Arrow::BOT).dY;
+	TopY = GetAttributes().m_aArrowShape[ARROW_TOP].dY;
+	BotY = GetAttributes().m_aArrowShape[ARROW_BOT].dY;
+	W = TopY - BotY;
 	return fabs(W);
-}
-
-BOOL CCadArrow::NeedsAttributes()
-{
-	return (m_AttributesGood == FALSE);
-}
-
-void CCadArrow::ClearNeedsAttributes()
-{
-	m_AttributesGood = TRUE;
-}
-
-void CCadArrow::Recalc()
-{
-	for (int i = 0; i < 4; ++i)
-	{
-		GetArrowPoints()[i] = GetAttributes().m_PolyPointsShape.GetPoint(i) + GetArrowTip();
-	}
-}
-
-void CCadArrow::SetArrowTip(CDoublePoint Tip)
-{
-	m_ArrowTip = Tip;
-	Recalc();
-}
-
-void CCadArrow::SetDefineAnglePoint(CDoublePoint DAP)
-{
-	double Angle;
-	int i;
-
-	m_DefineAngle = DAP;
-	Angle = (DAP - m_ArrowTip).Angle();
-	Recalc();
-	for (i = 1; i < 4; ++i)
-	{
-		GetArrowPoints()[i].Rotate(GetArrowTip(), Angle);
-	}
 }
 
 void CCadArrow::ApplyParameters(double L1, double L2, double W)
@@ -626,10 +555,9 @@ void CCadArrow::ApplyParameters(double L1, double L2, double W)
 	//	L2.....Length to bend from tip
 	//	W......Width, opposite tip
 	//------------------------------------
-	GetShape().SetPoint(int(Arrow::TIP), CDoublePoint(0, 0));
-	GetShape().SetPoint(int(Arrow::TOP), CDoublePoint(L1, W / 2.0));
-	GetShape().SetPoint(int(Arrow::END), CDoublePoint(L2, 0.0));
-	GetShape().SetPoint(int(Arrow::BOT), CDoublePoint(L1, -W / 2.0));
-
+	GetAttributes().m_aArrowShape[ARROW_TIP] = DOUBLEPOINT(0, 0);
+	GetAttributes().m_aArrowShape[ARROW_TOP] = DOUBLEPOINT(L1, W / 2.0);
+	GetAttributes().m_aArrowShape[ARROW_BACK] = DOUBLEPOINT(L2, 0.0);
+	GetAttributes().m_aArrowShape[ARROW_BOT] = DOUBLEPOINT(L1, -W / 2.0);
 }
 

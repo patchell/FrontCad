@@ -4,6 +4,7 @@
 
 class CDlgLineAttributes : public CDialog
 {
+	BOOL m_bDirty;
 	//=---------------------------------
 	// Data
 	//----------------------------------
@@ -19,14 +20,13 @@ public:
 	virtual ~CDlgLineAttributes();
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
-	afx_msg void OnStnClickedStaticLineColor();
 	void SetLine(CCadLine* pCL) { m_pLine = pCL; }
+	BOOL IsDirty() { return m_bDirty; }
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_LINE_ATTRB };
 #endif
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	DECLARE_MESSAGE_MAP()
+	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };
-
-extern int DoLineAttrbDlg(CCadLine* pCL);

@@ -36,7 +36,6 @@ END_MESSAGE_MAP()
 // CStaticPreview message handlers
 
 CScale CStaticPreview::CalculateScale(
-	CRect& Client, 
 	CDoubleSize& ObjSize
 )
 {
@@ -48,7 +47,6 @@ CScale CStaticPreview::CalculateScale(
 	// in question
 	// 
 	// parameters:
-	//	Client......client rectangle
 	//	ObjectSize..Size of the object in inches
 	// 
 	// Return Value
@@ -58,9 +56,11 @@ CScale CStaticPreview::CalculateScale(
 	double ScaleX;
 	double ScaleY;
 	double Scale;
+	CRect rectClient;
 
-	ScaleX = double(Client.Width()) / ObjSize.dCX;
-	ScaleY = double(Client.Height()) / ObjSize.dCY;
+	GetClientRect(&rectClient);
+	ScaleX = double(rectClient.Width()) / ObjSize.dCX;
+	ScaleY = double(rectClient.Height()) / ObjSize.dCY;
 	//-----------------------------------
 	// We need to pick only one, but
 	// we must choose wisely
@@ -98,7 +98,7 @@ void CStaticPreview::OnPaint()
 	}
 	dc.SelectObject(oldPen);
 	MODE mode;
-	CDoublePoint ulhc;
+	CCadPoint ulhc;
 	while(pO)
 	{
 		pO->Draw(&dc, mode, ulhc, m_Scale);
@@ -136,31 +136,29 @@ BOOL CStaticPreview::PreCreateWindow(CREATESTRUCT& cs)
 	return rV;
 }
 
-void CStaticPreview :: AutoScale(CDoubleRect &rect)
+void CStaticPreview::AutoScale()
 {
 	//-------------------------------------------------
 	// AutoScale
 	// This Method uses the rectangle that surronds
-	// the object that is desired to sho and calculates
-	// and optimized offset and scale
+	// the object that is desired to show and calculates
+	// an optimized offset and scale
 	//
-	// parameters:
-	//	rect.......rectangle that surrounds object
 	//---------------------------------------------------
 	CRect RectClient;
 	CDoubleSize ObjectSize;
-	CDoublePoint pointScratch;
+	DOUBLEPOINT pointScratch;
 	CPoint ClientCenterPoint;
-	CDoublePoint dblPtZero;
+	DOUBLEPOINT dblPtZero;
 
 	GetClientRect(&RectClient);
 	ClientCenterPoint = RectClient.CenterPoint();
-	ObjectSize = m_pObj->GetSize(ObjectSize);
-	m_Scale = CalculateScale(RectClient, ObjectSize);
+	ObjectSize = m_pObj->GetSize();
+	m_Scale = CalculateScale(ObjectSize);
 	//-----------------------------------
 	// Now we need to calculate the
 	// offset value so that the drawing
 	// can start inside of the rectangle
 	//-----------------------------------
-	m_Offset = rect.GetCenter(pointScratch).ToPixelPoint(dblPtZero, m_Scale) - ClientCenterPoint;
+//	m_Offset = rect.GetCenter(pointScratch).ToPixelPoint(dblPtZero, m_Scale) - ClientCenterPoint;
 }

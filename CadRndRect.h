@@ -9,33 +9,25 @@ class CCadRndRect:public CCadObject
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
 	SRoundedRectAttributes m_Attrib;
-	CPen *m_pPenLine;
-	CBrush *m_pBrush;
-	CDoublePoint m_P1, m_P2, m_P3;
 public:
 	CCadRndRect();
-	CCadRndRect(CCadRndRect &r);
 	virtual ~CCadRndRect();
+	void Create();
+	virtual BOOL Destroy(CCadObject* pDependentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CDoubleSize sz);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
-		CDoublePoint p, 
-		CCadObject ** ppSelList = 0, 
-		int index = 0, 
-		int n = 0, 
-		DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL
+		DOUBLEPOINT p,
+		CCadObject ** ppSelList, 
+		int index, 
+		int n
 	);
-	virtual CDoublePoint GetReference();
-	virtual CDoubleRect& GetRect(CDoubleRect& rect);
 	virtual CString& GetTypeString(void);
-	CCadRndRect operator=(CCadRndRect &v);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint& GetCenter(CDoublePoint& Center);
-	virtual CDoubleSize& GetSize(CDoubleSize& size);
+	virtual CDoubleSize GetSize();
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	void CopyAttributesTo(SRoundedRectAttributes *pAttrb);
 	void CopyAttributesFrom(SRoundedRectAttributes*pAttrb);
@@ -58,12 +50,16 @@ public:
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	UINT GetTransparent() { return GetAttributes().m_TransparentFill; }
 	void SetTransparent(UINT t) { GetAttributes().m_TransparentFill = t; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static void RenderEnable(BOOL e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SRoundedRectAttributes* GetLastAttributes() const {
+	static SRoundedRectAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

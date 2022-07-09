@@ -57,3 +57,14 @@ April 14, 2022
 The commits may be very sparse for a bit.  Making another radical change to the code.  I really should have planned 
 this out from the start, although, probably the same thing might have happened.  I just seem to always have one
 of those moments when I say "oo-oo doing this will be really cool!"
+
+April 29, 2022
+After chasing my tail for a coulple of weeks, I have ironed out problems I was having with Rulers/Zoom/Origins.
+I did convert the way I am offsetting the screen when it is scrolled.  And that looks like a good improvement.
+If the code look dumb, probably it is.
+
+July 9, 2022
+Wow, what an ordeal.  Since May, I have made a lot of changes because things just became really weird.  The objects were 
+just getting too cumbersom, so I made some basic changes to the drawing objects that should, hopefully, make things a bit better.
+With this push, it is at the very least drawing lines.  I did not do any pushes so I at least knew that I had a working
+copy of the program.

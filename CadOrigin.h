@@ -8,29 +8,26 @@ class CCadOrigin:public CCadObject
 	inline static SOriginAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	CDoublePoint m_Origin;
 	SOriginAttributes m_Attrib;
 public:
 	CCadOrigin();
 	virtual ~CCadOrigin();
-	void Create(double x, double y, CString& csName);
+	void Create();
+	virtual BOOL Destroy(CCadObject* pDependentObject);
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void SetVertex(int v, CPoint p);
-	virtual int GrabPoint(CDoublePoint p);
-	virtual void Draw(CDC* pDC, MODE mode, CDoublePoint& ULHC, CScale& Scale);
-	virtual BOOL PointInObjectAndSelect(CPoint p, CSize Offest = CSize(0, 0), CCadObject ** ppSelList = 0, int index = 0, int n = 0, DrawingCheckSelectFlags flag = DrawingCheckSelectFlags::FLAG_ALL);
-	virtual CDoublePoint GetReference();
+	virtual DOUBLEPOINT GetCenterPoint();
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
+	virtual int PointInObjectAndSelect(
+		DOUBLEPOINT p,
+		CCadObject ** ppSelList, 
+		int index, 
+		int n
+	);
 	virtual CString& GetTypeString(void);
-	CCadOrigin operator=(CCadOrigin &v);
-	virtual CPoint ScalePoint(CPoint p, int Scale, int ScaleDiv);
+	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
-	virtual void RenderEnable(int e);
-	virtual CDoublePoint& GetCenter(CDoublePoint& pointCent) {
-		pointCent = m_Origin;
-		return pointCent;
-	}
-	virtual CDoubleSize GetSize();
+	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
 	//---------------------------------------------
 	// Draw Object Methodes
@@ -49,12 +46,16 @@ public:
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
 	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
-	virtual BOOL NeedsAttributes();
-	virtual void ClearNeedsAttributes();
 	//--------------------------------------------
-	static void SetRenderEnable(BOOL e) { m_RenderEnable = e; }
+	static void RenderEnable(int e) { m_RenderEnable = e; }
 	static BOOL IsRenderEnabled() { return m_RenderEnable; }
-	SOriginAttributes* GetLastAttributes() const {
+	static BOOL NeedsAttributes() {
+		return (m_AttributesGood == FALSE);
+	}
+	static void ClearNeedsAttributes() {
+		m_AttributesGood = TRUE;
+	}
+	static SOriginAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
 };

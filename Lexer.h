@@ -35,7 +35,7 @@ public:
 	//-----------------------------------------------
 	DocFileParseToken Point(
 		DocFileParseToken token,
-		CDoublePoint &p, 
+		CCadPoint &p, 
 		DocFileParseToken lookaheadtoken
 	);
 	DocFileParseToken DoubleSize(
@@ -65,9 +65,9 @@ public:
 		char *&s, 
 		DocFileParseToken Token
 	);
-	DocFileParseToken DoubleRect(
+	DocFileParseToken CadRect(
 		DocFileParseToken TypeToken, 
-		CDoubleRect& DoubleRect, 
+		CCadRect& CadRect, 
 		DocFileParseToken LookaheadToken
 	);
 	void UnexpectedToken(DocFileParseToken Token);

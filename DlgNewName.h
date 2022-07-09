@@ -12,7 +12,7 @@ class CDlgNewName : public CDialog
 	//----------------------------------
 	// Dialog Controls
 	//----------------------------------
-	CEdit m_Edit_Name;
+	CEditText m_Edit_Name;
 	DECLARE_DYNAMIC(CDlgNewName)
 public:
 	CDlgNewName(CWnd* pParent = NULL);   // standard constructor

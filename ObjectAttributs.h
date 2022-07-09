@@ -33,17 +33,21 @@ struct SArcCenterAttributes
 {
 	double m_LineWidth;
 	COLORREF m_colorLine;
+	COLORREF m_colorSelected;
 	SArcCenterAttributes() {
 		m_LineWidth = 0.01;	//default line width
 		m_colorLine = RGB(0, 0, 0);	//default color
+		m_colorSelected = RGB(200, 200, 200);	//default color
 	}
 	void CopyFrom(SArcCenterAttributes* pAttributes) {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorSelected = pAttributes->m_colorSelected;
 	}
 	void CopyTo(SArcCenterAttributes* pAttributes) {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorSelected = m_colorSelected;
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, int Indent, int flags) {
@@ -81,35 +85,43 @@ struct SArcAngleAttributes
 
 //---------- Arrow Attributes ---------
 
+constexpr auto ARROW_TIP = 0;
+constexpr auto ARROW_TOP = 1;
+constexpr auto ARROW_BACK = 2;
+constexpr auto ARROW_BOT = 3;
+
 struct SArrowAttributes {
 	COLORREF m_colorLine;
+	COLORREF m_colorSelected;
 	COLORREF m_colorFill;
 	double m_LineWidth;
-	CDoublePolygon m_PolyPointsShape;  /*m_ArrowPoly*/;;
+	DOUBLEPOINT m_aArrowShape[4];
 	SArrowAttributes() {
 		m_colorLine = RGB(255, 0, 0);
 		m_colorFill = RGB(0, 0, 255);
+		m_colorSelected = RGB(0, 255, 0);
 		m_LineWidth = 0.01;
-		m_PolyPointsShape.SetSize(4);
-		m_PolyPointsShape.AddPoint(CDoublePoint(0.0, 0.0));
-		m_PolyPointsShape.AddPoint(CDoublePoint(0.4, 0.1));
-		m_PolyPointsShape.AddPoint(CDoublePoint(0.3, 0.0));
-		m_PolyPointsShape.AddPoint(CDoublePoint(0.4, -0.1));
+		m_aArrowShape[ARROW_TIP] = { 0.0, 0.0 };
+		m_aArrowShape[ARROW_TOP] = { 0.4, 0.1 };
+		m_aArrowShape[ARROW_BACK] = { 0.3, 0.0 };
+		m_aArrowShape[ARROW_BOT] = { 0.4, -0.1 };
 	}
 	~SArrowAttributes() {}
 	void CopyFrom(SArrowAttributes* pAttributes) {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorSelected = pAttributes->m_colorSelected;
 		m_colorFill = pAttributes->m_colorFill;
 		for(int i = 0;i<4;++i)
-			m_PolyPointsShape.SetPoint(i, pAttributes->m_PolyPointsShape.GetPoint(i));
+			m_aArrowShape[i] = pAttributes->m_aArrowShape[i];
 	}
 	void CopyTo(SArrowAttributes* pAttributes) {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_colorFill = m_colorFill;
 		for (int i = 0; i < 4; ++i)
-			pAttributes->m_PolyPointsShape.SetPoint(i, m_PolyPointsShape.GetPoint(i));
+			pAttributes->m_aArrowShape[i] = m_aArrowShape[i];
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, DocFileParseToken TypeToken, int Indent, int flags) {
@@ -142,7 +154,7 @@ struct SBitmapAttributes {
 };
 //----------- Dimension Attributes -----------------------
 struct SCadDimAttributes {
-	inline static CDoublePoint m_aDefaultArrow[4] = {
+	inline static DOUBLEPOINT m_aDefaultArrow[4] = {
 		{0.0,0.0},
 		{0.20,0.05},
 		{0.175,0.0},
@@ -155,7 +167,7 @@ struct SCadDimAttributes {
 	double m_LineWidth;
 	double m_ExtLineGap;
 	double m_DimLineInset;
-	CDoublePoint m_aArrowShape[4];
+	DOUBLEPOINT m_aArrowShape[4];
 	SCadDimAttributes() {
 		m_colorLine = RGB(0,0,0);
 		m_colorText = RGB(0,0,0);
@@ -179,9 +191,9 @@ struct SCadDimAttributes {
 		m_DimLineInset = pAttributes->m_DimLineInset;
 		memcpy_s(
 			m_aArrowShape, 
-			sizeof(CDoublePoint) * 4, 
+			sizeof(DOUBLEPOINT) * 4, 
 			pAttributes->m_aArrowShape, 
-			sizeof(CDoublePoint) * 4
+			sizeof(DOUBLEPOINT) * 4
 		);
 	}
 	void CopyTo(SCadDimAttributes* pAttributes) {
@@ -194,9 +206,9 @@ struct SCadDimAttributes {
 		pAttributes->m_DimLineInset = m_DimLineInset;
 		memcpy_s(
 			pAttributes->m_aArrowShape,
-			sizeof(CDoublePoint) * 4,
+			sizeof(DOUBLEPOINT) * 4,
 			m_aArrowShape,
-			sizeof(CDoublePoint) * 4
+			sizeof(DOUBLEPOINT) * 4
 		);
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
@@ -212,23 +224,27 @@ struct SCadDimAttributes {
 struct SEllipseAttributes {
 
 	COLORREF m_colorLine;
+	COLORREF m_colorLineSelected;
 	COLORREF m_colorFill;
 	double m_LineWidth;
 	UINT m_TransparentFill;
 	SEllipseAttributes() {
-		m_colorLine = RGB(0, 0, 0);
+		m_colorLine = RGB(0, 0, 255);
+		m_colorLineSelected = RGB(0, 255, 0);
 		m_colorFill = RGB(255, 0, 0);
 		m_LineWidth = 0.01;
 		m_TransparentFill = 0;
 	}
 	void CopyFrom(SEllipseAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorLineSelected = pAttributes->m_colorLineSelected;
 		m_colorFill = pAttributes->m_colorFill;
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 	}
 	void CopyTo(SEllipseAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorLineSelected = m_colorLineSelected;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
@@ -245,20 +261,24 @@ struct SEllipseAttributes {
 
 struct SLineAttributes {
 	COLORREF m_colorLine;
+	COLORREF m_colorSelected;
 	double m_LineWidth;
 	BOOL m_LockLength;
 	SLineAttributes() {
 		m_colorLine = RGB(0, 0, 0);
+		m_colorSelected = RGB(0, 0, 0);
 		m_LineWidth = 0.01;
 		m_LockLength = FALSE;
 	}
 	void CopyFrom(SLineAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorSelected = pAttributes->m_colorSelected;
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_LockLength = pAttributes->m_LockLength;
 	}
 	void CopyTo(SLineAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_LockLength = m_LockLength;
 	}
@@ -307,23 +327,27 @@ struct SOriginAttributes {
 
 struct SPolyAttributes {
 	COLORREF m_colorLine;
+	COLORREF m_colorSelect;
 	COLORREF m_colorFill;
 	double m_LineWidth;
 	UINT m_TransparentFill;
 	SPolyAttributes() {
-		m_colorLine = RGB(0, 0, 0);
+		m_colorLine = RGB(0, 0, 255);
+		m_colorSelect = RGB(0, 255, 0);
 		m_colorFill = RGB(255, 0, 0);
 		m_LineWidth = 0.01;
 		m_TransparentFill = 0;
 	}
 	void CopyFrom(SPolyAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
+		m_colorSelect = pAttributes->m_colorSelect;
 		m_colorFill = pAttributes->m_colorFill;
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 	}
 	void CopyTo(SPolyAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
+		pAttributes->m_colorSelect = m_colorSelect;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
@@ -340,11 +364,15 @@ struct SPolyAttributes {
 struct SRectAttributes {
 	COLORREF m_colorLine;
 	COLORREF m_colorFill;
+	COLORREF m_colorSelected;
+	COLORREF m_colorSketch;
 	double m_LineWidth;
 	UINT m_TransparentFill;
 	SRectAttributes() {
 		m_colorLine = RGB(0, 0, 0);
 		m_colorFill = RGB(255, 0, 0);
+		m_colorSelected = RGB(255, 255, 0);
+		m_colorSketch = RGB(255, 255, 255);
 		m_LineWidth = 0.01;
 		m_TransparentFill = 0;
 	}
@@ -373,12 +401,14 @@ struct SRectAttributes {
 struct SRoundedRectAttributes {
 	COLORREF m_colorLine;
 	COLORREF m_colorFill;
+	COLORREF m_colorLineSelected;
 	double m_LineWidth;
 	UINT m_TransparentFill;
 	CDoubleSize m_dszCornerRadius;
 	SRoundedRectAttributes() {
-		m_colorLine = RGB(0, 0, 0);
+		m_colorLine = RGB(0, 255, 0);
 		m_colorFill = RGB(255, 0, 0);
+		m_colorLineSelected = RGB(255, 0, 255);
 		m_LineWidth = 0.01;
 		m_TransparentFill = 0;
 		m_dszCornerRadius = CDoubleSize(0.1, 0.1);
@@ -386,6 +416,7 @@ struct SRoundedRectAttributes {
 	void CopyFrom(SRoundedRectAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
 		m_colorFill = pAttributes->m_colorFill;
+		m_colorLineSelected = pAttributes->m_colorLineSelected;
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 		m_dszCornerRadius = pAttributes->m_dszCornerRadius;
@@ -393,6 +424,7 @@ struct SRoundedRectAttributes {
 	void CopyTo(SRoundedRectAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorFill = m_colorFill;
+		pAttributes->m_colorLineSelected = m_colorLineSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 		pAttributes->m_dszCornerRadius = m_dszCornerRadius;
@@ -410,7 +442,7 @@ struct STextAttributes {
 	CString m_csFontName;
 	COLORREF m_colorText;
 	COLORREF m_colorBK;
-	double m_Angle;
+	COLORREF m_colorSelected;
 	double m_fontHeight;
 	double m_fontWidth;
 	UINT m_Format;
@@ -420,7 +452,7 @@ struct STextAttributes {
 		m_csFontName = CString(_T("ARIAL"));
 		m_colorText = RGB(255,255,255);
 		m_colorBK = RGB(0,0,0);
-		m_Angle = 0.0;
+		m_colorSelected = RGB(255, 0, 0);
 		m_fontHeight = 0.060;
 		m_fontWidth = 0.0;
 		m_Format = DT_BOTTOM | DT_SINGLELINE;
@@ -431,7 +463,7 @@ struct STextAttributes {
 		m_csFontName = pAttributes->m_csFontName;
 		m_colorText = pAttributes->m_colorText;
 		m_colorBK = pAttributes->m_colorBK;
-		m_Angle = pAttributes->m_Angle;
+		m_colorSelected = pAttributes->m_colorSelected;
 		m_fontHeight = pAttributes->m_fontHeight;
 		m_fontWidth = pAttributes->m_fontWidth;
 		m_Format = pAttributes->m_Format;
@@ -442,7 +474,7 @@ struct STextAttributes {
 		pAttributes->m_csFontName = m_csFontName;
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorBK = m_colorBK;
-		pAttributes->m_Angle = m_Angle;
+		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_fontHeight = m_fontHeight;
 		pAttributes->m_fontWidth = m_fontWidth;
 		pAttributes->m_Format = m_Format;
@@ -465,7 +497,7 @@ struct SRectHoleAttributes {
 	SRectHoleAttributes() {
 		m_colorLine = RGB(0, 0, 0);
 		m_LineWidth = 0.01;
-		m_HoleHeight = 0.25;
+		m_HoleHeight = 0.250;
 		m_HoleWidth = 0.2500;
 	}
 	void CopyFrom(SRectHoleAttributes* pAttributes) {
@@ -712,4 +744,30 @@ struct SRullerAttributes {
 	}
 	static void LoadSettings(SRullerAttributes* pAttrb);
 	static void SaveSettings(SRullerAttributes* pAttrb);
+};
+
+//------------- Points ----------------------
+
+struct SPointAttributes
+{
+	COLORREF m_colorNormal;
+	COLORREF m_colorSelected;
+	SPointAttributes() {
+		m_colorNormal = 0;
+		m_colorSelected = 0;
+	}
+	void CopyFrom(SPointAttributes* pAttrib) {
+		m_colorNormal = pAttrib->m_colorNormal;
+		m_colorSelected = pAttrib->m_colorSelected;
+	}
+	void CopyTo(SPointAttributes* pAttrib) {
+		pAttrib->m_colorNormal = m_colorNormal;
+		pAttrib->m_colorSelected = m_colorSelected;
+	}
+	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
+	void Save(FILE* pO, int Indent, int flags) {
+
+	}
+	static void LoadSettings(SPointAttributes* pAttrb);
+	static void SaveSettings(SPointAttributes* pAttrb);
 };

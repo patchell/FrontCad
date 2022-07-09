@@ -15,22 +15,19 @@ CFrontCadView::CFrontCadView()
 	m_ControlKeyDown = FALSE;
 	m_ShiftKeyDown = FALSE;
 	m_DrawMode = DrawingMode::SELECT;
-	m_DrawState = ObjectDrawState::SELECT_NOTHING;
-	m_SelectionCount = 0;
-	m_pSelObjList = 0;
-	m_pSelObjEnd = 0;
-	m_GrabbedVertex = 0;
+	m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
 	m_CadObj.pCadObject = 0;
-	m_pGrabbedObject = 0;
-	m_pMoveObjects = 0;
 	m_MouseLeftWindow = FALSE;
 	m_MouseLocation = MouseIsHere::NOWHERE;
-	m_AutoScrollTimerId = 5600;
+	m_AutoScrollTimerId = TIMER_ID_AUTOSCROLL;
+	m_MouseLButtonHeldDownId = TIMER_ID_LBUTTON_DOWN;;
+	m_MouseLButtonHeldDown = FALSE;
 	memset(&m_HScrollInfo, 0, sizeof(SCROLLINFO));
 	memset(&m_VScrollInfo, 0, sizeof(SCROLLINFO));
 	m_HScrollInfo.cbSize = sizeof(SCROLLINFO);
 	m_HScrollInfo.cbSize = sizeof(SCROLLINFO);
-	SetMoveObjects(0);
+	m_R_KeyDown = FALSE;
+	m_GrabbedObject.pCadObject = 0;
 }
 
 CFrontCadView::~CFrontCadView()
@@ -67,8 +64,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ARROW, &CFrontCadView::OnUpdateDrawArrow)
 	ON_COMMAND(ID_DRAW_ELLIPSE, &CFrontCadView::OnDrawEllipse)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ELLIPSE, &CFrontCadView::OnUpdateDrawEllipse)
-	ON_COMMAND(ID_DRAW_LINE, &CFrontCadView::OnDrawLine)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_LINE, &CFrontCadView::OnUpdateDrawLine)
+	ON_COMMAND(ID_LINE_LINE, &CFrontCadView::OnDrawLine)
+	ON_UPDATE_COMMAND_UI(ID_LINE_LINE, &CFrontCadView::OnUpdateDrawLine)
 	ON_COMMAND(ID_DRAW_ORIGIN, &CFrontCadView::OnDrawOrigin)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ORIGIN, &CFrontCadView::OnUpdateDrawOrigin)
 	ON_COMMAND(ID_DRAW_POINT, &CFrontCadView::OnDrawPoint)
@@ -132,14 +129,14 @@ END_MESSAGE_MAP()
 
 void CFrontCadView::OnDraw(CDC* pDC)
 {
-	CDoublePoint UprLHCorner;
+//	CCadPoint UprLHCorner;
 	CDC memDC;
 	CRect rectClient;
 	CBitmap memDCbitmap;
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
 	CCadObject* pDrawingObjectList, * pOriginList;
-	CDoublePoint ULHC;		//upper left hand corner offset
+	CCadPoint ULHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
 
@@ -156,16 +153,15 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	br.CreateSolidBrush(RGB(0, 0, 0));
 	memDC.FillRect(&rectClient, &br);
 
-	UprLHCorner = GetRulerInfo().GetUpperLeft();
-	GetGrid().Draw(&memDC, mode, UprLHCorner, Scale, rectClient);
+	GetGrid().Draw(&memDC, mode, ULHC, Scale, rectClient);
 	while (pDrawingObjectList)
 	{
-		pDrawingObjectList->Draw(&memDC, mode, UprLHCorner, Scale);
+		pDrawingObjectList->Draw(&memDC, mode, ULHC, Scale);
 		pDrawingObjectList = pDrawingObjectList->GetNext();
 	}
 	while (pOriginList)
 	{
-		pOriginList->Draw(&memDC, mode, UprLHCorner, Scale);
+		pOriginList->Draw(&memDC, mode, ULHC, Scale);
 		pOriginList = pOriginList->GetNextOrigin();
 	}
 	if (GetObjectTypes().pCadObject)	//is an object being draw?
@@ -189,7 +185,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 			mode.DrawMode = ObjectDrawMode::ARCEND;
 			break;
 		}
-		GetObjectTypes().pCadObject->Draw(&memDC, mode, UprLHCorner, Scale);
+		GetObjectTypes().pCadObject->Draw(&memDC, mode, ULHC, Scale);
 	}
 //	if (GetMoveObjectes())	//are there any objects being moved?
 //		GetMoveObjectes()->Draw(&memDC, UprLHCorner, Scale);
@@ -198,7 +194,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 		&memDC, 
 		GetCurrentMousePosition(),
 		&rectClient,
-		UprLHCorner,
+		ULHC,
 		Scale,
 		RGB(255, 255, 255)
 	);
@@ -236,176 +232,6 @@ void CFrontCadView::Dump(CDumpContext& dc) const
 
 // CFrontCadView message handlers
 
-//-----------------------------------------------
-// Methods that manage the selection of objects
-//-----------------------------------------------
-
-
-void CFrontCadView::RemoveUnselectedObjects()
-{
-	///-------------------------------------
-	/// RemoveUnselectedObjects
-	///remove all unselected objects
-	///--------------------------------------
-	CCadObject* pO, * pOr, * pPrev = 0;
-
-	pO = m_pSelObjList;
-	while (pO)
-	{
-		if (!pO->IsSelected())
-		{
-			m_SelectionCount--;
-
-			pOr = pO;
-			if (!pPrev)
-			{
-				m_pSelObjList = pO->GetNextSel();
-				pO = m_pSelObjList;
-				pOr->SetNextSel(0);
-			}
-			else
-			{
-				//pPrev will stay the same
-				pO = pO->GetNextSel();
-				pPrev->SetNextSel(pOr->GetNextSel());
-				pOr->SetNextSel(0);
-			}
-		}
-		else
-		{
-			pPrev = pO;
-			pO = pO->GetNextSel();
-		}
-
-	}
-	if (m_pSelObjList == 0) m_pSelObjEnd = 0;
-}
-
-void CFrontCadView::RemoveSelectedObjects(CCadObject* pO)
-{
-	///----------------------------------------------
-	///	RemoveObject
-	/// This fuction removes the specified object
-	/// from the selected list
-	///		parameters:
-	///			pO.....pointer to object to remove
-	///----------------------------------------------
-	CCadObject* pL, * pPrev = 0;
-	int loop = 1;
-
-	pL = m_pSelObjList;
-	while (pL && loop)
-	{
-		if (pL == pO)
-		{
-			m_SelectionCount--;
-			loop = 0;
-			if (pPrev == 0)
-			{
-				m_pSelObjList = pL->GetNextSel();
-				pL->SetNextSel(0);
-			}
-			else
-			{
-				pPrev->SetNextSel(pL->GetNextSel());
-				pO->SetNextSel(0);
-			}
-		}
-		else
-		{
-			pPrev = pL;
-			pL = pL->GetNextSel();
-		}
-
-	}
-	if (m_pSelObjList == 0) m_pSelObjEnd = 0;
-}
-
-void CFrontCadView::ClearSelList()
-{
-	//------------------------------------
-	// ClearSelList
-	//		This method removes all objects
-	// from the selected list and also
-	// unselects any objects that are still
-	// slected.
-	//------------------------------------
-	CCadObject* pO = GetTopSelection();
-	CCadObject* next;
-	while (pO)
-	{
-		next = pO->GetNextSel();
-		pO->SetSelected(0);
-		RemoveObject(pO);
-		pO = next;
-	}
-	m_SelectionCount = 0;
-}
-
-int CFrontCadView::SelectAnObject(CCadObject** ppObj, int n, CPoint p)
-{
-	//---------------------------------------------
-	// SelectAnObject
-	//		This method is called when the user has
-	// requested that an object under the mouse be
-	// selected, but there are multiple objects
-	// there, and JamCad needs the user to clarify
-	// parameters:
-	//	ppObj........points to a list of posible objects
-	//	n............Number of objects in the list
-	//	p............Coordinate of mouse pointer
-	// returns:
-	//	Index in ppObj where desired object is
-	//		returns negative on error
-	//---------------------------------------------
-	int i, Id;
-	CString csString;
-	CPoint point = p;
-	ClientToScreen(&point);
-	CMenu ConTextMenu;
-
-	ConTextMenu.CreatePopupMenu();
-	for (i = 0; i < n; ++i)
-	{
-		csString.Format(
-			_T("%lS (%8.3lf,%8.3lf)"),
-			ppObj[i]->GetTypeString().GetBuffer(),
-			ppObj[i]->GetReference().dX,
-			ppObj[i]->GetReference().dY
-		);
-		ConTextMenu.AppendMenu(MF_STRING, 3000 + i, csString);
-		ConTextMenu.EnableMenuItem(3000 + i, MF_ENABLED);;
-	}
-	Id = ConTextMenu.TrackPopupMenu(TPM_RETURNCMD | TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON, point.x, point.y, this);
-	ConTextMenu.DestroyMenu();
-	if (Id >= 3000) Id -= 3000;
-	else Id = -1;
-	return Id;
-}
-
-
-void CFrontCadView::AddToSelList(CCadObject* pO)
-{
-	///----------------------------------------
-	///	AddToSelList
-	///		This Method adds an object to the
-	/// selection list.
-	///
-	///	parameter:
-	///		pO.....Object to add to list
-	///---------------------------------------
-	if (this->m_pSelObjList)
-	{
-		pO->SetNextSel(m_pSelObjList);
-		m_pSelObjList = pO;
-	}
-	else
-	{
-		m_pSelObjList = pO;
-		m_pSelObjEnd = pO;
-	}
-	m_SelectionCount++;
-}
 
 //--------------------------------------------
 // User Interface Input devices
@@ -413,7 +239,7 @@ void CFrontCadView::AddToSelList(CCadObject* pO)
 
 BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	CDoublePoint pointMousePos;
+	DOUBLEPOINT pointMousePos;
 	ScreenToClient(&pt);
 
 	pointMousePos = ConvertMousePosition(
@@ -423,7 +249,6 @@ BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		GetGrid().GetSnapGrid(),
 		GetGrid().IsSnapOn()
 	);
-	SetCurrentMousePosition(pointMousePos);
 
 	if (IsShiftKeyDown())	//scroll up or down
 	{
@@ -448,10 +273,55 @@ BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		PostMessageToRulers(RW_ZOOM);
 	}
 	CFrontCadDoc* pDoc = GetDocument();
-	pDoc->SetAllDirty();
 	return CChildViewBase::OnMouseWheel(nFlags, zDelta, pt);
 }
 
+//--------------------------------------------------------
+//  Mouse State Machine
+// The combination of OnLButtonDown, OnLButtonUp and
+// OnMouseMove methods together process the state machine
+// that controls almost all drawing actions.  Each
+// drawing mode, pretty much, has it's own state machine
+// however, the state is a combination of both the draw
+// mode, weather the left mouse button is up or down
+// and the draw state
+// -------------------------------------------------------
+// 
+// DRAWMODE:SELECT
+//		Mouse Down With CTRL key
+//			Select object, append to selected list
+//			If Mouse Down for time T
+//				Drawmode = Move
+//		Mouse Down Only
+//			Clear Selected List
+//			Add Object to Selected List
+//			If Mouse Down for time T
+//				Drawmode = Move
+//		Mouse Down but No objects to select
+//			Drawmode = SelectRegion
+// DRAWMODE:MOVE
+//		While Mouse Button is Down
+//			Move Object(s) around.
+//		When Button released
+//			Place Objects
+// DRAWMODE:COPY
+//		Not a mouse operation (CTRL-C)
+// DRAWMODE:CUT
+//		Not a mouse operation (CTRL-C)
+// DRAWMODE:PASTE
+//		While Mouse is Moving
+//			Move objects around
+//		When button is clicked
+//			Place objects.
+// DRAWMODE:SELECTREGION
+//		While Mouse Button down
+//			Draw selection region
+//		When Mouse button is up
+//			Select Objects in region
+// DRAWMODE:Everything else
+//		Set Drawmode for specified object.
+//		Sequence defined by the object.
+//--------------------------------------------------------
 
 void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 {
@@ -464,64 +334,71 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	//  nFlags......various flag bits
 	//  point.......mouse pointer coordinates for this window
 	//------------------------------------------------------
+	DOUBLEPOINT MousePos;
+	CFrontCadDoc* pDoc = GetDocument();
+	CCadObject* pObj = 0;
+
 	m_LeftMouseButtonDown = TRUE;
-	SetCurrentMousePosition(
-		ConvertMousePosition(
-			point,
-			GetRulerInfo().GetUpperLeft(),
-			GetGrid().GetInchesPerPixel(),
-			GetGrid().GetSnapGrid(),
-			GetGrid().IsSnapOn()
-		)
+	MousePos = ConvertMousePosition(
+		point,
+		GetRulerInfo().GetUpperLeft(),
+		GetGrid().GetInchesPerPixel(),
+		GetGrid().GetSnapGrid(),
+		GetGrid().IsSnapOn()
 	);
+	//------------------------------------
+	// Start a timer to see if the left
+	// button is being held down
+	// 
+	// If it is being held down, then
+	// the mouse will continue to be
+	// processed in the MouseMove and
+	// OnLButtonUp methods
+	//------------------------------------
+	m_MouseLButtonHeldDownId = SetTimer(
+		m_MouseLButtonHeldDownId,
+		TIMER_LBUTTON_DOWN_TIME,
+		NULL
+	);
+	m_MouseLButtonHeldDown = FALSE;
+	//-----------------------------------------
 	switch (m_DrawMode)
 	{
-	case DrawingMode::SELECT:
+	case DrawingMode::SELECT:	// OnLButtonDown
+		//-----------------------------------
+		// DrawingMode::SELECT
+		// This is the default Draw Mode
+		//-----------------------------------
 		switch (m_DrawState)
 		{
-		case ObjectDrawState::SELECT_NOTHING:
-			//------------------------------------
-			// check to see if anything is selected
-			// and are we clicking in the body of
-			// of the object, or one of the verticies
-			//-------------------------------------
-			if (m_SelectionCount)	//are there selections?
-			{
-				CCadObject* pObj = GetTopSelection();
-				m_GrabbedVertex = pObj->GrabPoint(GetCurrentMousePosition());
-				if (m_GrabbedVertex >= 0)
-				{
-					m_DrawState = ObjectDrawState::VERTEX_GRABBED;
-//					printf("Grabbed Vertex  %d\n", m_GrabbedVertex);
-				}
-			}
+		case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN:	//Mode:Select OnLButtonDown
+			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN_TIMEOUT;
 			break;
-		case ObjectDrawState::SELECT_MOVE:
+		case ObjectDrawState::SELECT_MOVE:		//Mode:Select OnLButtonDown
 			break;
-		case ObjectDrawState::SELECT_COPY:
+		case ObjectDrawState::SELECT_COPY:		//Mode:Select OnLButtonDown
 			break;
 		}
 		Invalidate();
 		break;
-	case DrawingMode::MOVE:
+	case DrawingMode::MOVE:		// OnLButtonDown
 		break;
-	case DrawingMode::COPY:
+	case DrawingMode::COPY:		// OnLButtonDown
 		break;
-	case DrawingMode::CUT:
+	case DrawingMode::CUT:		// OnLButtonDown
 		break;
-	case DrawingMode::PASTE:
+	case DrawingMode::PASTE:	//OnLButtonDown
 		switch (m_DrawState)
 		{
-			case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-			m_pMoveObjects = new CMoveObjects;
-			m_pMoveObjects->Copy(GETAPP.GetClipBoard());
+		case ObjectDrawState::PASTE_WAITFOR_LBUTTON_DOWN:	//Mode:PASTE OnLButtonDown
+			m_DrawState = ObjectDrawState::PASTE_WAITFOR_LBUTTON_DOWN;
 			Invalidate();
 			break;
-		}
+		}	//End of Switch(DrawState)
 		break;
-	case DrawingMode::SELECTREGION:
+	case DrawingMode::SELECTREGION:	// OnLButtonDown
 		break;
-	default:	//it must be something we are going to draw.
+	default:	// OnLButtonDownit must be something we are going to draw.
 		if (m_CadObj.pCadObject)
 		{
 			m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
@@ -537,7 +414,6 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	CChildViewBase::OnLButtonDown(nFlags, point);
 }
 
-
 void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	//-------------------------------------------------------
@@ -549,82 +425,92 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 	//  nFlags......various flag bits
 	//  point.......mouse pointer coordinates for this window
 	//------------------------------------------------------
-	CCadObject** pSel, * pObjSel, * pObj;
+	CCadObject** ppSel, * pObjSel, * pObj;
 	int n;
-	//-----------------------------------------------------
-	// CBaseDocument is the base class for all of JamCad
-	// drafting documents.  They will all have the same
-	// virtual Method set
-	//	virtual BOOL PointInObjectAndSelect(CPoint p, CCadObject **ppL, int n, int flag) { return 0; };
-	//	virtual void AddObjectAtEnd(CCadObject * pObj) {};
-	//	virtual void AddObject(CCadObject * pObj) {};
-	//	virtual void RemoveObject(CCadObject * pObj) {};
-	//	virtual void SetReference(CPoint Ref) {};
-	//	virtual void DrawReference(CDC *pDC, CSize Offset, CScale Scale, CRect &clientrect) {};
-	//	virtual void UpdateReference(CPoint newRef) {};
-	//-----------------------------------------------------
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
+	DOUBLEPOINT MousePos;
+	CFrontCadDoc* pDoc = GetDocument();
 
-	SetCurrentMousePosition(
-		ConvertMousePosition(
-			point,
-			GetRulerInfo().GetUpperLeft(),
-			GetGrid().GetInchesPerPixel(),
-			GetGrid().GetSnapGrid(),
-			GetGrid().IsSnapOn()
-		)
+	MousePos = ConvertMousePosition(
+		point,
+		GetRulerInfo().GetUpperLeft(),
+		GetGrid().GetInchesPerPixel(),
+		GetGrid().GetSnapGrid(),
+		GetGrid().IsSnapOn()
 	);
 	m_LeftMouseButtonDown = FALSE;
+	m_MouseLButtonHeldDown = FALSE;
 	switch (m_DrawMode)
 	{
 	case DrawingMode::SELECT:
+		//-----------------------------------------------------
+		//-----------------------------------------------------
 		switch (m_DrawState)
 		{
-		case ObjectDrawState::VERTEX_GRABBED:
-		{
-			CCadObject* pOBj = GetTopSelection();
-			pOBj->SetVertex(m_GrabbedVertex, GetCurrentMousePosition());
-			m_DrawState = ObjectDrawState::SELECT_NOTHING;
-		}
-		break;
-		case ObjectDrawState::SELECT_NOTHING:
-			pSel = new CCadObject * [8];
+		case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN_TIMEOUT:
+			KillTimer(m_MouseLButtonHeldDownId);	//Don't need timer anymore
+			//go onto Wait for mouse button up processing
+		case ObjectDrawState::SELECT_WAITFOR_LBUTTON_UP:	// Mode:Select/LButtonUP
+			if (m_ControlKeyDown)	//Select/Toggle Multiple Ofjects
+			{
+				ppSel = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
+				for (int i = 0; i < DEFALT_SELECT_BUFFER_SIZE; ++i)
+					ppSel[i] = 0;
+				//-------------------------------------
+				// If there is a selected object,
+				// add it to the selected list
+				//-------------------------------------
+				n = pDoc->PointInObjectAndSelect(
+					MousePos,
+					ppSel,
+					DEFALT_SELECT_BUFFER_SIZE
+				);
+			}
+			else
+			{
+				//------------------------------------
+				// Clear all selected objects and
+				// check to see if the mouse clicked
+				// in an object
+				//------------------------------------
+				pDoc->UnSelectAll();
+			}
+			ppSel = new CCadObject * [8];
 			if (n = pDoc->PointInObjectAndSelect(
 				GetCurrentMousePosition(),
-				pSel,
-				8,
-				DrawingCheckSelectFlags::FLAG_ALL
-			))
-			{
+				ppSel,
+				8)
+			)
+			{											//OnLButtonUp
 				//we have found some objects to select
 				if (n > 1)
 				{
-					int index = SelectAnObject(pSel, n, point);
+					//Let the user choose the object
+					int index = pDoc->SelectAnObject(ppSel, n, MousePos);
 					if (index < 0)
 						break;
-					pObjSel = pSel[index];
+					pObjSel = ppSel[index];
 				}
 				else
-					pObjSel = pSel[0];
+					pObjSel = ppSel[0];
 				if (pObjSel->IsSelected())
 				{
 					pObjSel->SetSelected(0);	//deselect object
-					RemoveObject(pObjSel);
+					pDoc->RemoveSelectedObject(pObjSel);
 				}
 				else
 				{
-					if (m_SelectionCount && !m_ControlKeyDown)
+					if (pDoc->GetTotalSelectedItems() && !m_ControlKeyDown)
 					{
-						CCadObject* pO = GetTopSelection();
+						CCadObject* pO = pDoc->GetSelListHead();
 						while (pO)
 						{
-							RemoveObject(pO);	//remove object from selection list
+							pDoc->RemoveSelectedObject(pO);	//remove object from selection list
 							pO->SetSelected(0);	//set to unselected
-							pO = GetTopSelection();	//get next object, if any
+							pO = pDoc->GetSelListHead();	//get next object, if any
 						}
 					}
 					pObjSel->SetSelected(1);
-					AddToSelList(pObjSel);
+					pDoc->AddToSelListHead(pObjSel);
 				}
 				Invalidate();
 			}//end of if(n = pDoc->PointInObjectAndSelect(m_ScalePos, pSel, 8, DrawingCheckSelectFlags::FLAG_ALL))
@@ -636,90 +522,85 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				// we will deselect all of the objects
 				// that have already been selected
 				//---------------------------------
-				if (m_SelectionCount && !m_ControlKeyDown)
+				if (pDoc->GetTotalSelectedItems() && !m_ControlKeyDown)
 				{
-					CCadObject* pO = GetTopSelection();
+					CCadObject* pO = pDoc->GetSelListHead();
 					while (pO)
 					{
-						RemoveObject(pO);	//remove object from selection list
-						pO->SetSelected(0);	//set to unselected
-						pO = GetTopSelection();	//get next object, if any
+						pDoc->RemoveSelectedObject(pO);	//remove object from selection list
+						pO->SetSelected(FALSE);	//set to unselected
+						pO = pDoc->GetSelListHead();	//get next object, if any
 					}
 					Invalidate();
 				}
 			}
 			break;
-		case ObjectDrawState::SELECT_MOVE:
-		case ObjectDrawState::SELECT_COPY:
-			pObj = m_pMoveObjects->RemoveFromHead();
+		case ObjectDrawState::SELECT_LBUTTON_DOWN_DRAGGING:
+			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
+			break;
+		case ObjectDrawState::SELECT_MOVE:	// Mode:Select/LButtonUP
+		case ObjectDrawState::SELECT_COPY:	// Mode:Select/LButtonUP
+			pObj = pDoc->RemoveSelectedObjectFromHead();
 			while (pObj)
 			{
-				pObj->Move(-GetCurrentMousePosition());
+				pObj->Move(GetDeltaMousePos());
 				pObj->SetSelected(0);
-				pDoc->AddObjectAtEnd(pObj);
-				pObj = m_pMoveObjects->RemoveFromHead();
+				pDoc->AddObjectAtTail(pObj);
+				pObj = pDoc->RemoveSelectedObjectFromHead();
 			}
-			delete m_pMoveObjects;
-			m_pMoveObjects = 0;
-			m_DrawState = ObjectDrawState::SELECT_NOTHING;
+			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
 			Invalidate();
 			break;
-		}
-		if (m_pGrabbedObject)
+		}	//End of switch(DrawState) LButtonUp
+		if (m_GrabbedObject.pCadObject)
 		{
-			m_pGrabbedObject->Move(GetCurrentMousePosition());
-			m_pGrabbedObject = 0;
+			m_GrabbedObject.pCadObject->Move(GetCurrentMousePosition());
+			m_GrabbedObject.pCadObject = 0;
 		}
 		break;
-	case DrawingMode::MOVE:
+	case DrawingMode::MOVE:		//LButton Up
+		//-----------------------------------------------------
+		//-----------------------------------------------------
 		break;
-	case DrawingMode::COPY:
-		GETAPP.GetClipBoard()->Clear();		//clear old contents from clipboard
-		GETAPP.CopyToClipBoard(m_pSelObjList);
-		GETAPP.SetClipboardRef(GetCurrentMousePosition());
+	case DrawingMode::COPY:		//LButton Up
+		GETAPP.GetClipBoard().RemoveAndDestroyALL();		//clear old contents from clipboard
+		pDoc->CopyToClipBoard();
+		GETAPP.GetClipBoard().SetRef(GetCurrentMousePosition());
 		Invalidate();
 		break;
-	case DrawingMode::CUT:
-	{
-		GETAPP.CutToClipboard(this->m_pSelObjList);
-		GETAPP.SetClipboardRef(GetCurrentMousePosition());
-		CCadObject* pO = GetTopSelection();
-		while (pO)
-		{
-			pDoc->RemoveObject(pO);
-			this->RemoveObject(pO);
-			pO = GetTopSelection();
-		}
+	case DrawingMode::CUT:		//LButton Up
+		pDoc->CutToClipBoard();
+		GETAPP.GetClipBoard().SetRef(GetCurrentMousePosition());
 		Invalidate();
-	}
-	break;
+		break;
 	case DrawingMode::PASTE:	//Mouse Button Up
 		switch (m_DrawState)
 		{
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
+		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:		//Mode:PASTE LButtonUP
 			GETAPP.UpdateStatusBar(_T("PASTE:Position Objects"));
 			m_DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 			break;
-		case ObjectDrawState::PLACE_LBUTTON_UP:
+		case ObjectDrawState::PLACE_LBUTTON_UP:		//Mode:PASTE LButtonUP
 			GETAPP.UpdateStatusBar(_T("SELECT an Object"));
 			m_DrawMode = DrawingMode::SELECT;
-			m_DrawState = ObjectDrawState::SELECT_NOTHING;
+			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
 			{
-				CCadObject* pO = m_pMoveObjects->RemoveFromHead();
-				while (pO)
+				//---------------------------------------
+				//	Copy Everyting from the clipboard
+				// and add it to the drawing
+				//--------------------------------------
+				pObj = GETAPP.GetClipBoard().RemoveFromHead();
+				while (pObj)
 				{
-					pO->SetSelected(0);
-					pO->Move(-GetCurrentMousePosition());
-					pDoc->AddObjectAtEnd(pO);
-					pO = m_pMoveObjects->RemoveFromHead();
+					pObj->SetSelected(0);		//unselect
+					pObj->Move(GetDeltaMousePos());
+					pDoc->AddObjectAtTail(pObj);
 				}
-				delete m_pMoveObjects;
-				m_pMoveObjects = 0;
 			}
 			break;
-		}
+		}	//end of switch(DrawState)
 		break;
-	case DrawingMode::SELECTREGION:
+	case DrawingMode::SELECTREGION:		// LButton Up
 		break;
 	default:	//this is where the bulk of the operations occure
 				//such as drawing objects
@@ -742,34 +623,42 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	///-----------------------------------------------
 	CString csDB;
 	CFrontCadDoc* pDoc = GetDocument();
-	CDoublePoint pointCenter;
-	CDoublePoint pointMousePos;
+	DOUBLEPOINT OriginCenterPoint;	//center of current origin
+	DOUBLEPOINT pointMousePos;
 	CPoint ptScreen = point;
+	DOUBLEPOINT MousePos;
+	CCadObject* pObj;
+
 	ClientToScreen(&ptScreen);
 
 	csDB.Format(_T("C(%d, %d)  S(%d,%d)"), point.x, point.y, ptScreen.x, ptScreen.y);
 	ToolBarSetDebug(csDB);
-	pointMousePos = ConvertMousePosition(
+	MousePos = ConvertMousePosition(
 		point,
 		GetRulerInfo().GetUpperLeft(),
 		GetGrid().GetInchesPerPixel(),
 		GetGrid().GetSnapGrid(),
 		GetGrid().IsSnapOn()
 	);
-	SetCurrentMousePosition(pointMousePos);
 	if (pDoc->GetCurrentOrigin())
 	{
-		pDoc->GetCurrentOrigin()->GetCenter(pointCenter);
-		pointCenter.dX = pointMousePos.dX - pointCenter.dX;
-		pointCenter.dY = pointCenter.dY - pointMousePos.dY;
-		ToolBarSetMousePosition(pointCenter);
+		OriginCenterPoint = DOUBLEPOINT(*(CCadPoint*)pDoc->GetCurrentOrigin()->FindObject(
+			ObjectType::POINT,
+			SubType::ORIGIN_LOCATION, 
+			SUBSUBTYPE_ANY)
+		);
+		OriginCenterPoint = pointMousePos - OriginCenterPoint;
+		ToolBarSetMousePosition(OriginCenterPoint);
 	}
 	else
 		ToolBarSetMousePosition(GetCurrentMousePosition());
+	//----------------------------------------------------
+	// Prosses mouse position to find out if it is
+	// In the View Client Area
+	//----------------------------------------------------
 	if (DidMouseLeaveWindow())
 	{
 		SetMouseLeftWindow(FALSE);
-//		printf("Mouse Entered Window > MMB=%d\n", m_MiddleMouseButtonDown);
 		TrackMouseEvent(&m_TrackMouseEvent);
 		if (IsMiddleMouseButtonDown())
 		{
@@ -777,79 +666,49 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 			EnableAutoScroll(0);
 		}
 	}
+	//------------------------------------------
+	// Processing for the various draw modes
+	//------------------------------------------
 	switch (m_DrawMode)
 	{
-	case DrawingMode::SELECT:
+	case DrawingMode::SELECT:	//OnMouseMove
 		switch (m_DrawState)
 		{
-		case ObjectDrawState::VERTEX_GRABBED:
-			if (IsLeftMouseButtonDown())
-			{
-				CCadObject* pOBj = GetTopSelection();
-				pOBj->SetVertex(m_GrabbedVertex, GetCurrentMousePosition());
-			}
-			break;
-		case ObjectDrawState::SELECT_NOTHING:
+		case ObjectDrawState::SELECT_LBUTTON_DOWN_DRAGGING:
+		case ObjectDrawState::SELECT_WAITFOR_LBUTTON_UP:
 			//-----------------------------------
 			// If the mouse moves,
-			// while down, we are then
+			// while the LButton is down, we are then
 			// going to grab and either move or
-			// copy the objects
+			// copy/cut the objects
 			//------------------------------------
-			if (IsLeftMouseButtonDown() && m_SelectionCount)
+			pObj = pDoc->GetSelListHead();
+			while (pObj)
 			{
-				if (m_ShiftKeyDown)	//copy selection
-				{
-					m_pMoveObjects = new CMoveObjects();
-					CCadObject* pObj = GetTopSelection();
-					while (pObj)
-					{
-						m_pMoveObjects->AddObject(pObj->CopyObject());
-						pObj = pObj->GetNextSel();
-					}
-					m_DrawState = ObjectDrawState::SELECT_COPY;
-				}
-				else  //move selection
-				{
-					m_pMoveObjects = new CMoveObjects();
-					CCadObject* pObj = GetTopSelection();
-					while (pObj)
-					{
-						RemoveObject(pObj);
-						pDoc->RemoveObject(pObj);
-						m_pMoveObjects->AddObject(pObj);
-						pObj = GetTopSelection();
-					}
-					m_DrawState = ObjectDrawState::SELECT_MOVE;
-				}
-				m_pMoveObjects->SetRef(GetCurrentMousePosition());
-			}	//end of if MouseDown
+				pObj->Move(GetDeltaMousePos());
+				pObj = pObj->GetNext();
+			}
 			break;
 		case ObjectDrawState::SELECT_MOVE:
 		case ObjectDrawState::SELECT_COPY:
 			break;
-		}
-		Invalidate();
-		if (IsLeftMouseButtonDown())
-		{
-			if (m_pGrabbedObject)
-				m_pGrabbedObject->Move(GetCurrentMousePosition());
-		}
-		break;
-	case DrawingMode::MOVE:
-		break;
-	case DrawingMode::COPY:
+		}//end of switch ObjectDrawState
 		Invalidate();
 		break;
-	case DrawingMode::CUT:
+	case DrawingMode::MOVE:	//OnMouseMove
+		break;
+	case DrawingMode::COPY:	//OnMouseMove
 		Invalidate();
 		break;
-	case DrawingMode::PASTE:
+	case DrawingMode::CUT:	//OnMouseMove
 		Invalidate();
 		break;
-	case DrawingMode::SELECTREGION:
+	case DrawingMode::PASTE:	//OnMouseMove
+		Invalidate();
 		break;
-	default:
+	case DrawingMode::SELECTREGION:	//OnMouseMove
+		break;
+	default:	//OnMouseMove
 		//--------------------------------------------
 		// If we get here, we are in the midst of
 		// actually drawing an object
@@ -861,7 +720,6 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 
 	CChildViewBase::OnMouseMove(nFlags, point);
-	GetRulerInfo().SetCursorPos(GetCurrentMousePosition());
 	PostMessageToRulers(RW_POSITION);
 }
 
@@ -872,8 +730,9 @@ void CFrontCadView::OnInitialUpdate()
 	CString csOrgName = _T("Default");
 
 	//------------ Setup Default Origin --------------
-	m_DefaultOrigin.Create(0, pDoc->GetDocHieght(), csOrgName);
-	pDoc->AddOriginAtFront(&m_DefaultOrigin);
+	m_DefaultOrigin.Create();
+	m_DefaultOrigin.SetName(csOrgName);
+	pDoc->AddOriginAtHead(&m_DefaultOrigin);
 	GetRulerInfo().SetOrigin(&m_DefaultOrigin);
 	pDoc->SetCurrentOrigin(&m_DefaultOrigin);
 	// This will be finished up later when
@@ -894,7 +753,8 @@ void CFrontCadView::OnInitialUpdate()
 	//-----------------------------------------
 	GetMyFrame()->InitToolBar(this, GetPtrToRulerInfo());
 	//------------- Scroll Bars ---------------
-	GetRulerInfo().SetUpperLeft(CDoublePoint(0.0, 0.0));
+	CCadPoint ulhc = CCadPoint(0.0, 0.0);
+	GetRulerInfo().SetUpperLeft(ulhc);
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
 	UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 	ShowScrollBar(SB_BOTH, TRUE);
@@ -915,6 +775,7 @@ void CFrontCadView::OnInitialUpdate()
 	GetClientRect(&rect);
 	GetRulerInfo().SetClientSize(rect.Size());
 	GetRulerInfo().SetGrid(GetPtrToGrid());
+	GetRulerInfo().SetCursorPos(GetCurrentMousePosition());
 	GetRulerInfo().GetAttributes().CopyFrom(GETAPP.GetRulerAttributes());
 	//------------------------------------------------------
 	// Initialize Grid and Scale stuff
@@ -941,37 +802,6 @@ void CFrontCadView::OnInitialUpdate()
 	CChildViewBase::OnInitialUpdate();
 }
 
-void CFrontCadView::OnAutoScroll(CPoint /*point*/, BOOL /*bBeforeScroll*/)
-{
-}
-
-void CFrontCadView::RemoveObject(CCadObject* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-	pDoc->RemoveObject(pObj);
-}
-
-void CFrontCadView::AddObjectAtFrontIntoDoc(CCadObject* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-	pDoc->AddObjectAtEnd(pObj);
-}
-
-void CFrontCadView::AddObjectAtEndIntoDoc(CCadObject* pObj)
-{
-	//--------------------------------------------------
-	// AddObjectAtEndIntoDoc
-	//		This methode inserts a new object into the
-	//	document that is connected to this view.  The
-	// object is placed last in line.
-	//
-	// parameters:
-	//		pObj........point to object to insert
-	//--------------------------------------------------
-	CFrontCadDoc* pDoc = GetDocument();
-	pDoc->AddObjectAtEnd(pObj);
-}
-
 BOOL CFrontCadView::OnEraseBkgnd(CDC* pDC)
 {
 	return TRUE;
@@ -994,12 +824,16 @@ void CFrontCadView::OnUpdateDrawArcangle(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawArcCenter()
 {
+	CCadArcCent* pArc;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
-	SetObjectTypes(new CCadArcCent);
+	pArc = new CCadArcCent;
+	pArc->Create();
+	SetObjectTypes(pArc);
 	SetDrawMode(DrawingMode::ARC_CENTER);
 	GETAPP.UpdateStatusBar(_T("Arc:Place Center Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1014,13 +848,17 @@ void CFrontCadView::OnUpdateDrawArccnter(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawArc()
 {
+	CCadArc* pArc;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::ARC);
-	SetObjectTypes(new CCadArc);
+	pArc = new CCadArc;
+	pArc->Create();
+	SetObjectTypes(pArc);
 	GETAPP.UpdateStatusBar(_T("Arc:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1034,13 +872,17 @@ void CFrontCadView::OnUpdateDrawArc(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawArrow()
 {
+	CCadArrow* pArrow;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::ARROW);
-	SetObjectTypes(new CCadArrow);
+	pArrow = new CCadArrow;
+	pArrow->Create();
+	SetObjectTypes(pArrow);
 	GETAPP.UpdateStatusBar(_T("Arrow:Place Location of Tip"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1052,13 +894,17 @@ void CFrontCadView::OnUpdateDrawArrow(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawEllipse()
 {
+	CCadElispe* pE;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::ELIPSE);
-	SetObjectTypes(new CCadElispe);
+	pE = new CCadElispe;
+	pE->Create();
+	SetObjectTypes(pE);
 	GETAPP.UpdateStatusBar(_T("Ellispe Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1072,13 +918,17 @@ void CFrontCadView::OnUpdateDrawEllipse(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawLine()
 {
+	CCadLine* pL;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::LINE);
-	SetObjectTypes(new CCadLine);
+	pL = new CCadLine;
+	pL->Create();
+	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1092,13 +942,17 @@ void CFrontCadView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawOrigin()
 {
+	CCadOrigin* pO;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::ORIGIN);
-	SetObjectTypes(new CCadOrigin);
+	pO = new CCadOrigin;
+	pO->Create();
+	SetObjectTypes(pO);
 	GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1112,14 +966,18 @@ void CFrontCadView::OnUpdateDrawOrigin(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawPoint()
 {
+	CCadPoint *pP;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::POINT);
-//	SetDataTypes(new CDoublePoint);
-	GETAPP.UpdateStatusBar(_T("Point:Place Location of Point"));
+	pP = new CCadPoint;
+	pP->Create();
+	SetObjectTypes(pP);
+	GETAPP.UpdateStatusBar(_T("Point:PlacePoint"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
 
@@ -1131,13 +989,17 @@ void CFrontCadView::OnUpdateDrawPoint(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawPlaceBitmap()
 {
+	CCadBitmap* pBM;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::BITMAP);
-	SetObjectTypes(new CCadBitmap);
+	pBM = new CCadBitmap;
+	pBM->Create();
+	SetObjectTypes(pBM);
 	GETAPP.UpdateStatusBar(_T("Bitmap:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1149,13 +1011,17 @@ void CFrontCadView::OnUpdateDrawPlacebitmap(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawPolygon()
 {
+	CCadPolygon* pPG;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::POLYGON);
-	SetObjectTypes(new CCadPolygon);
+	pPG = new CCadPolygon;
+	pPG->Create();
+	SetObjectTypes(pPG);
 	GETAPP.UpdateStatusBar(_T("Polygon:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1169,13 +1035,17 @@ void CFrontCadView::OnUpdateDrawPolygohn(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRectangle()
 {
+	CCadRect* pR;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::RECT);
-	SetObjectTypes(new CCadRect);
+	pR = new CCadRect;
+	pR->Create();
+	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1189,12 +1059,16 @@ void CFrontCadView::OnUpdateDrawRectangle(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRectangularhole()
 {
+	CCadHoleRect* pRH;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::HOLE_RECT);
+	pRH = new CCadHoleRect;
+//	pRH->Create();
 	SetObjectTypes(new CCadHoleRect);
 	GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Location of Center"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1220,13 +1094,17 @@ void CFrontCadView::OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRoundedrectangle()
 {
+	CCadRndRect* pRR;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::RNDRECT);
-	SetObjectTypes(new CCadRndRect);
+	pRR = new CCadRndRect;
+	pRR->Create();
+	SetObjectTypes(pRR);
 	GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1238,6 +1116,8 @@ void CFrontCadView::OnUpdateDrawRoundedrectangle(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRoundhole()
 {
+	CCadHoleRound *pHole;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
@@ -1245,7 +1125,9 @@ void CFrontCadView::OnDrawRoundhole()
 	}
 	SetDrawMode(DrawingMode::HOLE_ROUND);
 	GETAPP.UpdateStatusBar(_T("Round Hole:Place Location of Hole Center"));
-	SetObjectTypes(new CCadHoleRound);
+	pHole = new CCadHoleRound;
+	pHole->Create();
+	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
 
@@ -1258,13 +1140,17 @@ void CFrontCadView::OnUpdateDrawRoundhole(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRoundholewith1flat()
 {
+	CCadHoleRnd1Flat* pHR1F;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::HOLE_RND1F);
-	SetObjectTypes(new CCadHoleRnd1Flat);
+	pHR1F = new CCadHoleRnd1Flat;
+	pHR1F->Create();
+	SetObjectTypes(pHR1F);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With one Flat:Place location of Center"));
 }
@@ -1276,13 +1162,17 @@ void CFrontCadView::OnUpdateDrawRoundholewith1flat(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRoundholewith2flats()
 {
+	CCadHoleRnd2Flat *pHole;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::HOLE_RND2F);
-	SetObjectTypes(new CCadHoleRnd2Flat);
+	pHole = new CCadHoleRnd2Flat;
+	pHole->Create();
+	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With two Flats:Place Location of Center"));
 }
@@ -1296,13 +1186,17 @@ void CFrontCadView::OnUpdateDrawRoundholewith2flats(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawText()
 {
+	CCadText* pText;
+
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::TEXT);
-	SetObjectTypes(new CCadText);
+	pText = new CCadText;
+	pText->Create();
+	SetObjectTypes(pText);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Text:Place location of Text"));
 }
@@ -1541,17 +1435,17 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	//      pWnd......??
 	//      point.....point where mouse pointer is in screen coordinates
 	//-----------------------------------------------------------
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
+	CFrontCadDoc* pDoc = GetDocument();
 	CMenu ConTexMenu;
 	CMenu PlaceMenu;
 
 	int id;
 	//	CPoint m_MousePos = point;
-	//	CDoublePoint CurPos;
+	//	CCadPoint CurPos;
 
 	//	ScreenToClient(&m_MousePos);
 	//	CurPos = ConvertMousePosition(m_MousePos).Snap(GetSnapGrid(), IsSnapGridOn();
-	CCadObject* pObj = GetTopSelection();
+	CCadObject* pObj = pDoc->GetSelListHead();
 	//-----------------------------------------
 	// create place submenu
 	//------------------------------------------
@@ -1633,7 +1527,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			SetObjectTypes(0);
 		}
 		SetDrawMode(DrawingMode::SELECT);
-		SetDrawState(ObjectDrawState::SELECT_NOTHING);
+		SetDrawState(ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN);
 		EnableAutoScroll(0);
 		break;
 	case ID_CM_EDIT_PROPERIES:
@@ -1642,11 +1536,11 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		break;
 	case ID_CM_FORWARD:		//make object draw last
 	{
-		CCadObject* pO = GetTopSelection();
+		CCadObject* pO = pDoc->GetSelListHead();
 		while (pO)
 		{
 			pDoc->RemoveObject(pO);
-			pDoc->AddObjectAtEnd(pO);
+			pDoc->AddObjectAtTail(pO);
 			pO = pO->GetNextSel();
 		}
 		Invalidate();
@@ -1654,26 +1548,26 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	break;
 	case ID_CM_BACKWARD:	//make object draw first
 	{
-		CCadObject* pO = GetTopSelection();
+		CCadObject* pO = pDoc->GetSelListHead();
 		while (pO)
 		{
 			pDoc->RemoveObject(pO);
-			pDoc->AddObjectAtEnd(pO);
+			pDoc->AddObjectAtTail(pO);
 			pO = pO->GetNextSel();
 		}
 		Invalidate();
 	}
 		break;
-	case ID_CM_DELETE:	//delete selected objects
+	case ID_CM_DELETE:	//delete selected object(s)
 //		printf("Delete Object\n");
 		{
-			CCadObject* pO = GetTopSelection();
+			CCadObject* pO = pDoc->GetSelListHead();
 			while (pO)
 			{
-				RemoveObject(pO);
+				pDoc->RemoveSelectedObject(pO);
 				pDoc->RemoveObject(pO);
 				delete pO;
-				pO = GetTopSelection();
+				pO = pDoc->GetSelListHead();
 			}
 			Invalidate();
 		}
@@ -1684,8 +1578,8 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	case ID_CM_DESELECT:
 //		printf("DeSelect\n");
 		{
-			CCadObject* pO = GetTopSelection();
-			RemoveObject(pO);
+			CCadObject* pO = pDoc->GetSelListHead();
+			pDoc->RemoveSelectedObject(pO);
 			pO->SetSelected(0);
 			Invalidate();
 		}
@@ -1693,12 +1587,12 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	case ID_CM_DESELECT_ALL:
 //		printf("Deselect All\n");
 		{
-			CCadObject* pO = GetTopSelection();
+			CCadObject* pO = pDoc->GetSelListHead();
 			while (pO)
 			{
-				RemoveObject(pO);
+				pDoc->RemoveSelectedObject(pO);
 				pO->SetSelected(0);
-				pO = GetTopSelection();
+				pO = pDoc->GetSelListHead();
 			}
 			Invalidate();
 		}
@@ -1786,7 +1680,7 @@ void CFrontCadView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				{
 				case ObjectDrawState::SELECT_MOVE:
 					break;
-				case ObjectDrawState::SELECT_NOTHING:
+				case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN:
 					break;
 				case ObjectDrawState::SELECT_COPY:
 					break;
@@ -1806,7 +1700,7 @@ void CFrontCadView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			{
 			case ObjectDrawState::SELECT_MOVE:
 				break;
-			case ObjectDrawState::SELECT_NOTHING:
+			case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN:
 				break;
 			case ObjectDrawState::SELECT_COPY:
 				break;
@@ -1815,6 +1709,14 @@ void CFrontCadView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}	//end of switch(m_DrawMode)
 		break;
 
+	case 'R':
+		switch (m_DrawMode)
+		{
+		case DrawingMode::RECT:
+			m_R_KeyDown = TRUE;
+			break;
+		}
+		break;
 	}
 	CChildViewBase::OnKeyDown(nChar, nRepCnt, nFlags);
 }
@@ -1835,9 +1737,17 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	CCadObject** ppSelList;
 	int n;
 
-	CBaseDocument* pDoc = (CBaseDocument*)GetDocument();
+	CFrontCadDoc* pDoc = GetDocument();
 	switch (nChar)
 	{
+	case 'R':
+		switch (m_DrawMode)
+		{
+		case DrawingMode::RECT:
+			m_R_KeyDown = FALSE;
+			break;
+		}
+		break;
 	case VK_ESCAPE:
 		//			if (IsScrolling())
 	{
@@ -1873,7 +1783,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		case DrawingMode::RNDRECT:
 		case DrawingMode::BITMAP:
 		case DrawingMode::TEXT:
-			m_DrawState = ObjectDrawState::SELECT_NOTHING;
+			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
 			if (m_CadObj.pCadObject)
 			{
 				m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
@@ -1885,33 +1795,33 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 	break;
 	case 'X':
-		ppSelList = new CCadObject * [8];
+		ppSelList = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
 			ppSelList,
-			8,
-			DrawingCheckSelectFlags::FLAG_ALL
+			DEFALT_SELECT_BUFFER_SIZE
 		);
 		if (n > 0)
 		{
-			CDoublePoint Center;
-			ppSelList[0]->Flip(ppSelList[0]->GetCenter(Center), 0);
+			CCadPoint *pCenter;
+			pCenter = (CCadPoint * )ppSelList[0]->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			ppSelList[0]->Flip(pCenter, 0);
 		}
 		delete[]ppSelList;
 		Invalidate();
 		break;
 	case 'Y':
-		ppSelList = new CCadObject * [8];
+		ppSelList = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
 			ppSelList,
-			8,
-			DrawingCheckSelectFlags::FLAG_ALL
+			DEFALT_SELECT_BUFFER_SIZE
 		);
 		if (n > 0)
 		{
-			CDoublePoint Center;
-			ppSelList[0]->Flip(ppSelList[0]->GetCenter(Center), 1);
+			CCadPoint *pCenter;
+			pCenter = (CCadPoint * )ppSelList[0]->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			ppSelList[0]->Flip(pCenter, 1);
 		}
 		delete[]ppSelList;
 		Invalidate();
@@ -1926,7 +1836,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 			{
 			case ObjectDrawState::SELECT_MOVE:
 				break;
-			case ObjectDrawState::SELECT_NOTHING:
+			case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN:
 				break;
 			case ObjectDrawState::SELECT_COPY:
 				break;
@@ -1943,7 +1853,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 			{
 			case ObjectDrawState::SELECT_MOVE:
 				break;
-			case ObjectDrawState::SELECT_NOTHING:
+			case ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN:
 				break;
 			case ObjectDrawState::SELECT_COPY:
 				break;
@@ -2043,28 +1953,28 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 void CFrontCadView::DoVScroll(double Yinches, BOOL Absolute, BOOL Update)
 {
 	CFrontCadDoc* pDoc = GetDocument();;
-	CDoublePoint UL;
+	DOUBLEPOINT ULHC; //upper left hand corner
 
 	if (Update)
 	{
 		if (Absolute)
 		{
-			UL = GetRulerInfo().GetUpperLeft();
-			UL.dY = Yinches;
+			ULHC = GetRulerInfo().GetUpperLeft();
+			ULHC.dY = Yinches;
 		}
 		else
-			UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
+			ULHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
 
-		if (UL.dY < 0.0)
-			UL.dY = 0.0;
-		else if (UL.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
+		if (ULHC.dY < 0.0)
+			ULHC.dY = 0.0;
+		else if (ULHC.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
 		{
-			UL.dY = pDoc->GetDocSize().dCY - GetClientHieght();
-			if (UL.dY < 0.0)
-				UL.dY = 0.0;
+			ULHC.dY = pDoc->GetDocSize().dCY - GetClientHieght();
+			if (ULHC.dY < 0.0)
+				ULHC.dY = 0.0;
 		}
-		GetRulerInfo().SetUpperLeft(UL);
-		double pos = UL.dY;
+		GetRulerInfo().SetUpperLeft(ULHC);
+		double pos = ULHC.dY;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleY();
 		SetScrollPos(SB_VERT, GETAPP.RoundDoubleToInt(pos), TRUE);
 		PostMessageToRulers(RW_VSCROLL);
@@ -2129,31 +2039,31 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 {
-	CDoublePoint UL;
+	DOUBLEPOINT ULHC;
 	CFrontCadDoc* pDoc = GetDocument();
 
 	if (Update)
 	{
 		if (Absolute)
 		{
-			UL = GetRulerInfo().GetUpperLeft();
-			UL.dX = Xinches;
+			ULHC = GetRulerInfo().GetUpperLeft();
+			ULHC.dX = Xinches;
 		}
 		else
-			UL = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
-		if (UL.dX < 0.0)
-			UL.dX = 0.0;
-		else if (UL.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
+			ULHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
+		if (ULHC.dX < 0.0)
+			ULHC.dX = 0.0;
+		else if (ULHC.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
 		{
-			UL.dX = pDoc->GetDocSize().dCX - GetClientWidth();
-			if (UL.dX < 0.0)
-				UL.dX = 0;
+			ULHC.dX = pDoc->GetDocSize().dCX - GetClientWidth();
+			if (ULHC.dX < 0.0)
+				ULHC.dX = 0;
 		}
-		GetRulerInfo().SetUpperLeft(UL);
+		GetRulerInfo().SetUpperLeft(ULHC);
 
-		double pos = UL.dX;
+		double pos = ULHC.dX;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleX();
-		SetScrollPos(SB_HORZ, pos, TRUE);
+		SetScrollPos(SB_HORZ, GETAPP.RoundDoubleToInt(pos), TRUE);
 		//----------------------------------------------------------
 		// Update Rulers
 		//---------------------------------------------------------
@@ -2163,7 +2073,7 @@ void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 	}
 }
 
-void CFrontCadView::UpdateScrollbarInfo(CDoublePoint ULHC)
+void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT ULHC)
 {
 	//---------------------------------------------------------------------
 	//  UpdateScrollbarInfo
@@ -2258,11 +2168,11 @@ BOOL CFrontCadView::PostMessageToRulers(UINT msg, LPARAM data)
 }
 
 
-CDoublePoint CFrontCadView::ConvertMousePosition(
-	CPoint& MousePoint,	//mouse position client ref
-	CDoublePoint& ULHC,	//upper left corner of client in inches
-	CScale& Scale,		//Inches per Pixel
-	CDoubleSize& SnapGrid,
+DOUBLEPOINT CFrontCadView::ConvertMousePosition(
+	CPoint MousePoint,	//mouse position client ref
+	DOUBLEPOINT ULHC,	//upper left corner of client in inches
+	CScale Scale,		//Inches per Pixel
+	CDoubleSize SnapGrid,
 	BOOL SnapGridIsEnabled
 )
 {
@@ -2290,16 +2200,30 @@ CDoublePoint CFrontCadView::ConvertMousePosition(
 	//----------------------------------------------
 	// Convert from pixels to inches
 	//-----------------------------------------------
-	return (CDoublePoint(MousePoint) * Scale + ULHC).Snap(SnapGrid, SnapGridIsEnabled);
+	double X, Y;
+	DOUBLEPOINT MousePos;
+
+	X = double(MousePoint.x) * Scale.GetScaleX() + ULHC.dX;
+	Y = double(MousePoint.y) * Scale.GetScaleY() + ULHC.dY;
+	if (SnapGridIsEnabled)
+	{
+		X = GETAPP.Snap(X, SnapGrid.dCX);
+		Y = GETAPP.Snap(Y, SnapGrid.dCY);
+	}
+	MousePos = DOUBLEPOINT(X, Y);
+	m_DeltaMousePos = MousePos - m_LastMousePos;
+	m_LastMousePos = m_CurMousePos;
+	m_CurMousePos = MousePos;
+	return m_CurMousePos;
 }
 
 
 void CFrontCadView::DrawCursor(
 	CDC* pDC, 
-	CDoublePoint& pos, 
+	DOUBLEPOINT pos,
 	CRect* pRect, 
-	CDoublePoint& ULHC, 
-	CScale& Scale, 
+	DOUBLEPOINT ULHC,
+	CScale Scale, 
 	COLORREF color
 )
 {
@@ -2324,11 +2248,11 @@ void CFrontCadView::DrawCursor(
 	pOldPen = pDC->SelectObject(&pen);
 	int w, h;
 	CPoint p;
-//	CDoublePoint Org = GetDocument()->GetCurrentOrigin()->GetCenter(Org);
+//	CCadPoint Org = GetDocument()->GetCurrentOrigin()->GetCenter(Org);
 
 	pos -= GetRulerInfo().GetUpperLeft();
 	pos = pos * Scale;
-	pos.RoundToNearest(CDoubleSize(1.0,1.0));
+	pos = GETAPP.RoundToNearest(pos,CDoubleSize(1.0,1.0));
 	p = CPoint(GETAPP.RoundDoubleToInt(pos.dX), GETAPP.RoundDoubleToInt(pos.dY));
 	w = pRect->Width();
 	h = pRect->Height();
@@ -2341,12 +2265,11 @@ void CFrontCadView::DrawCursor(
 
 // Zoom in around a point
 
-CDoublePoint& CFrontCadView::CalculateNewULHC(
+DOUBLEPOINT CFrontCadView::CalculateNewULHC(
 	CScale CurrentScale, 
 	CScale NextScale, 
-	CDoublePoint& pointResult, 
-	CDoublePoint& pointLocation,
-	CDoublePoint& pointULHC
+	DOUBLEPOINT pointLocation,
+	DOUBLEPOINT pointULHC
 )
 {
 	//--------------------------------------
@@ -2368,6 +2291,7 @@ CDoublePoint& CFrontCadView::CalculateNewULHC(
 	//--------------------------------------
 	double Ux=0.0, Uy=0.0;
 	double Temp;
+	DOUBLEPOINT pointResult;
 
 	Temp = CurrentScale.GetScaleX() / NextScale.GetScaleX();
 	Temp *= (pointLocation.dX - pointULHC.dX);
@@ -2375,11 +2299,11 @@ CDoublePoint& CFrontCadView::CalculateNewULHC(
 	Temp = CurrentScale.GetScaleY() / NextScale.GetScaleY();
 	Temp *= (pointLocation.dY - pointULHC.dY);
 	Uy = pointLocation.dY - Temp;
-	pointResult = CDoublePoint(Ux, Uy);
+	pointResult = CCadPoint(Ux, Uy);
 	return pointResult;
 }
 
-void CFrontCadView::ZoomIn(CDoublePoint point)
+void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 {
 	//---------------------------------------
 	// ZoomIn
@@ -2393,8 +2317,9 @@ void CFrontCadView::ZoomIn(CDoublePoint point)
 	// returns:nothing
 	//-----------------------------------------
 	CScale CurrentScale, NextScale;
-	CDoublePoint pointNewULHC;
-	CDoublePoint ptULHC = GetRulerInfo().GetUpperLeft();
+	DOUBLEPOINT pointNewULHC;
+	DOUBLEPOINT ptULHC = GetRulerInfo().GetUpperLeft();
+	CFrontCadDoc* pDoc;
 
 	CurrentScale = GetGrid().GetPixelsPerInch();
 	if (GetGrid().ZoomIn())	// did a zoom
@@ -2403,7 +2328,6 @@ void CFrontCadView::ZoomIn(CDoublePoint point)
 		pointNewULHC = CalculateNewULHC(
 			CurrentScale,
 			NextScale,
-			pointNewULHC,
 			point,
 			ptULHC
 		);
@@ -2416,14 +2340,15 @@ void CFrontCadView::ZoomIn(CDoublePoint point)
 		// Update the Scroll Position
 		//--------------------------------
 		UpdateScrollbarInfo(pointNewULHC);
-		SetCursorPosition(GetCurrentMousePosition());
+		pDoc = GetDocument();
+		pDoc->ProcessZoom(GetGrid().GetInchesPerPixel());
 		Invalidate();
 	}
 }
 
 
 // //zoom out around a point
-void CFrontCadView::ZoomOut(CDoublePoint point)
+void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 {
 	//---------------------------------------
 	// ZoomOut
@@ -2437,8 +2362,9 @@ void CFrontCadView::ZoomOut(CDoublePoint point)
 	// returns:nothing
 	//-----------------------------------------
 	CScale CurrentScale, NextScale;
-	CDoublePoint pointNewULHC;
-	CDoublePoint ptULHC = GetRulerInfo().GetUpperLeft();
+	DOUBLEPOINT pointNewULHC;
+	DOUBLEPOINT ptULHC = GetRulerInfo().GetUpperLeft();
+	CFrontCadDoc* pDoc = GetDocument();
 
 	CurrentScale = GetGrid().GetPixelsPerInch();
 	if (GetGrid().ZoomOut())	// did a zoom
@@ -2447,7 +2373,6 @@ void CFrontCadView::ZoomOut(CDoublePoint point)
 		pointNewULHC = CalculateNewULHC(
 			CurrentScale,
 			NextScale,
-			pointNewULHC,
 			point,
 			ptULHC
 		);
@@ -2456,8 +2381,8 @@ void CFrontCadView::ZoomOut(CDoublePoint point)
 		//--------------------------------
 		// Update the Scroll Position
 		//--------------------------------
+		pDoc->ProcessZoom(GetGrid().GetInchesPerPixel());
 		UpdateScrollbarInfo(pointNewULHC);
-		SetCursorPosition(GetCurrentMousePosition());
 		Invalidate();
 	}
 }
@@ -2474,7 +2399,11 @@ void CFrontCadView::EnableAutoScroll(BOOL flag)
 		//-----------------------------------------
 		// Create a Timer
 		//-----------------------------------------
-		m_AutoScrollTimerId = SetTimer(m_AutoScrollTimerId, 100, NULL);
+		m_AutoScrollTimerId = SetTimer(
+			m_AutoScrollTimerId, 
+			TIMER_AUTOSCROLL_TIME, 
+			NULL
+		);
 	}
 	else
 	{
@@ -2485,50 +2414,6 @@ void CFrontCadView::EnableAutoScroll(BOOL flag)
 	}
 }
 // //converts raw position
-CDoublePoint CFrontCadView::ProcessMousePosition(
-	CPoint point,
-	CDoubleSize SnapGrid,
-	int Which
-)
-{
-	//---------------------------------------------
-	// ProcessMousePosition
-	//	First, we need to correct the mouse position
-	// for the fact that our virtual work surface
-	// is much larger than the screen
-	// m_CurMousePos is still in screen units
-	//
-	// parameters:
-	//	point.....raw mouse position
-	//	SnapGrid..Snap Grid constant
-	//	Which.....Selects the mode of the processing
-	//--------------------------------------------
-	CDoublePoint rV;
-
-	switch (Which)
-	{
-	case PROC_MOUSE_POSISTION_CORRECTED:
-	case PROC_MOUSE_POSISTION_SCALED:
-		rV = ConvertMousePosition(
-			point,
-			GetRulerInfo().GetUpperLeft(),
-			GetGrid().GetInchesPerPixel(),
-			GetGrid().GetSnapGrid(),
-			GetGrid().IsSnapOn()
-		);
-		break;
-	case PROC_MOUSE_POSISTION_SNAPPED:
-		rV = ConvertMousePosition(
-			point,
-			GetRulerInfo().GetUpperLeft() ,
-			GetGrid().GetInchesPerPixel(),
-			SnapGrid,
-			TRUE
-		);
-		break;
-	}
-	return rV;
-}
 
 void CFrontCadView::OnMouseLeave()
 {
@@ -2578,44 +2463,62 @@ MouseIsHere CFrontCadView::WhereIsMouse()
 	return rV;
 }
 
+void CFrontCadView::StartMouseDragging()
+{
+
+}
+
 void CFrontCadView::OnTimer(UINT_PTR nIDEvent)
 {
 	//-----------------------------------------
 	// The Timer is used to perform the task
-	// of Auto Scrolling the view
-	// 
+	// of Auto Scrolling the view,
+	// Detecting when the mouse has been held
+	// down for a bit,
 	// 
 	//-----------------------------------------
 	MouseIsHere MouseLocation;
 
-	if (IsAutoScrollEnabled())
+	switch (nIDEvent)
 	{
-		MouseLocation = WhereIsMouse();
-		switch (MouseLocation)
+	case TIMER_ID_AUTOSCROLL:
+		if (IsAutoScrollEnabled())
 		{
-		case MouseIsHere::UPPER:
-			DoVScroll(-GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
-			break;
-		case MouseIsHere::LOWER:
-			DoVScroll(GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
-			break;
-		case MouseIsHere::LEFT:
-			DoHScroll(-GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
-			break;
-		case MouseIsHere::RIGHT:
-			DoHScroll(GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
-			break;
-		case MouseIsHere::UPPERLEFT:
-			break;
-		case MouseIsHere::UPPERRIGHT:
-			break;
-		case MouseIsHere::LOWERLEFT:
-			break;
-		case MouseIsHere::LOWERRIGHT:
-			break;
-		case MouseIsHere::NOWHERE:
-			break;
+			MouseLocation = WhereIsMouse();
+			switch (MouseLocation)
+			{
+			case MouseIsHere::UPPER:
+				DoVScroll(-GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
+				break;
+			case MouseIsHere::LOWER:
+				DoVScroll(GetGrid().GetSnapGrid().dCY, FALSE, TRUE);
+				break;
+			case MouseIsHere::LEFT:
+				DoHScroll(-GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
+				break;
+			case MouseIsHere::RIGHT:
+				DoHScroll(GetGrid().GetSnapGrid().dCX, FALSE, TRUE);
+				break;
+			case MouseIsHere::UPPERLEFT:
+				break;
+			case MouseIsHere::UPPERRIGHT:
+				break;
+			case MouseIsHere::LOWERLEFT:
+				break;
+			case MouseIsHere::LOWERRIGHT:
+				break;
+			case MouseIsHere::NOWHERE:
+				break;
+			}
 		}
+		break;
+	case TIMER_ID_LBUTTON_DOWN:
+		if (m_DrawState == ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN_TIMEOUT)
+		{
+			m_MouseLButtonHeldDown = TRUE;
+			m_DrawState = ObjectDrawState::SELECT_LBUTTON_DOWN_DRAGGING;
+		}
+		break;
 	}
 	CChildViewBase::OnTimer(nIDEvent);
 }
@@ -2645,7 +2548,7 @@ void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
 	CFrontCadDoc* pDoc = GetDocument();
 
 	GetToolBarView()->AddOrigin(pObj);
-	pDoc->AddOriginAtFront(pObj);
+	pDoc->AddOriginAtHead(pObj);
 }
 
 void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
@@ -2680,3 +2583,88 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 	return 0;
 }
 
+/*
+
+void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	//-------------------------------------------------------
+	// OnLButtonDown
+	//
+	//      This Method handles messages created when the
+	// presses the left mouse button.
+	//
+	//  nFlags......various flag bits
+	//  point.......mouse pointer coordinates for this window
+	//------------------------------------------------------
+	DOUBLEPOINT MousePos;
+
+	m_LeftMouseButtonDown = TRUE;
+	MousePos = ConvertMousePosition(
+		point,
+		GetRulerInfo().GetUpperLeft(),
+		GetGrid().GetInchesPerPixel(),
+		GetGrid().GetSnapGrid(),
+		GetGrid().IsSnapOn()
+	);
+	switch (m_DrawMode)
+	{
+	case DrawingMode::SELECT:	// OnLButtonDown
+		switch (m_DrawState)
+		{
+		case ObjectDrawState::SELECT_NOTHING:	//Mode:Select OnLButtonDown
+			//------------------------------------
+			// check to see if anything is selected
+			// and are we are clicking in the body of
+			// the object, or one of the points
+			//-------------------------------------
+			if (m_SelectionCount)	//are there selections?
+			{
+				CCadObject* pObj = GetSelListHead();
+				m_GrabbedPoint = pObj->GrabPoint(NULL,GetCurrentMousePosition());
+				if (m_GrabbedPoint >= 0)
+				{
+					m_DrawState = ObjectDrawState::POINT_GRABBED;
+				}
+			}
+			break;
+		case ObjectDrawState::SELECT_MOVE:		//Mode:Select OnLButtonDown
+			break;
+		case ObjectDrawState::SELECT_COPY:		//Mode:Select OnLButtonDown
+			break;
+		}
+		Invalidate();
+		break;
+	case DrawingMode::MOVE:		// OnLButtonDown
+		break;
+	case DrawingMode::COPY:		// OnLButtonDown
+		break;
+	case DrawingMode::CUT:		// OnLButtonDown
+		break;
+	case DrawingMode::PASTE:	//OnLButtonDown
+		switch (m_DrawState)
+		{
+		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:	//Mode:PASTE OnLButtonDown
+			m_pMoveObjects = new CMoveObjects;
+			m_pMoveObjects->Copy(GETAPP.GetClipBoard());
+			Invalidate();
+			break;
+		}	//End of Switch(DrawState)
+		break;
+	case DrawingMode::SELECTREGION:	// OnLButtonDown
+		break;
+	default:	// OnLButtonDownit must be something we are going to draw.
+		if (m_CadObj.pCadObject)
+		{
+			m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
+			if (m_DrawState == ObjectDrawState::END_DRAWING)
+			{
+				m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
+				delete m_CadObj.pCadObject;
+				m_CadObj.pCadObject = 0;
+			}
+		}
+		break;
+	}
+	CChildViewBase::OnLButtonDown(nFlags, point);
+}
+*/
