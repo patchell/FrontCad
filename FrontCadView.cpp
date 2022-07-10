@@ -54,12 +54,10 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_WM_MBUTTONUP()
 	ON_MESSAGE(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), &CFrontCadView::OnFromToolbarMessage)
 	//----- Menu Draw Objects ------
-	ON_COMMAND(ID_DRAW_ARCANGLE, &CFrontCadView::OnDrawArcangle)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_ARCANGLE, &CFrontCadView::OnUpdateDrawArcangle)
-	ON_COMMAND(ID_DRAW_ARCCNTER, &CFrontCadView::OnDrawArcCenter)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_ARCCNTER, &CFrontCadView::OnUpdateDrawArccnter)
-	ON_COMMAND(ID_DRAW_ARDC, &CFrontCadView::OnDrawArc)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_ARDC, &CFrontCadView::OnUpdateDrawArc)
+	ON_COMMAND(ID_ARC_ARCFROMCENTER, &CFrontCadView::OnDrawArcCenter)
+	ON_UPDATE_COMMAND_UI(ID_ARC_ARCFROMCENTER, &CFrontCadView::OnUpdateDrawArccnter)
+	ON_COMMAND(ID_ARC_ARCINRECT, &CFrontCadView::OnDrawArc)
+	ON_UPDATE_COMMAND_UI(ID_ARC_ARCINRECT, &CFrontCadView::OnUpdateDrawArc)
 	ON_COMMAND(ID_DRAW_ARROW, &CFrontCadView::OnDrawArrow)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ARROW, &CFrontCadView::OnUpdateDrawArrow)
 	ON_COMMAND(ID_DRAW_ELLIPSE, &CFrontCadView::OnDrawEllipse)
@@ -70,14 +68,14 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ORIGIN, &CFrontCadView::OnUpdateDrawOrigin)
 	ON_COMMAND(ID_DRAW_POINT, &CFrontCadView::OnDrawPoint)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_POINT, &CFrontCadView::OnUpdateDrawPoint)
-	ON_COMMAND(ID_DRAW_POLYGOHN, &CFrontCadView::OnDrawPolygon)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_POLYGOHN, &CFrontCadView::OnUpdateDrawPolygohn)
-	ON_COMMAND(ID_DRAW_RECTANGLE, &CFrontCadView::OnDrawRectangle)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGLE, &CFrontCadView::OnUpdateDrawRectangle)
+	ON_COMMAND(ID_LINE_POLYGON, &CFrontCadView::OnDrawPolygon)
+	ON_UPDATE_COMMAND_UI(ID_LINE_POLYGON, &CFrontCadView::OnUpdateDrawPolygohn)
+	ON_UPDATE_COMMAND_UI(ID_LINE_RECTANGLE, &CFrontCadView::OnUpdateDrawRectangle)
+	ON_COMMAND(ID_LINE_RECTANGLE, &CFrontCadView::OnDrawRectangle)
 	ON_COMMAND(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnDrawRectangularhole)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnUpdateDrawRectangularhole)
-	ON_COMMAND(ID_DRAW_ROTATEDRECTANGLE, &CFrontCadView::OnDrawRotatedrectangle)
-	ON_UPDATE_COMMAND_UI(ID_DRAW_ROTATEDRECTANGLE, &CFrontCadView::OnUpdateDrawRotatedrectangle)
+	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedrectangle)
+	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedrectangle)
 	ON_COMMAND(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnDrawRoundedrectangle)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnUpdateDrawRoundedrectangle)
 	ON_COMMAND(ID_DRAW_ROUNDHOLE, &CFrontCadView::OnDrawRoundhole)
@@ -122,6 +120,10 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_ZOOMOUT, &CFrontCadView::OnUpdateViewZoomout)
 	ON_COMMAND(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnDrawPlaceBitmap)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnUpdateDrawPlacebitmap)
+	ON_COMMAND(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnLineLinefixedlen)
+	ON_UPDATE_COMMAND_UI(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnUpdateLineLinefixedlen)
+	ON_COMMAND(ID_LINE_POLYLINE, &CFrontCadView::OnLinePolyline)
+	ON_UPDATE_COMMAND_UI(ID_LINE_POLYLINE, &CFrontCadView::OnUpdateLinePolyline)
 END_MESSAGE_MAP()
 
 
@@ -811,17 +813,6 @@ BOOL CFrontCadView::OnEraseBkgnd(CDC* pDC)
 // Methods for placing objects on drawings
 //-----------------------------------------------------
 
-void CFrontCadView::OnDrawArcangle()
-{
-	// TODO: Add your command handler code here
-}
-
-
-void CFrontCadView::OnUpdateDrawArcangle(CCmdUI* pCmdUI)
-{
-	pCmdUI->Enable(1);
-}
-
 void CFrontCadView::OnDrawArcCenter()
 {
 	CCadArcCent* pArc;
@@ -934,6 +925,18 @@ void CFrontCadView::OnDrawLine()
 }
 
 
+void CFrontCadView::OnLineLinefixedlen()
+{
+	// TODO: Add your command handler code here
+}
+
+
+void CFrontCadView::OnUpdateLineLinefixedlen(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+}
+
+
 void CFrontCadView::OnUpdateDrawLine(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(1);
@@ -1030,6 +1033,18 @@ void CFrontCadView::OnDrawPolygon()
 void CFrontCadView::OnUpdateDrawPolygohn(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(1);
+}
+
+
+void CFrontCadView::OnLinePolyline()
+{
+	// TODO: Add your command handler code here
+}
+
+
+void CFrontCadView::OnUpdateLinePolyline(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
 }
 
 
@@ -2668,3 +2683,4 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	CChildViewBase::OnLButtonDown(nFlags, point);
 }
 */
+

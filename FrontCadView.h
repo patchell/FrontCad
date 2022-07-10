@@ -201,8 +201,6 @@ public:
 public:
 	afx_msg void OnDrawArc();
 	afx_msg void OnUpdateDrawArc(CCmdUI* pCmdUI);
-	afx_msg void OnDrawArcangle();
-	afx_msg void OnUpdateDrawArcangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawArcCenter();
 	afx_msg void OnUpdateDrawArccnter(CCmdUI* pCmdUI);
 	afx_msg void OnDrawArrow();
@@ -356,5 +354,9 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnLineLinefixedlen();
+	afx_msg void OnUpdateLineLinefixedlen(CCmdUI* pCmdUI);
+	afx_msg void OnLinePolyline();
+	afx_msg void OnUpdateLinePolyline(CCmdUI* pCmdUI);
 };
 

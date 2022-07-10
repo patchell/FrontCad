@@ -264,11 +264,17 @@ struct SLineAttributes {
 	COLORREF m_colorSelected;
 	double m_LineWidth;
 	BOOL m_LockLength;
+	BOOL m_P1_SNAP_POINT;
+	BOOL m_P2_SNAP_POINT;
+	BOOL m_P2_FIXED_LEN_SNAP_LINE;
 	SLineAttributes() {
 		m_colorLine = RGB(0, 0, 0);
 		m_colorSelected = RGB(0, 0, 0);
 		m_LineWidth = 0.01;
 		m_LockLength = FALSE;
+		m_P1_SNAP_POINT = FALSE;
+		m_P2_SNAP_POINT = FALSE;
+		m_P2_FIXED_LEN_SNAP_LINE = FALSE;
 	}
 	void CopyFrom(SLineAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;
