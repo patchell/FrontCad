@@ -4,7 +4,6 @@
 
 class CDlgRndRectProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//----------------------------
 	// Data
 	//-----------------------------
@@ -28,7 +27,6 @@ public:
 	afx_msg void OnStnClickedStaticLinecolor();
 	afx_msg void OnBnClickedCheckRndrectNofill();
 	void SetRndRect(CCadRndRect* pCRR) { m_pRndRect = pCRR; }
-	BOOL IsDirty() { return m_bDirty; }
 
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ROUNDEDRECT_PROPERTIES };

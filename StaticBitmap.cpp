@@ -15,7 +15,6 @@ static char THIS_FILE[] = __FILE__;
 CStaticBitmap::CStaticBitmap()
 {
 	m_Color = RGB(0,0,0);
-	m_bDirty = FALSE;
 }
 
 CStaticBitmap::~CStaticBitmap()
@@ -51,13 +50,6 @@ void CStaticBitmap::OnStnClicked()
 	if (IDOK == Id)
 	{
 		m_Color = Dlg.GetColor();
-		if (!m_bDirty)
-		{
-			m_bDirty = TRUE;
-			if (GetParent())
-				GetParent()->PostMessageW(UINT(WindowsMsg::WM_DLG_CONTROL_DIRTY));
-			Invalidate();
-		}
-
+		Invalidate();
 	}
 }

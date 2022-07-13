@@ -11,14 +11,12 @@ class CDlgOriginAttributes : public CDialog
 	CEditDecimal m_Edit_LineWidth;
 	CEditDecimal m_Edit_Radius;
 	CEditText m_Edit_Name;
-	BOOL m_bDirty;
 	DECLARE_DYNAMIC(CDlgOriginAttributes)
 
 public:
 	CDlgOriginAttributes(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgOriginAttributes();
 	void SetOrigin(CCadOrigin* pOrg) { m_pOrg = pOrg; }
-	BOOL IsDirty() { return m_bDirty; }
 	CCadOrigin* GetOrigin() { return m_pOrg; }
 // Dialog Data
 #ifdef AFX_DESIGN_TIME

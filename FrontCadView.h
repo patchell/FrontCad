@@ -209,6 +209,10 @@ public:
 	afx_msg void OnUpdateDrawEllipse(CCmdUI* pCmdUI);
 	afx_msg void OnDrawLine();
 	afx_msg void OnUpdateDrawLine(CCmdUI* pCmdUI);
+	afx_msg void OnLineLinefixedlen();
+	afx_msg void OnUpdateLineLinefixedlen(CCmdUI* pCmdUI);
+	afx_msg void OnLinePolyline();
+	afx_msg void OnUpdateLinePolyline(CCmdUI* pCmdUI);
 	afx_msg void OnDrawOrigin();
 	afx_msg void OnUpdateDrawOrigin(CCmdUI* pCmdUI);
 	afx_msg void OnDrawPoint();
@@ -354,9 +358,5 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnLineLinefixedlen();
-	afx_msg void OnUpdateLineLinefixedlen(CCmdUI* pCmdUI);
-	afx_msg void OnLinePolyline();
-	afx_msg void OnUpdateLinePolyline(CCmdUI* pCmdUI);
 };
 

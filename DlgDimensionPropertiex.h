@@ -6,7 +6,6 @@
 
 class CDlgDimensionPropertiex : public CDialogEx
 {
-	BOOL m_bDirty;
 	CCadDimension* m_pDimension;
 	//---------------------------------
 	// Controls
@@ -25,7 +24,6 @@ public:
 	CDlgDimensionPropertiex(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgDimensionPropertiex();
 	void SetDimension(CCadDimension* pCD) { m_pDimension = pCD; }
-	BOOL IsDirty() { return m_bDirty; }
 	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_DIMENSION_PROPERTIES };

@@ -4,7 +4,6 @@
 
 class CDlgArrowProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//--------------------------------
 	// Data
 	//--------------------------------
@@ -32,8 +31,6 @@ public:
 	virtual void OnCancel();
 	void UpdateControls();
 	void UpdateArrowData();
-	BOOL IsDirty() { return m_bDirty; }
-
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ARROW_ATTRIBUTES };
@@ -43,7 +40,6 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	afx_msg LRESULT OnArrowAttrbValues(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnStnClickedStaticLineColor();
-	afx_msg void OnBnClickedCancel();
 	DECLARE_MESSAGE_MAP()
 	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };

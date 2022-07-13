@@ -11,7 +11,6 @@ IMPLEMENT_DYNAMIC(CDlgRectProperties, CDialogEx)
 CDlgRectProperties::CDlgRectProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_RECTPROPERTIES, pParent)
 {
-	m_bDirty = FALSE;
 	m_pRect = 0;
 }
 
@@ -31,7 +30,6 @@ void CDlgRectProperties::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDlgRectProperties, CDialog)
 	ON_BN_CLICKED(IIDC_CHECK_RECT_NOFILL, &CDlgRectProperties::OnClickedIidcCheckRectNofill)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgRectProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -61,13 +59,10 @@ void CDlgRectProperties::OnOK()
 	switch (Id)
 	{
 		case IDOK:
-			if (IsDirty())
-			{
-				m_pRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-				m_pRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
-				m_pRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
-				m_pRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
-			}
+			m_pRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+			m_pRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
+			m_pRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
+			m_pRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
 			CDialog::OnOK();
 			break;
 	}
@@ -83,12 +78,5 @@ void CDlgRectProperties::OnClickedIidcCheckRectNofill()
 	{
 		m_Static_FillColor.ShowWindow(1);
 	}
-	m_bDirty = TRUE;
 }
 
-
-afx_msg LRESULT CDlgRectProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}

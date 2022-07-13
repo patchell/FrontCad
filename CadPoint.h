@@ -72,9 +72,9 @@ public:
 	// Pointy Things to do with lines
 	//----------------------------------
 	double Slope(CCadPoint* pPoint);
-	double Slope(CCadPoint point);
+	double Slope(DOUBLEPOINT point);
 	double OrthogonalSlope(CCadPoint point);
-	UINT LineIs(CCadPoint point);
+	UINT LineIs(DOUBLEPOINT OtherPoint);
 	double YIntercept(double m);
 	double XIntercept(double m);
 	BOOL PointOnLineAtDistance(
@@ -99,8 +99,14 @@ public:
 		double m, 
 		double Distance
 	);
+	void PointOnLineAtDistance(
+		CCadPoint* P1,	//starting point
+		DOUBLEPOINT RotationPoint,
+		double Distance
+	);
 	CCadPoint& CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint);
 	BOOL IsPointBetween(CCadPoint* pP1, CCadPoint* pP2);
+	void Print(const char* s);
 	//----------------------------------
 	// Operators
 	//----------------------------------

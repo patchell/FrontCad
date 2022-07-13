@@ -493,6 +493,10 @@ void SLineAttributes::LoadSettings(SLineAttributes* pAttrib)
 	csVal = GETAPP.GetProfileStringW(_T("LINE"), _T("WIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 	pAttrib->m_LockLength = GETAPP.GetProfileIntW(_T("LINE"), _T("LEN_LOCKED"), 0);
+
+	pAttrib->m_P1_SNAP_POINT = GETAPP.GetProfileIntW(_T("LINE"), _T("P1_SNAP_POINT"), FALSE);
+	pAttrib->m_P2_FIXED_LEN_SNAP_LINE = GETAPP.GetProfileIntW(_T("LINE"), _T("P2_SNAP_LINE"), FALSE);
+	pAttrib->m_P2_SNAP_POINT = GETAPP.GetProfileIntW(_T("LINE"), _T("P2_SNAP_POINT"), FALSE);
 }
 
 void SLineAttributes::SaveSettings(SLineAttributes* pAttrib)
@@ -513,6 +517,9 @@ void SLineAttributes::SaveSettings(SLineAttributes* pAttrib)
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("LINE"), _T("WIDTH"), csString);
 	GETAPP.WriteProfileInt(_T("LINE"), _T("LEN_LOCKED"), pAttrib->m_LockLength);
+	GETAPP.WriteProfileInt(_T("LINE"), _T("P1_SNAP_POINT"), pAttrib->m_P1_SNAP_POINT);
+	GETAPP.WriteProfileInt(_T("LINE"), _T("P2_SNAP_LINE"), pAttrib->m_P2_FIXED_LEN_SNAP_LINE);
+	GETAPP.WriteProfileInt(_T("LINE"), _T("P2_SNAP_POINT"), pAttrib->m_P2_SNAP_POINT);
 }
 
 DocFileParseToken SLineAttributes::Parse(DocFileParseToken Token, CLexer* pLex)

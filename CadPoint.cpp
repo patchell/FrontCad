@@ -393,14 +393,6 @@ int CCadPoint::EditProperties()
 
 	Dlg.SetPoint(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
-		}
-	}
 	return 0;
 }
 
@@ -416,7 +408,7 @@ double CCadPoint::Slope(CCadPoint* pPoint)
 	return m;
 }
 
-double CCadPoint::Slope(CCadPoint point)
+double CCadPoint::Slope(DOUBLEPOINT point)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
@@ -440,13 +432,13 @@ double CCadPoint::OrthogonalSlope(CCadPoint point)
 	return m;
 }
 
-UINT CCadPoint::LineIs(CCadPoint point)
+UINT CCadPoint::LineIs(DOUBLEPOINT OtherPoint)
 {
 	UINT rV = LINE_IS_WHATEVER;	//line is whatever
 
-	if (dY == point.dY)
+	if (dY == OtherPoint.dY)
 		rV = LINE_IS_HORIZONTAL;
-	else if (dX == point.dX)
+	else if (dX == OtherPoint.dX)
 		rV = LINE_IS_VERTICAL;
 	return rV;
 }
@@ -666,6 +658,68 @@ void CCadPoint::PointOnLineAtDistance(
 	}
 }
 
+void CCadPoint::PointOnLineAtDistance(
+	CCadPoint* pP1, 
+	DOUBLEPOINT RotationPoint, 
+	double Distance
+)
+{
+	//-----------------------------------
+	// PointOnLineAtDistance
+	//	Calculates coordinates of
+	// this point based on the the
+	// first point, and a point that
+	// defines the angle that the
+	// point is rotated at
+	// If the snap is set to
+	// something, the point will
+	// get snapped.
+	// 
+	// parameters:
+	//	P1.......first point of the line
+	// RotationPoint...yep, that
+	// Distance...between points 
+	//-----------------------------------
+
+	UINT LineType;
+	double m;
+
+	LineType = pP1->LineIs(RotationPoint);
+	switch (LineType)
+	{
+	case LINE_IS_WHATEVER:	//Hard
+		printf("Whatever --------\n");
+		m = pP1->Slope(RotationPoint);
+		printf("Distance = %7.3lf  ", Distance);
+		if(pP1->GetX() < RotationPoint.dX)
+			dX = sqrt((Distance * Distance) / (1 + m * m));
+		else
+			dX = -sqrt((Distance * Distance) / (1 + m * m));
+		printf("dX = %7.3lf  ", dX);
+		dY = m * dX;
+		printf("dY = %7.3lf\n", dY);
+		dX += pP1->GetX();
+		dY += pP1->GetY();
+		break;
+	case LINE_IS_VERTICAL:	//easy
+		printf("Vertical ------\n");
+		SetX(pP1->GetX());
+		if(pP1->GetY() > RotationPoint.dY)
+			SetY(pP1->GetY() - Distance);
+		else
+			SetY(pP1->GetY() + Distance);
+		break;
+	case LINE_IS_HORIZONTAL:	//easy
+		printf("Horizontal ----- \n");
+		if(pP1->GetX() < RotationPoint.dX)
+			SetX(pP1->GetX() + Distance);
+		else
+			SetX(pP1->GetX() - Distance);
+		SetY(pP1->GetY());
+		break;
+	}
+}
+
 CCadPoint& CCadPoint::CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint)
 {
 	Result.dX = (dX + OtherPoint.dX) / 2.0;
@@ -684,4 +738,9 @@ BOOL CCadPoint::IsPointBetween(CCadPoint* pP1, CCadPoint* pP2)
 		)
 		rV = TRUE;
 	return rV;
+}
+
+void CCadPoint::Print(const char* s)
+{
+	printf("%s::X=%7.3lf, Y=%7.3lf\n", s, dX, dY);
 }

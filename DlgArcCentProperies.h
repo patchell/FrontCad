@@ -4,7 +4,6 @@
 
 class CDlgArcCentProperies : public CDialog
 {
-	BOOL m_bDirty;
 	//--------------------------
 	// Data
 	//--------------------------
@@ -25,7 +24,6 @@ public:
 	void SetArcCentered(CCadArcCent* pAC) { m_pArc = pAC; }
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
-	BOOL IsDirty() { return m_bDirty; }
 	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ARCCENTPROPERTIES };

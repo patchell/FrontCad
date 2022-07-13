@@ -13,6 +13,7 @@
 #define IDD_DIALOG_CHANGE_REFERENCE_ORIGIN 316
 #define IDD_DIALOG_ORIGIN_ATTRIBUTES    318
 #define IDD_DIALOG_POINT_PROPERTIES     320
+#define IDD_DIALOG_DOUBLE_VALUE         322
 #define IDD_DIALOG_TEXT_PROPERTIES      326
 #define IDD_DIALOG_LINE_ATTRB           328
 #define IDD_DIALOG_RECTPROPERTIES       330
@@ -57,12 +58,20 @@
 #define IDC_EDIT_ANGLE                  1022
 #define IDC_STATIC_POINT_COLOR_NORMAL2  1022
 #define IDC_STATIC_POINT_COLOR_SELECTED 1022
+#define IDC_EDIT_DATA                   1022
 #define IDC_EDIT_LINE_WIDTH             1023
+#define IDC_STATIC_DATA_LABEL           1023
 #define IDC_STATIC_LINE_COLOR           1024
 #define IDC_DLGLINE_STATIC_FILL_COLOR   1025
+#define IDC_EDIT_LINE_LENGTH            1025
 #define IDC_STATIC_FILL_COLOR           1026
+#define IDC_STATIC_LINE_COLOR_SELECTED  1026
 #define IDC_STATIC_LINECOLOR            1028
+#define IDC_CHECK_P1_TO_POINT           1028
 #define IDC_STATIC_FILLCOLOR            1029
+#define IDC_CHECK_P2_TO_POINT           1029
+#define IDC_CHECK3                      1030
+#define IDC_CHECK_P2_TO_LINE            1030
 #define IDC_EDIT_LINEWIDTH              1031
 #define IDC_EDIT_CORNERRADIUS           1033
 #define IDC_EDIT_CORNERRADIUS_Y         1034
@@ -159,9 +168,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        322
+#define _APS_NEXT_RESOURCE_VALUE        324
 #define _APS_NEXT_COMMAND_VALUE         32818
-#define _APS_NEXT_CONTROL_VALUE         1022
+#define _APS_NEXT_CONTROL_VALUE         1031
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

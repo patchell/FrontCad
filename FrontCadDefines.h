@@ -435,11 +435,7 @@ enum class WindowsMsg {
 	//--------------------------
 	// Messages From Tool Bar
 	//--------------------------
-	WM_FROM_TOOLBAR_MESSAGE,
-	//--------------------------
-	// Dirty Message To Dialog
-	//--------------------------
-	WM_DLG_CONTROL_DIRTY
+	WM_FROM_TOOLBAR_MESSAGE
 };
 
 //----------------------------

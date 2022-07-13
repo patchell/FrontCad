@@ -1,5 +1,7 @@
 #pragma once
 
+constexpr auto LINE_KIND_NORMAL = 0;
+constexpr auto LINE_KIND_FIXED = 1;
 
 class CCadLine :public CCadObject
 {
@@ -52,6 +54,11 @@ public://public methodes
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth; }
 	void CopyAttributesTo(SLineAttributes* pAtr);
 	void CopyAttributesFrom(SLineAttributes* pAtr);
+	//--------------------------------------------------
+	// Line Length
+	//--------------------------------------------------
+	void SetLength(double l) { m_Length = l; }
+	double GetLength() { return m_Length; }
 	//--------------------------------------------------
 	// Static Functions
 	//--------------------------------------------------

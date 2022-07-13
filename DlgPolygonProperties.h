@@ -5,7 +5,6 @@
 
 class CDlgPolygonProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//--------------------
 	// Data
 	//---------------------
@@ -22,7 +21,6 @@ class CDlgPolygonProperties : public CDialog
 public:
 	CDlgPolygonProperties(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgPolygonProperties();
-	BOOL IsDirty() { return m_bDirty; }
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME

@@ -7,14 +7,12 @@
 class CDlgPointProperties : public CDialog
 {
 	CCadPoint* m_pPoint;
-	BOOL m_bDirty;
 	DECLARE_DYNAMIC(CDlgPointProperties)
 
 public:
 	CDlgPointProperties(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgPointProperties();
 	void SetPoint(CCadPoint* pP) { m_pPoint = pP; }
-	BOOL IsDirty() { return m_bDirty; }
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_POINT_PROPERTIES };

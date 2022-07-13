@@ -228,11 +228,6 @@ int CCadDimension::EditProperties()
 
 	Dlg.SetDimension(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-			m_AttributesDirty = TRUE;
-	}
 	return Id;
 }
 

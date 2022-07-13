@@ -11,7 +11,6 @@ IMPLEMENT_DYNAMIC(CDlgArcProperties, CDialog)
 CDlgArcProperties::CDlgArcProperties(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ARCPROPERTIES, pParent)
 {
-	m_bDirty = FALSE;
 	m_pArc = 0;
 }
 
@@ -33,7 +32,6 @@ void CDlgArcProperties::DoDataExchange(CDataExchange* pDX)
 
 BEGIN_MESSAGE_MAP(CDlgArcProperties, CDialog)
 	ON_STN_CLICKED(IDC_STATIC_LINECOLOR, &CDlgArcProperties::OnStnClickedStaticLinecolor)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgArcProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -55,8 +53,7 @@ void CDlgArcProperties::OnOK()
 	switch (Id)
 	{
 		case IDOK:
-			if(IsDirty())
-				UpdateData();
+			UpdateData();
 			CDialog::OnOK();
 			break;
 	}
@@ -108,12 +105,4 @@ void CDlgArcProperties::UpdateData()
 		m_Edit_StartX.GetDoubleValue(),
 		m_Edit_StartY.GetDoubleValue()
 	);
-}
-
-
-
-afx_msg LRESULT CDlgArcProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
 }

@@ -81,6 +81,7 @@
 #include "DlgSelectOrigin.h"
 #include "DlgOriginAttributes.h"
 #include "DlgPointProperties.h"
+#include "DlgDoubleData.h"
 //------------ Views -----------------------
 #include "Grid.h"
 #include "RulerInfo.h"

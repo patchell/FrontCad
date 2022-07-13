@@ -353,14 +353,6 @@ int CCadHoleRound::EditProperties(void)
 
 	Dlg.SetRoundHole(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
-		}
-	}
 	return Id;
 
 }

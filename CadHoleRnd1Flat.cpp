@@ -391,14 +391,6 @@ int CCadHoleRnd1Flat::EditProperties()
 
 	Dlg.SetRndHole1Flat(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
-		}
-	}
 	return Id;
 }
 

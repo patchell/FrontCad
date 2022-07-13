@@ -49,6 +49,7 @@ BOOL CCadLine::Create()
 	pRect->Create();
 	pRect->SetSubType(SubType::RECTSHAPE);
 	AddObjectAtTail(pRect);
+	m_Length = 0.0;
 	return TRUE;
 }
 
@@ -362,7 +363,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes Obj;
+	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
 
 	switch (DrawState)
@@ -398,12 +399,12 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(
+		ObjP1.pCadObject = FindObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
 		);
-		Obj.pCadPoint->SetPoint(MousePos);
+		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
 		break;
@@ -412,12 +413,12 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
 		GETVIEW->EnableAutoScroll(FALSE);
-		Obj.pCadObject = FindObject(
+		ObjP2.pCadObject = FindObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
 		);
-		Obj.pCadPoint->SetPoint(MousePos);
+		ObjP2.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		pNewLine = new CCadLine;
 		pNewLine->Create();
@@ -425,6 +426,62 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		GETVIEW->Invalidate();
+		break;
+		//-----------------------------
+		// Fixed Line Length processing
+		//-----------------------------
+	case ObjectDrawState::START_DRAWING_LINE_FIXED_LEN:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
+		GetAttributes().m_LockLength = TRUE;
+		Id = EditProperties();
+		if (Id == IDOK)
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+			DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN;
+			GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
+		}
+		else
+		{
+			DrawState = ObjectDrawState::END_DRAWING;
+			GETAPP.UpdateStatusBar(_T(""));
+		}
+		break;
+	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP;
+		break;
+	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
+		ObjP1.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		ObjP1.pCadPoint->SetPoint(MousePos);
+		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
+		GETAPP.UpdateStatusBar(_T("Line:Place Second Point"));
+		break;
+	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP;
+		break;
+	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
+		ObjP1.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		ObjP2.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			2
+		);
+		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		pNewLine = new CCadLine;
+		pNewLine->Create();
+		GETVIEW->SetObjectTypes(pNewLine);
+		DrawState = ObjectDrawState::START_DRAWING_LINE_FIXED_LEN;
+		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		break;
 	}
 	return DrawState;
@@ -446,19 +503,33 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes Obj;
+	DOUBLEPOINT SecondPoint;
+	CADObjectTypes ObjP1, ObjP2;
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(
+		ObjP2.pCadObject = FindObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
 		);
-		Obj.pCadPoint->SetPoint(MousePos);
+		ObjP2.pCadPoint->SetPoint(MousePos);
+		break;
+	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+		ObjP1.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		ObjP2.pCadObject = FindObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			2
+		);
+		ObjP1.pCadPoint->Print("P1->::");
+		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
+		ObjP2.pCadPoint->Print("Move Mouse To:Line");
 		break;
 	}
 	GETVIEW->Invalidate();
@@ -527,15 +598,8 @@ int CCadLine::EditProperties(void)
 {
 	CDlgLineAttributes Dlg;
 	int Id;
+
 	Dlg.SetLine(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
-		}
-	}
 	return Id;
 }

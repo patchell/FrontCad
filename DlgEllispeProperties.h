@@ -4,7 +4,6 @@
 
 class CDlgEllispeProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//-------------------------------------
 	//Data
 	//-------------------------------------
@@ -26,7 +25,6 @@ public:
 	afx_msg void OnStnClickedStaticFillcolor();
 	afx_msg void OnStnClickedStaticLinecolor();
 	afx_msg void OnBnClickedCheckEllipseNofill();
-	BOOL IsDirty() { return m_bDirty; }
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ELLIPSE_PROPERTIES };
 #endif

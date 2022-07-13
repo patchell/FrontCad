@@ -4,7 +4,6 @@
 
 class CDlgBitmapProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//-----------------------------------------
 	// Data
 	//-----------------------------------------
@@ -23,7 +22,6 @@ public:
 	afx_msg void OnBnClickedButtonChooseFile();
 	virtual void OnOK();
 	virtual BOOL OnInitDialog();
-	BOOL IsDirty() { return m_bDirty; }
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_BITMAP_PROPERTIES };

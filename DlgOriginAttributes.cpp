@@ -12,7 +12,6 @@ CDlgOriginAttributes::CDlgOriginAttributes(CWnd* pParent /*=nullptr*/)
 	: CDialog(IDD_DIALOG_ORIGIN_ATTRIBUTES, pParent)
 {
 	m_pOrg = 0;
-	m_bDirty = FALSE;
 }
 
 CDlgOriginAttributes::~CDlgOriginAttributes()
@@ -31,7 +30,6 @@ void CDlgOriginAttributes::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDlgOriginAttributes, CDialog)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgOriginAttributes::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -60,14 +58,11 @@ void CDlgOriginAttributes::OnOK()
 	switch (Id)
 	{
 	case IDOK:
-		if (m_bDirty)
-		{
-			m_pOrg->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
-			m_pOrg->GetAttributes().m_Radius = m_Edit_Radius.GetDoubleValue();
-			m_Edit_Name.GetWindowTextW(m_pOrg->GetName());
-			m_pOrg->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-			m_pOrg->GetAttributes().m_colorSelected = m_Static_SelectionColor.GetColor();
-		}
+		m_pOrg->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
+		m_pOrg->GetAttributes().m_Radius = m_Edit_Radius.GetDoubleValue();
+		m_Edit_Name.GetWindowTextW(m_pOrg->GetName());
+		m_pOrg->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+		m_pOrg->GetAttributes().m_colorSelected = m_Static_SelectionColor.GetColor();
 		CDialog::OnOK();
 		break;
 	case IDC_EDIT_ORIGIN_LINE_WIDTH:
@@ -80,9 +75,3 @@ void CDlgOriginAttributes::OnOK()
 	}
 }
 
-
-afx_msg LRESULT CDlgOriginAttributes::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}

@@ -16,7 +16,6 @@ CDlgPolygonProperties::CDlgPolygonProperties(CWnd* pParent /*=nullptr*/)
 #ifndef _WIN32_WCE
 	EnableActiveAccessibility();
 #endif
-	m_bDirty = FALSE;
 	m_pPolygon = 0;
 }
 
@@ -36,7 +35,6 @@ void CDlgPolygonProperties::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDlgPolygonProperties, CDialog)
 	ON_STN_CLICKED(IDC_STATIC_FILL_COLOR, &CDlgPolygonProperties::OnClickedStaticFillColor)
 	ON_STN_CLICKED(IDC_STATIC_LINE_COLOR, &CDlgPolygonProperties::OnClickedStaticLineColor)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgPolygonProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -61,13 +59,10 @@ void CDlgPolygonProperties::OnOK()
 	switch (Id)
 	{
 	case IDOK:
-		if (IsDirty())
-		{
-			m_pPolygon->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-			m_pPolygon->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
-			m_pPolygon->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
-			m_pPolygon->SetTransparent(m_Check_NoFill.GetCheck());;
-		}
+		m_pPolygon->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+		m_pPolygon->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
+		m_pPolygon->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
+		m_pPolygon->SetTransparent(m_Check_NoFill.GetCheck());;
 		CDialog::OnOK();
 		break;
 	}
@@ -89,9 +84,3 @@ void CDlgPolygonProperties::OnClickedStaticLineColor()
 		m_Static_LineColor.SetColor(Dlg.GetColor());
 }
 
-
-afx_msg LRESULT CDlgPolygonProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}

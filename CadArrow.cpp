@@ -484,13 +484,6 @@ int CCadArrow::EditProperties()
 	Dlg.SetArrow(this);
 	Id = Dlg.DoModal();
 	if (IDOK == Id)
-	{
-		if (Dlg.IsDirty())
-		{
-			CopyAttributesTo(&m_CurrentAttributes);
-			m_AttributesDirty = TRUE;
-		}
-	}
 	return Id;
 }
 void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)

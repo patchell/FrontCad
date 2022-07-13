@@ -213,6 +213,7 @@
     <ClInclude Include="DlgArrowProperties.h" />
     <ClInclude Include="DlgBitmapProperties.h" />
     <ClInclude Include="DlgDimensionPropertiex.h" />
+    <ClInclude Include="DlgDoubleData.h" />
     <ClInclude Include="DlgEllispeProperties.h" />
     <ClInclude Include="DlgLineAttributes.h" />
     <ClInclude Include="DlgNewDrawing.h" />
@@ -288,6 +289,7 @@
     <ClCompile Include="DlgArrowProperties.cpp" />
     <ClCompile Include="DlgBitmapProperties.cpp" />
     <ClCompile Include="DlgDimensionPropertiex.cpp" />
+    <ClCompile Include="DlgDoubleData.cpp" />
     <ClCompile Include="DlgEllispeProperties.cpp" />
     <ClCompile Include="DlgLineAttributes.cpp" />
     <ClCompile Include="DlgNewDrawing.cpp" />

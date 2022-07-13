@@ -281,12 +281,18 @@ struct SLineAttributes {
 		m_colorSelected = pAttributes->m_colorSelected;
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_LockLength = pAttributes->m_LockLength;
+		m_P1_SNAP_POINT = pAttributes->m_P1_SNAP_POINT;
+		m_P2_SNAP_POINT = pAttributes->m_P2_SNAP_POINT;
+		m_P2_FIXED_LEN_SNAP_LINE = pAttributes->m_P2_FIXED_LEN_SNAP_LINE;
 	}
 	void CopyTo(SLineAttributes* pAttributes) {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_LockLength = m_LockLength;
+		pAttributes->m_P1_SNAP_POINT = m_P1_SNAP_POINT;
+		pAttributes->m_P2_SNAP_POINT = m_P2_SNAP_POINT;
+		pAttributes->m_P2_FIXED_LEN_SNAP_LINE = m_P2_FIXED_LEN_SNAP_LINE;
 	}
 	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
 	void Save(FILE* pO, int Indent, int flags) {

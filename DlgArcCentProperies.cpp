@@ -11,7 +11,6 @@ IMPLEMENT_DYNAMIC(CDlgArcCentProperies, CDialog)
 CDlgArcCentProperies::CDlgArcCentProperies(CWnd* pParent /*=NULL*/)
 	: CDialog(IDD_DIALOG_ARCCENTPROPERTIES, pParent)
 {
-	m_bDirty = FALSE;
 	m_pArc = 0;
 }
 
@@ -32,7 +31,6 @@ void CDlgArcCentProperies::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(CDlgArcCentProperies, CDialog)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgArcCentProperies::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 //-------------------------------------------------
@@ -54,8 +52,7 @@ void CDlgArcCentProperies::OnOK()
 	switch (Id)
 	{
 	case IDOK:
-		if(IsDirty())
-			UpdateControls();
+		UpdateControls();
 		CDialog::OnOK();
 		break;
 	}
@@ -101,9 +98,3 @@ void CDlgArcCentProperies::UpdateData()
 	);
 }
 
-
-afx_msg LRESULT CDlgArcCentProperies::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}

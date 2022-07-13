@@ -73,9 +73,6 @@ void CEditDecimal::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags)
 	case '9':
 	case '.':
 	case VK_BACK:
-		if (!m_Dirty && GetParent())
-			GetParent()->PostMessageW(UINT(WindowsMsg::WM_DLG_CONTROL_DIRTY));
-		m_Dirty = TRUE;
 		CEdit::OnChar(nChar, nRepCnt, nFlags);
 		break;
 	default:

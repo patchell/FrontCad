@@ -4,7 +4,6 @@
 
 class CDlgArcProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//---------------------------
 	// Data
 	//----------------------------
@@ -29,7 +28,6 @@ public:
 	afx_msg void OnStnClickedStaticLinecolor();
 	void UpdateControls();
 	void UpdateData();
-	BOOL IsDirty() { return m_bDirty; }
 	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ARCPROPERTIES };
@@ -39,8 +37,5 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
-public:
-protected:
-	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };
 

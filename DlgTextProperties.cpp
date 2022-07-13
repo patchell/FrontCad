@@ -14,7 +14,6 @@ IMPLEMENT_DYNAMIC(CDlgTextProperties, CDialogEx)
 CDlgTextProperties::CDlgTextProperties(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_DIALOG_TEXT_PROPERTIES, pParent)
 {
-	m_bDirty = FALSE;
 	m_pText = 0;
 }
 
@@ -42,7 +41,6 @@ BEGIN_MESSAGE_MAP(CDlgTextProperties, CDialogEx)
 	ON_STN_CLICKED(IDC_STATIC_TEXT_COLOR, &CDlgTextProperties::OnStnClickedStaticTextColor)
 	ON_STN_CLICKED(IDC_STATIC_BACKGROUND_COLOR, &CDlgTextProperties::OnStnClickedStaticBackgroundColor)
 	ON_CBN_SELCHANGE(IDC_COMBO_FONTWEIGHT, &CDlgTextProperties::OnSelchangeComboFontweight)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgTextProperties::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -93,18 +91,15 @@ void CDlgTextProperties::OnOK()
 			//---------------------------------
 			// Update Data from controls
 			//---------------------------------
-			if (IsDirty())
-			{
-				m_pText->SetAngle(m_Edit_Angle.GetDoubleValue());
-				m_pText->SetBackgroundColor(m_Static_BackGroundColor.GetColor());
-				m_pText->SetTextColor(m_Static_TextColor.GetColor());
-				m_pText->SetFontHeight(m_Edit_Height.GetDoubleValue());
-				m_pText->SetFontWidth(m_Edit_FontWidth.GetDoubleValue());
-				m_Button_Font.GetWindowTextW(m_pText->GetFontName());
-				m_pText->SetTransparent(m_Check_Transparent.GetCheck());
-				m_pText->SetFontWeight(m_Combo_FontWeight.GetFontWeight());
-				m_Edit_TextString.GetWindowTextW(m_pText->GetText());
-			}
+			m_pText->SetAngle(m_Edit_Angle.GetDoubleValue());
+			m_pText->SetBackgroundColor(m_Static_BackGroundColor.GetColor());
+			m_pText->SetTextColor(m_Static_TextColor.GetColor());
+			m_pText->SetFontHeight(m_Edit_Height.GetDoubleValue());
+			m_pText->SetFontWidth(m_Edit_FontWidth.GetDoubleValue());
+			m_Button_Font.GetWindowTextW(m_pText->GetFontName());
+			m_pText->SetTransparent(m_Check_Transparent.GetCheck());
+			m_pText->SetFontWeight(m_Combo_FontWeight.GetFontWeight());
+			m_Edit_TextString.GetWindowTextW(m_pText->GetText());
 			break;
 	}
 }
@@ -152,9 +147,3 @@ void CDlgTextProperties::OnSelchangeComboFontweight()
 	// TODO: Add your control notification handler code here
 }
 
-
-afx_msg LRESULT CDlgTextProperties::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}

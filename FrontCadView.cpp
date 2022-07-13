@@ -927,7 +927,25 @@ void CFrontCadView::OnDrawLine()
 
 void CFrontCadView::OnLineLinefixedlen()
 {
-	// TODO: Add your command handler code here
+	CCadLine* pL;
+
+	if (GetObjectTypes().pCadObject)
+	{
+		delete GetObjectTypes().pCadObject;
+		GetObjectTypes().pCadObject = 0;
+	}
+	SetDrawMode(DrawingMode::LINE);
+	pL = new CCadLine;
+	pL->Create();
+	SetObjectTypes(pL);
+	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING_LINE_FIXED_LEN);
+	if (m_DrawState == ObjectDrawState::END_DRAWING)
+	{
+		m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(m_DrawState);		delete GetObjectTypes().pCadObject;
+		delete GetObjectTypes().pCadObject;
+		GetObjectTypes().pCadObject = 0;
+	}
 }
 
 

@@ -5,7 +5,6 @@
 
 class CDlgRectProperties : public CDialog
 {
-	BOOL m_bDirty;
 	//------------------------------------------
 	// Data
 	//-------------------------------------------
@@ -25,7 +24,6 @@ public:
 	virtual void OnOK();
 	afx_msg void OnClickedIidcCheckRectNofill();
 	void SetRectangle(CCadRect* pCR) { m_pRect = pCR; }
-	BOOL IsDirty() { return m_bDirty; }
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_RECTPROPERTIES };
 #endif

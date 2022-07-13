@@ -10,7 +10,6 @@ IMPLEMENT_DYNAMIC(CDlgDimensionPropertiex, CDialogEx)
 CDlgDimensionPropertiex::CDlgDimensionPropertiex(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DIALOG_DIMENSION_PROPERTIES, pParent)
 {
-	m_bDirty = FALSE;
 	m_pDimension = 0;
 }
 
@@ -37,7 +36,6 @@ BEGIN_MESSAGE_MAP(CDlgDimensionPropertiex, CDialogEx)
 	ON_STN_CLICKED(IDC_STATIC_BACKGROUND_COLOR, &CDlgDimensionPropertiex::OnClickedStaticBackgroundColor)
 	ON_STN_CLICKED(IDC_STATIC_DIM_PREVIW, &CDlgDimensionPropertiex::OnClickedStaticDimPreviw)
 	ON_STN_CLICKED(IDC_STATIC_LINE_COLOR, &CDlgDimensionPropertiex::OnClickedStaticLineColor)
-	ON_MESSAGE((UINT)WindowsMsg::WM_DLG_CONTROL_DIRTY, &CDlgDimensionPropertiex::OnDlgControlDirty)
 END_MESSAGE_MAP()
 
 
@@ -91,9 +89,3 @@ void CDlgDimensionPropertiex::OnClickedStaticLineColor()
 	// TODO: Add your control notification handler code here
 }
 
-
-afx_msg LRESULT CDlgDimensionPropertiex::OnDlgControlDirty(WPARAM wParam, LPARAM lParam)
-{
-	m_bDirty = TRUE;
-	return 0;
-}
