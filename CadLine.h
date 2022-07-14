@@ -6,6 +6,7 @@ constexpr auto LINE_KIND_FIXED = 1;
 class CCadLine :public CCadObject
 {
 protected:
+	inline static BOOL m_SavedSnapEnable = FALSE;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_LineCount;
 	inline static SLineAttributes m_LastAttributes;
@@ -42,6 +43,7 @@ public://public methodes
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual void ProcessZoom(CScale& InchesPerPixel);
+	DOUBLEPOINT SnapToObuject(DOUBLEPOINT MousePos, ObjectDrawState DrawState);
 	virtual int EditProperties(void);
 	//-------------------------------------
 	//attribute Methods

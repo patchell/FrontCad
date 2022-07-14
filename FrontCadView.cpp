@@ -124,6 +124,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnUpdateLineLinefixedlen)
 	ON_COMMAND(ID_LINE_POLYLINE, &CFrontCadView::OnLinePolyline)
 	ON_UPDATE_COMMAND_UI(ID_LINE_POLYLINE, &CFrontCadView::OnUpdateLinePolyline)
+	ON_WM_SYSKEYDOWN()
+	ON_WM_SYSKEYUP()
 END_MESSAGE_MAP()
 
 
@@ -1739,6 +1741,27 @@ void CFrontCadView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 				break;
 			}	//end of switch(m_DrawState
 			break;
+		case DrawingMode::ALIGN_DIM_TO_HOLE:
+		case DrawingMode::ARC:
+		case DrawingMode::ARC_CENTER:
+		case DrawingMode::ARROW:
+		case DrawingMode::BITMAP:
+		case DrawingMode::DIMENSION:
+		case DrawingMode::ELIPSE:
+		case DrawingMode::HOLE_RECT:
+		case DrawingMode::HOLE_RND1F:
+		case DrawingMode::HOLE_RND2F:
+		case DrawingMode::HOLE_ROUND:
+		case DrawingMode::LIBPART:
+		case DrawingMode::LINE:
+		case DrawingMode::ORIGIN:
+		case DrawingMode::POINT:
+		case DrawingMode::POLYGON:
+		case DrawingMode::RECT:
+		case DrawingMode::RNDRECT:
+		case DrawingMode::TEXT:
+			GetGrid().EnableSnap(FALSE);
+			break;
 		}	//end of switch(m_DrawMode)
 		break;
 
@@ -1881,6 +1904,27 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		m_ShiftKeyDown = 0;
 		switch (m_DrawMode)
 		{
+		case DrawingMode::ALIGN_DIM_TO_HOLE:
+		case DrawingMode::ARC:
+		case DrawingMode::ARC_CENTER:
+		case DrawingMode::ARROW:
+		case DrawingMode::BITMAP:
+		case DrawingMode::DIMENSION:
+		case DrawingMode::ELIPSE:
+		case DrawingMode::HOLE_RECT:
+		case DrawingMode::HOLE_RND1F:
+		case DrawingMode::HOLE_RND2F:
+		case DrawingMode::HOLE_ROUND:
+		case DrawingMode::LIBPART:
+		case DrawingMode::LINE:
+		case DrawingMode::ORIGIN:
+		case DrawingMode::POINT:
+		case DrawingMode::POLYGON:
+		case DrawingMode::RECT:
+		case DrawingMode::RNDRECT:
+		case DrawingMode::TEXT:
+			GetGrid().EnableSnap(TRUE);
+			break;
 		case DrawingMode::SELECT:
 			switch (m_DrawState)
 			{
@@ -2243,6 +2287,8 @@ DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 		X = GETAPP.Snap(X, SnapGrid.dCX);
 		Y = GETAPP.Snap(Y, SnapGrid.dCY);
 	}
+	else
+		printf("Not Snapped\n");
 	MousePos = DOUBLEPOINT(X, Y);
 	m_DeltaMousePos = MousePos - m_LastMousePos;
 	m_LastMousePos = m_CurMousePos;
@@ -2702,3 +2748,19 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 }
 */
 
+
+
+void CFrontCadView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	// TODO: Add your message handler code here and/or call default
+	printf("Sys Key Down\n");
+	CChildViewBase::OnSysKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+void CFrontCadView::OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	// TODO: Add your message handler code here and/or call default
+	printf("Sys Key Up\n");
+	CChildViewBase::OnSysKeyUp(nChar, nRepCnt, nFlags);
+}

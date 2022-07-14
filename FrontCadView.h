@@ -41,6 +41,7 @@ class CFrontCadView : public CChildViewBase
 	//----------------Keyboard/Mouse------------------------
 	BOOL m_ControlKeyDown;	//true when control key is pushed
 	BOOL m_ShiftKeyDown;	// true when shift key is pushed
+	BOOL m_AltKeyDown;		// Alt key is down
 	BOOL m_R_KeyDown;		//The R key is pressed
 	DOUBLEPOINT m_CurMousePos;	//mouse position raw, screen units
 	DOUBLEPOINT m_LastMousePos;
@@ -87,6 +88,7 @@ public:
 	//---------------------------------------------
 	BOOL IsControlKeyDown() { return m_ControlKeyDown; }
 	BOOL IsShiftKeyDown() { return m_ShiftKeyDown; }
+	BOOL IsAltKeyDown() { return m_AltKeyDown; }
 	BOOL IsR_KeyDown() { return m_R_KeyDown; }
 	//-------
 	BOOL IsLeftMouseButtonDown() { return m_LeftMouseButtonDown; }
@@ -358,5 +360,7 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 

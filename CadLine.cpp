@@ -459,6 +459,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
+		m_SavedSnapEnable = GETVIEW->GetGrid().EnableSnap(FALSE);
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Point"));
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
@@ -481,6 +482,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		pNewLine->Create();
 		GETVIEW->SetObjectTypes(pNewLine);
 		DrawState = ObjectDrawState::START_DRAWING_LINE_FIXED_LEN;
+		GETVIEW->GetGrid().EnableSnap(m_SavedSnapEnable);
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		break;
 	}
@@ -592,6 +594,20 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	// Update enclosing rectangle
 	//------------------------------------
 	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
+}
+
+DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, ObjectDrawState DrawState)
+{
+	//-------------------------------------------
+	// SnapToObuject
+	//	We check to see if the mouse cursor is
+	// near an object that this particular wants
+	// to snap to.
+	//-------------------------------------------
+	DOUBLEPOINT Result;
+
+	Result = MousePos;
+	return Result;
 }
 
 int CCadLine::EditProperties(void)

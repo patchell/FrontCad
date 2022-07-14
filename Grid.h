@@ -90,7 +90,11 @@ public:
 		CRect& rectClient
 	);
 	int GetGridLineType(double LineV, Axis Type);
-	void EnableSnap(BOOL en) { m_SnapGridOn = en; }	//Enables the Snap Grid
+	BOOL EnableSnap(BOOL en) { 
+		BOOL OldEnable = m_SnapGridOn;
+		m_SnapGridOn = en;
+		return OldEnable;
+	}	//Enables/Disables the Snap Grid
 	BOOL IsSnapOn() { return m_SnapGridOn; }
 	void ShowMajorGrid(BOOL en) { m_GridShowMajor = en; }	//Show major Grid
 	BOOL IsMajorGridShowing() { return m_GridShowMajor; }
