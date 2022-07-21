@@ -2,8 +2,46 @@
 
 class CCadPoint;
 
+struct TypeKindXREF {
+	ObjectType Type;
+	UINT Kind;
+	TypeKindXREF() {
+		Type = ObjectType::BASE;
+		Kind = OBJKIND_ALL;
+	}
+	TypeKindXREF(ObjectType T, UINT K) {
+		Type = T;
+		Kind = K;
+	}
+};
+
 class CCadObject
 {
+	//--------------------------------------
+	// Object Type/ Object Kind Cross Ref
+	//--------------------------------------
+	static inline TypeKindXREF XREF[21] = {
+		{ ObjectType::BASE,OBJKIND_ALL},
+		{ ObjectType::ARC,OBJKIND_ARC},
+		{ ObjectType::ARCCENTERED,OBJKIND_ARCCENTERED},
+		{ ObjectType::ARCANGLE,OBJKIND_ARCANGLE},
+		{ ObjectType::ARROW,OBJKIND_ARROW},
+		{ ObjectType::BITMAP,OBJKIND_BITMAP},
+		{ ObjectType::DIMENSION,OBJKIND_DIMENSION},
+		{ ObjectType::ELIPSE,OBJKIND_ELIPSE},
+		{ ObjectType::HOLE_RECTANGLE,OBJKIND_HOLE_RECTANGLE},
+		{ ObjectType::HOLE_RND1FLAT,OBJKIND_HOLE_RND1FLAT},
+		{ ObjectType::HOLE_RND2FLAT,OBJKIND_HOLE_RND2FLAT},
+		{ ObjectType::HOLE_ROUND,OBJKIND_HOLE_ROUND},
+		{ ObjectType::LIBCOMP,OBJKIND_LIBCOMP},
+		{ ObjectType::LINE,	OBJKIND_LINE},
+		{ ObjectType::ORIGIN,OBJKIND_ORIGIN},
+		{ ObjectType::POINT,OBJKIND_POINT},
+		{ ObjectType::POLYGON,OBJKIND_POLYGON},
+		{ ObjectType::RECT,OBJKIND_RECT},
+		{ ObjectType::ROUNDEDRECT,OBJKIND_ROUNDEDRECT},
+		{ ObjectType::TEXT,OBJKIND_TEXT}
+	};
 	//--------------------------------------
 	// Object Properties
 	//--------------------------------------
@@ -102,7 +140,8 @@ public:
 		DOUBLEPOINT p,
 		CCadObject** ppSelList,
 		int index,
-		int n
+		int n,
+		UINT nKinds
 	);
 	virtual BOOL IsSelected(void) const { return m_Selected; }
 	virtual void SetSelected(BOOL Flag) { m_Selected = Flag; }
@@ -207,4 +246,13 @@ public:
 	void SetNextClipBoard(CCadObject* pObj) { m_pNextClipBoard = pObj; }
 	CCadObject* GetPrevClipBoard() { return m_pPrevClipBoard; }
 	void SetPrevClipBoard(CCadObject* pObj) { m_pPrevClipBoard = pObj; }
+	UINT TypeToKind(ObjectType ObjType) {
+		return XREF[UINT(ObjType)].Kind;
+	}
+	BOOL IsItThisKind(UINT Kinds) {
+		BOOL rV = FALSE;
+		if (TypeToKind(GetType()) & Kinds)
+			rV = TRUE;
+		return rV;
+	}
 };

@@ -43,7 +43,8 @@ public:
 		DOUBLEPOINT p, 
 		CCadObject** ppSelList, 
 		int index, 
-		int n
+		int n,
+		UINT nKinds
 	);
 	virtual CCadObject* CopyObject();
 	//----------- Paint to Screen Ops ----------------------

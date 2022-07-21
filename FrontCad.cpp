@@ -95,7 +95,22 @@ BOOL CFrontCadApp::InitInstance()
 	AllocConsole();
 	freopen_s(&pConsol, "CONOUT$", "w", stdout);
 	printf("Ready\n");
-
+	//-------------------------------------------------------------
+	// Initialize Windows Classes
+	//-------------------------------------------------------------
+	try
+	{
+		m_csPopUpMenuClass = AfxRegisterWndClass(
+			CS_VREDRAW | CS_HREDRAW | CS_SAVEBITS | CS_OWNDC,
+			::LoadCursor(NULL, IDC_ARROW),
+			(HBRUSH)::GetStockObject(BLACK_BRUSH),
+			::LoadIcon(NULL, IDI_APPLICATION));
+	}
+	catch (CResourceException* pEx)
+	{
+		AfxMessageBox(_T("Couldn't register class! (Already registered?)"));
+		pEx->Delete();
+	}
 	//-------------------------------------------------------------
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size

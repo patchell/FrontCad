@@ -235,7 +235,8 @@ int CCadArc::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject ** ppSelList , 
 	int index, 
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//--------------------------------------------------
@@ -263,12 +264,14 @@ int CCadArc::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			ppSelList[index++] = this;
+			if(IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 			ix = CCadObject::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			index += ix;
 		}

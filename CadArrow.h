@@ -23,7 +23,8 @@ public:
 		DOUBLEPOINT pPoint,
 		CCadObject** ppSelList,
 		int index,
-		int n 
+		int n,
+		UINT nKinds
 	);
 	virtual CString& GetTypeString(void);
 	virtual CString& GetObjDescription();

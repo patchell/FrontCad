@@ -24,6 +24,10 @@ class CFrontCadApp : public CWinApp
 	static UINT Id;
 	FILE* pConsol;
 	CMainFrame* m_pMainFrame;
+	//-------------------------------------
+	// Names of registered windows classes
+	//-------------------------------------
+	CString m_csPopUpMenuClass;
 	//----------------------------------
 	//	The Clip Bopard
 	//----------------------------------
@@ -227,6 +231,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	CString& GetPopupMenuClassName() { return m_csPopUpMenuClass; }
 };
 
 extern CFrontCadApp theApp;	//the only "real" global variable

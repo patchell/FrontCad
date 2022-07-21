@@ -156,7 +156,8 @@ int CCadElispe::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
 	int index,
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//--------------------------------------------------
@@ -189,7 +190,8 @@ int CCadElispe::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			index += ix;
 		}

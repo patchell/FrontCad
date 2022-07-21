@@ -155,7 +155,8 @@ int CCadBitmap::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
 	int index,
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//--------------------------------------------------
@@ -176,19 +177,21 @@ int CCadBitmap::PointInObjectAndSelect(
 	//--------------------------------------------------
 	int ix;
 
-	if (index < n || n == 0)
+	if (index < n)
 	{
 		//---------------------------------------
 		// is point in the Arc?
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			ppSelList[index++] = this;
+			if(IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 			ix = CCadObject::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			index += ix;
 		}

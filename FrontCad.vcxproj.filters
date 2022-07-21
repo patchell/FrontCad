@@ -245,6 +245,9 @@
     <ClInclude Include="DlgDoubleData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyPopupMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
@@ -452,6 +455,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DlgDoubleData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyPopupMenu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

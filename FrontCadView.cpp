@@ -53,6 +53,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_WM_MBUTTONDOWN()
 	ON_WM_MBUTTONUP()
 	ON_MESSAGE(UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), &CFrontCadView::OnFromToolbarMessage)
+	ON_MESSAGE(UINT(WindowsMsg::WM_PU_MENU_HOVER_INDEX),&CFrontCadView::OnPuMenuHoverIndex)
+	ON_MESSAGE(UINT(WindowsMsg::WM_PU_MENU_SELECTED_INDEX),&CFrontCadView::OnPuMenuSelectedIndex)
 	//----- Menu Draw Objects ------
 	ON_COMMAND(ID_ARC_ARCFROMCENTER, &CFrontCadView::OnDrawArcCenter)
 	ON_UPDATE_COMMAND_UI(ID_ARC_ARCFROMCENTER, &CFrontCadView::OnUpdateDrawArccnter)
@@ -466,7 +468,8 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				n = pDoc->PointInObjectAndSelect(
 					MousePos,
 					ppSel,
-					DEFALT_SELECT_BUFFER_SIZE
+					DEFALT_SELECT_BUFFER_SIZE,
+					OBJKIND_ALL
 				);
 			}
 			else
@@ -478,11 +481,12 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				//------------------------------------
 				pDoc->UnSelectAll();
 			}
-			ppSel = new CCadObject * [8];
+			ppSel = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 			if (n = pDoc->PointInObjectAndSelect(
 				GetCurrentMousePosition(),
 				ppSel,
-				8)
+				DEFALT_SELECT_BUFFER_SIZE,
+				OBJKIND_ALL)
 			)
 			{											//OnLButtonUp
 				//we have found some objects to select
@@ -1855,7 +1859,8 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
 			ppSelList,
-			DEFALT_SELECT_BUFFER_SIZE
+			DEFALT_SELECT_BUFFER_SIZE,
+			OBJKIND_ALL
 		);
 		if (n > 0)
 		{
@@ -1871,7 +1876,8 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
 			ppSelList,
-			DEFALT_SELECT_BUFFER_SIZE
+			DEFALT_SELECT_BUFFER_SIZE,
+			OBJKIND_ALL
 		);
 		if (n > 0)
 		{
@@ -2763,4 +2769,14 @@ void CFrontCadView::OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	// TODO: Add your message handler code here and/or call default
 	printf("Sys Key Up\n");
 	CChildViewBase::OnSysKeyUp(nChar, nRepCnt, nFlags);
+}
+
+LRESULT CFrontCadView::OnPuMenuHoverIndex(WPARAM index, LPARAM lparam)
+{
+	return 0;
+}
+
+LRESULT CFrontCadView::OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam)
+{
+	return 0;
 }

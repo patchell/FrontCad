@@ -119,7 +119,8 @@ int CCadObject::PointInObjectAndSelect(
 	DOUBLEPOINT p, 
 	CCadObject** ppSelList, 
 	int index, 
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//--------------------------------------------------
@@ -132,7 +133,7 @@ int CCadObject::PointInObjectAndSelect(
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
 	//	n...........Total number of spaces in slection list
-	//	flag........Determines what sort of objects selected
+	//	nKinds........Determines what sort of objects selected
 	//
 	// return value:
 	//	returns true if point is within object
@@ -150,7 +151,8 @@ int CCadObject::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			if (ix > 0)	//any objects found?
 				index += ix;

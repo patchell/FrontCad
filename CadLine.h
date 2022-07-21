@@ -30,7 +30,8 @@ public://public methodes
 		DOUBLEPOINT p,
 		CCadObject ** ppSelList, 
 		int index, 
-		int n
+		int n,
+		UINT nKinds
 	);
 	virtual CString& GetTypeString(void);
 	virtual CString& GetObjDescription();
@@ -43,7 +44,7 @@ public://public methodes
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual void ProcessZoom(CScale& InchesPerPixel);
-	DOUBLEPOINT SnapToObuject(DOUBLEPOINT MousePos, ObjectDrawState DrawState);
+	DOUBLEPOINT SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo);
 	virtual int EditProperties(void);
 	//-------------------------------------
 	//attribute Methods

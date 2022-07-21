@@ -83,6 +83,7 @@
 #include "DlgPointProperties.h"
 #include "DlgDoubleData.h"
 //------------ Views -----------------------
+#include "MyPopupMenu.h"
 #include "Grid.h"
 #include "RulerInfo.h"
 #include "RulerSplitterWindow.h"

@@ -198,6 +198,29 @@ constexpr auto OBJECT_ENABLE_ARROW = 0x0400;
 constexpr auto OBJECT_ENABLE_ORIGIN = 0x0200;
 constexpr auto OBJECT_ENABLE_DIMENSION = 0x1000;
 constexpr auto OBJECT_ENABLE_POINT = 0x2000;
+//----------------------------------
+// Kinds of Objects
+//----------------------------------
+constexpr auto OBJKIND_ALL = 0xFFFFFFFF;
+constexpr auto OBJKIND_ARC = 0x00000001;
+constexpr auto OBJKIND_ARCCENTERED = 0x00000002;
+constexpr auto OBJKIND_ARCANGLE = 0x00000004;
+constexpr auto OBJKIND_ARROW = 0x00000008;
+constexpr auto OBJKIND_BITMAP = 0x00000010;
+constexpr auto OBJKIND_DIMENSION = 0x00000020;
+constexpr auto OBJKIND_ELIPSE = 0x00000040;
+constexpr auto OBJKIND_HOLE_RECTANGLE = 0x00000080;
+constexpr auto OBJKIND_HOLE_RND1FLAT = 0x00000100;
+constexpr auto OBJKIND_HOLE_RND2FLAT = 0x00000200;
+constexpr auto OBJKIND_HOLE_ROUND = 0x00000400;
+constexpr auto OBJKIND_LIBCOMP = 0x00000800;
+constexpr auto OBJKIND_LINE = 0x00001000;			
+constexpr auto OBJKIND_ORIGIN = 0x00002000;
+constexpr auto OBJKIND_POINT = 0x00004000;
+constexpr auto OBJKIND_POLYGON = 0x00008000;
+constexpr auto OBJKIND_RECT = 0x00010000;
+constexpr auto OBJKIND_ROUNDEDRECT = 0x00020000;
+constexpr auto OBJKIND_TEXT = 0x00040000;
 
 //----------------------------------
 // CCadObject derived types
@@ -435,7 +458,13 @@ enum class WindowsMsg {
 	//--------------------------
 	// Messages From Tool Bar
 	//--------------------------
-	WM_FROM_TOOLBAR_MESSAGE
+	WM_FROM_TOOLBAR_MESSAGE,
+	//--------------------------
+	// Messages pertaining to
+	// CMyPopupMenu
+	//--------------------------
+	WM_PU_MENU_HOVER_INDEX,
+	WM_PU_MENU_SELECTED_INDEX
 };
 
 //----------------------------

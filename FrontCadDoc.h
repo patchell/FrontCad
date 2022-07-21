@@ -13,7 +13,8 @@ public:
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject** ppSelList,
-		int n
+		int n,
+		UINT nKinds		//kinds of object to select
 	);
 	virtual void SetDirty(UINT flag);
 #ifndef _WIN32_WCE

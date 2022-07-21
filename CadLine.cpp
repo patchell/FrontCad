@@ -167,7 +167,8 @@ int CCadLine::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
 	int index,
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//---------------------------------------------------
@@ -195,12 +196,14 @@ int CCadLine::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			ppSelList[index++] = this;
+			if(IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 			ix = CCadObject::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			index += ix;
 		}
@@ -365,6 +368,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
+	CPoint pointSaved;
 
 	switch (DrawState)
 	{
@@ -434,6 +438,8 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 		CopyAttributesFrom(&m_CurrentAttributes);
 		GetAttributes().m_LockLength = TRUE;
+		//----- Remember Cursor position
+		GETVIEW->GetCursorPosition(&pointSaved);
 		Id = EditProperties();
 		if (Id == IDOK)
 		{
@@ -447,6 +453,8 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			DrawState = ObjectDrawState::END_DRAWING;
 			GETAPP.UpdateStatusBar(_T(""));
 		}
+		//---- Restore Cursor position
+		GETVIEW->SetCursorPosition(pointSaved);
 		break;
 	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
 		DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP;
@@ -507,9 +515,18 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	DOUBLEPOINT SecondPoint;
 	CADObjectTypes ObjP1, ObjP2;
+	UINT KindsOfObjects = 0;
 
 	switch (DrawState)
 	{
+	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		if (GetAttributes().m_P1_SNAP_POINT)
+		{
+			KindsOfObjects = OBJKIND_POINT;
+			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+		}
+		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		ObjP2.pCadObject = FindObject(
 			ObjectType::POINT,
@@ -596,17 +613,28 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
 }
 
-DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, ObjectDrawState DrawState)
+DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 {
 	//-------------------------------------------
 	// SnapToObuject
 	//	We check to see if the mouse cursor is
-	// near an object that this particular wants
-	// to snap to.
+	// near an object that this particular object
+	// wants to snap to.
 	//-------------------------------------------
 	DOUBLEPOINT Result;
-
+	
 	Result = MousePos;
+	CCadObject* ppObjectList[8];
+	CFrontCadDoc* pDoc;
+	int NumberOfObjects;
+
+	pDoc = GETVIEW->GetDocument();
+	NumberOfObjects = pDoc->PointInObjectAndSelect(
+		MousePos, 
+		ppObjectList, 
+		8,
+		KindsToSnapTo
+	);
 	return Result;
 }
 

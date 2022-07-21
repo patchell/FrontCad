@@ -31,7 +31,8 @@ public:
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject** ppL, 
-		int n
+		int n,
+		UINT nKinds		//kinds of object to select
 	) 
 	{ 
 		return 0;

@@ -152,7 +152,8 @@ void CFrontCadDoc::Serialize(CArchive& ar)
 int CFrontCadDoc::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
-	int n
+	int n,
+	UINT nKinds		//kinds of object to select
 )
 {
 	//--------------------------------------
@@ -168,7 +169,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	//		p......point of interest
 	//		ppSelList...pointer to an array of selected objects
 	//		n.....maximum number of objects to check for
-	//		flag..what kind of objects are inlcuded in list
+	//		nKinds..what kind of objects are inlcuded in list
 	//				0-All Objects
 	//				1-Unselected Objects
 	///				2-Selected Objects
@@ -181,7 +182,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 
 	while (pObject && (index < n))
 	{
-		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n);
+		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
 		if(ix)
 		{
 			index += ix;
@@ -191,7 +192,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	pObject = GetOriginHead();
 	while (pObject && (index < n))
 	{
-		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n);
+		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
 		if(ix)
 			index += ix;
 		pObject = pObject->GetNextOrigin();

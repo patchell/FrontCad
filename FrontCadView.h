@@ -109,9 +109,32 @@ public:
 	void SetMouseLeftWindow(BOOL flag) { m_MouseLeftWindow = flag; }
 	afx_msg void OnMouseLeave();
 	BOOL GetCursorPosition(CPoint* pMP) {
+		//----------------------------
+		// Get Cursor position in
+		// screen coordinates
+		//----------------------------
 		BOOL rV;
 		rV = ::GetCursorPos(pMP);
 		return rV;
+	}
+	BOOL SetCursorPosition(DOUBLEPOINT& p)
+	{
+		//----------------------------------
+		// Set the cursor poition, in
+		// client coordiates space to the
+		// position in screen coordinates
+		//----------------------------------
+		CPoint cp;
+		CScale Scale;
+
+		Scale = GetGrid().GetPixelsPerInch();
+		cp = p.ToPixelPoint(
+			GetRulerInfo().GetUpperLeft(), 
+			Scale.GetScaleX(),
+			Scale.GetScaleY()
+		);
+		ClientToScreen(&cp);
+		return ::SetCursorPos(cp.x,cp.y);
 	}
 	BOOL SetCursorPosition(CCadPoint& p)
 	{
@@ -119,9 +142,13 @@ public:
 
 		cp = p.ToPixelPoint(GetRulerInfo().GetUpperLeft(), GetGrid().GetPixelsPerInch());
 		ClientToScreen(&cp);
-		return SetCursorPosition(cp);
+		return ::SetCursorPos(cp.x,cp.y);
 	}
 	BOOL SetCursorPosition(CPoint MP) {
+		//------------------------------
+		// Set the cursor to the screen
+		// Coordinates define by MP
+		//------------------------------
 		BOOL rV;
 		rV = ::SetCursorPos(MP.x, MP.y);
 		return rV;
@@ -362,5 +389,7 @@ public:
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg LRESULT OnPuMenuHoverIndex(WPARAM index, LPARAM lparam);
+	afx_msg LRESULT OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam);
 };
 

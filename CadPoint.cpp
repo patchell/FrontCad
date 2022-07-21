@@ -130,7 +130,8 @@ int CCadPoint::PointInObjectAndSelect(
 	DOUBLEPOINT p, 
 	CCadObject** ppSelList, 
 	int index, 
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//---------------------------------------------------
@@ -160,7 +161,8 @@ int CCadPoint::PointInObjectAndSelect(
 		//-----------------------------------------------
 		if (IsPointOnTarget(p))
 		{
-			ppSelList[index++] = this;
+			if(IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 		}
 		//------------------------------------
 		// CCadPoint is a terminal object.

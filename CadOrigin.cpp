@@ -161,7 +161,8 @@ int CCadOrigin::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
 	int index,
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//---------------------------------------------------
@@ -194,7 +195,13 @@ int CCadOrigin::PointInObjectAndSelect(
 		pObj = GetHead();
 		while (pObj)
 		{
-			iX = pObj->PointInObjectAndSelect(p, ppSelList, index, n);
+			iX = pObj->PointInObjectAndSelect(
+				p, 
+				ppSelList, 
+				index, 
+				n,
+				nKinds
+			);
 			if (iX)
 			{
 				index += iX;

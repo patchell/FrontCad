@@ -284,7 +284,8 @@ int CCadPolygon::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject** ppSelList,
 	int index,
-	int n
+	int n,
+	UINT nKinds
 )
 {
 	//---------------------------------------------------
@@ -317,7 +318,8 @@ int CCadPolygon::PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
-				n
+				n,
+				nKinds
 			);
 			index += ix;
 		}
