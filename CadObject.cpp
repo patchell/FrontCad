@@ -32,8 +32,8 @@ CCadObject::CCadObject()
 	m_pNextSel = 0;
 	m_pPrevSel = 0;
 	//---------- Drawing Object Child List -------
-	m_pHead = 0;
-	m_pTail = 0;
+	m_pChildHead = 0;
+	m_pChildTail = 0;
 	m_nTotalChildObjects = 0;
 	//--------Dependent Child list --------------
 	m_pHeadDependentChildren = 0;
@@ -92,7 +92,7 @@ void CCadObject::Move(CDoubleSize Diff)
 	//--------------------------------------------------
 	CCadObject* pObj;
 
-	pObj = GetHead();
+	pObj = GetChildrenHead();
 	while (pObj)
 	{
 		pObj->Move(Diff);
@@ -144,10 +144,10 @@ int CCadObject::PointInObjectAndSelect(
 
 	if (index < n)	//Is there room?
 	{
-		pObj = GetHead();	//get head of children
+		pObj = GetChildrenHead();	//get head of children
 		while (pObj)	//take a look at the children
 		{
-			ix = PointInObjectAndSelect(
+			ix = pObj->PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
@@ -207,11 +207,11 @@ void CCadObject::CopyObject(CCadObject* pObjCopy)
 	//------------------------------
 	// copy children
 	//------------------------------
-	pObj = GetHead();
+	pObj = GetChildrenHead();
 	while (pObj)
 	{
 		pNew = pObj->CopyObject();
-		pObjCopy->AddObjectAtTail(pNew);
+		pObjCopy->AddObjectAtChildTail(pNew);
 		pObj = pObj->GetNext();
 	}
 }
@@ -220,59 +220,59 @@ void CCadObject::CopyObject(CCadObject* pObjCopy)
 // Child Object List
 //-------------------------------------------------
 
-void CCadObject::AddObjectAtHead(CCadObject* pObj)
+void CCadObject::AddObjectAtChildHead(CCadObject* pObj)
 {
 	pObj->SetParent(this);
 	pObj->SetDependentParentHead(this);
-	if (GetHead() == 0)
+	if (GetChildrenHead() == 0)
 	{
-		SetHead(pObj);
-		SetTail(pObj);;
+		SetChildrenHead(pObj);
+		SetChildrenTail(pObj);;
 	}
 	else
 	{
-		pObj->SetNext(GetHead());
-		GetHead()->SetPrev(pObj);
-		SetHead(pObj);
+		pObj->SetNext(GetChildrenHead());
+		GetChildrenHead()->SetPrev(pObj);
+		SetChildrenHead(pObj);
 	}
 	++m_nTotalChildObjects;
 }
 
-void CCadObject::AddObjectAtTail(CCadObject* pObj)
+void CCadObject::AddObjectAtChildTail(CCadObject* pObj)
 {
 	pObj->SetParent(this);
 	pObj->SetDependentParentHead(this);
-	if (GetHead() == 0)
+	if (GetChildrenHead() == 0)
 	{
-		SetHead(pObj);
-		SetTail(pObj);
+		SetChildrenHead(pObj);
+		SetChildrenTail(pObj);
 	}
 	else
 	{
-		pObj->SetPrev(GetTail());
-		GetTail()->SetNext(pObj);
-		SetTail(pObj);
+		pObj->SetPrev(GetChildrenTail());
+		GetChildrenTail()->SetNext(pObj);
+		SetChildrenTail(pObj);
 	}
 	++m_nTotalChildObjects;
 }
 
-void CCadObject::RemoveObject(CCadObject* pObj)
+void CCadObject::RemoveChildObject(CCadObject* pObj)
 {
-	if (pObj == GetHead())
+	if (pObj == GetChildrenHead())
 	{
-		SetHead(pObj->GetNext());
-		if (GetHead())
-			GetHead()->SetPrev(0);
+		SetChildrenHead(pObj->GetNext());
+		if (GetChildrenHead())
+			GetChildrenHead()->SetPrev(0);
 		else
-			SetTail(0);
+			SetChildrenTail(0);
 	}
-	else if (pObj == GetTail())
+	else if (pObj == GetChildrenTail())
 	{
-		SetTail(pObj->GetPrev());
-		if (GetTail())
-			GetTail()->SetNext(0);
+		SetChildrenTail(pObj->GetPrev());
+		if (GetChildrenTail())
+			GetChildrenTail()->SetNext(0);
 		else
-			SetHead(0);
+			SetChildrenHead(0);
 	}
 	else
 	{
@@ -285,14 +285,14 @@ void CCadObject::RemoveObject(CCadObject* pObj)
 	--m_nTotalChildObjects;
 }
 
-CCadObject* CCadObject::FindObject(ObjectType Type, SubType SubType, UINT SubSubType)
+CCadObject* CCadObject::FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType)
 {
 	// Is this the real one?
 	CCadObject* pResult = 0;
 	CCadObject* pObj;
 	BOOL bLoop = TRUE;
 
-	pObj = GetHead();
+	pObj = GetChildrenHead();
 	while (pObj && bLoop)
 	{
 		if (pObj->m_Type == Type &&

@@ -40,7 +40,7 @@ void CCadPolygon::Create()
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 BOOL CCadPolygon::Destroy(CCadObject* pDendentObjects)
@@ -87,7 +87,7 @@ void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 
 	for (i = 0; i< GetNumVerticies(); ++i)
 	{
-		pPoint = (CCadPoint*)FindObject(
+		pPoint = (CCadPoint*)FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			i + 1
@@ -105,7 +105,7 @@ BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Sca
 	int VertexCount = 0;
 	BOOL rV = FALSE;
 
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		++VertexCount
@@ -124,7 +124,7 @@ BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Sca
 		}
 		if (VertexCount == 3)
 			rV = TRUE;
-		pPoint = (CCadPoint*)FindObject(
+		pPoint = (CCadPoint*)FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			++VertexCount
@@ -141,7 +141,7 @@ CCadPoint *CCadPolygon::GetCenter()
 	UINT i, n;
 	CCadPoint* pPoint = 0,*pResultPoint = 0;
 
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::CENTERPOINT,
 		0
@@ -153,7 +153,7 @@ CCadPoint *CCadPolygon::GetCenter()
 		n = GetNumVerticies();
 		for (i = 0; i < n; ++i)
 		{
-			pPoint = (CCadPoint*)FindObject(
+			pPoint = (CCadPoint*)FindChildObject(
 				ObjectType::POINT,
 				SubType::VERTEX,
 				i + 1
@@ -176,7 +176,7 @@ CCadPoint *CCadPolygon::GetCenter()
 		pResultPoint->SetPoint(x, y);
 		pResultPoint->SetSubType(SubType::CENTERPOINT);
 		pResultPoint->SetSubSubType(0);
-		AddObjectAtTail(pResultPoint);	//Save that sucker for later
+		AddObjectAtChildTail(pResultPoint);	//Save that sucker for later
 	}
 exit:
 	return pResultPoint;
@@ -251,7 +251,7 @@ BOOL CCadPolygon::GetPoints(DOUBLEPOINT* pPolyPoints)
 
 	for (i = 0; i < n; ++i)
 	{
-		pPoint = (CCadPoint*)FindObject(
+		pPoint = (CCadPoint*)FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			i + 1
@@ -377,7 +377,7 @@ BOOL CCadPolygon::GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& 
 	n = GetNumVerticies();
 	for (i = 0; i < n; ++i)
 	{
-		pPoint = (CCadPoint*)FindObject(
+		pPoint = (CCadPoint*)FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			i + 1
@@ -574,7 +574,7 @@ CCadPoint* CCadPolygon::AddPoint(DOUBLEPOINT newPoint)
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(++m_NumVertices);
 	pPoint->SetPoint(newPoint);
-	AddObjectAtTail(pPoint);
+	AddObjectAtChildTail(pPoint);
 	return pPoint;;
 }
 

@@ -17,10 +17,10 @@ CCadLine::CCadLine():CCadObject()
 CCadLine::CCadLine(CCadLine &line) :CCadObject()
 {
 	CopyAttributesFrom(&line.GetAttributes());
-	CCadPoint* pCP = (CCadPoint*)line.GetHead();
+	CCadPoint* pCP = (CCadPoint*)line.GetChildrenHead();
 	while (pCP)
 	{
-		AddObjectAtHead(pCP);
+		AddObjectAtChildHead(pCP);
 		pCP = (CCadPoint * )pCP->GetNext();
 	}
 	SetType(ObjectType::LINE);
@@ -39,16 +39,16 @@ BOOL CCadLine::Create()
 	pPoint->Create();
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(1);
-	AddObjectAtTail(pPoint);
+	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
 	pPoint->Create();
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(2);
-	AddObjectAtTail(pPoint);
+	AddObjectAtChildTail(pPoint);
 	pRect = new CCadRect;
 	pRect->Create();
 	pRect->SetSubType(SubType::RECTSHAPE);
-	AddObjectAtTail(pRect);
+	AddObjectAtChildTail(pRect);
 	m_Length = 0.0;
 	return TRUE;
 }
@@ -85,11 +85,11 @@ void CCadLine::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 		GETAPP.MkIndentString(pIndent,Indent, ' '),
 		CLexer::TokenToString(DocFileParseToken::LINE),
 		CLexer::TokenToString(DocFileParseToken::POINT),
-		((CCadPoint*)GetHead())->GetX(),
-		((CCadPoint*)GetHead())->GetY(),
+		((CCadPoint*)GetChildrenHead())->GetX(),
+		((CCadPoint*)GetChildrenHead())->GetY(),
 		CLexer::TokenToString(DocFileParseToken::POINT),
-		((CCadPoint*)GetHead()->GetNext())->GetX(),
-		((CCadPoint*)GetHead()->GetNext())->GetY()
+		((CCadPoint*)GetChildrenHead()->GetNext())->GetX(),
+		((CCadPoint*)GetChildrenHead()->GetNext())->GetY()
 	);
 	GetAttributes().Save(pO, Indent + 1, flags);
 	delete[] pIndent;
@@ -122,30 +122,30 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			case ObjectDrawMode::FINAL:
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetHead())
+				if (GetChildrenHead())
 				{
-					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
 				}
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SELECTED:
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetHead())
+				if (GetChildrenHead())
 				{
-					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
 				}
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SKETCH:
 				penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetHead())
+				if (GetChildrenHead())
 				{
-					((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetHead()->GetNext())->LineTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
 				}
 				pDC->SelectObject(pOld);
 				break;
@@ -158,7 +158,7 @@ BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
 	BOOL rV = FALSE;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -231,13 +231,13 @@ CString& CCadLine::GetObjDescription()
 	DOUBLEPOINT P1, P2;
 	CCadPoint* pPoint;
 
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		1
 	);
 	P1 = DOUBLEPOINT(*pPoint);
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		2
@@ -282,13 +282,13 @@ CDoubleSize CCadLine::GetSize()
 	DOUBLEPOINT P1, P2;
 	CCadPoint* pPoint;
 
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		1
 	);
 	P1 = DOUBLEPOINT(*pPoint);
-	pPoint = (CCadPoint*)FindObject(
+	pPoint = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		2
@@ -403,7 +403,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		ObjP1.pCadObject = FindObject(
+		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
@@ -417,7 +417,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
 		GETVIEW->EnableAutoScroll(FALSE);
-		ObjP2.pCadObject = FindObject(
+		ObjP2.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
@@ -460,7 +460,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
-		ObjP1.pCadObject = FindObject(
+		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
@@ -474,12 +474,12 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
-		ObjP1.pCadObject = FindObject(
+		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
 		);
-		ObjP2.pCadObject = FindObject(
+		ObjP2.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
@@ -520,7 +520,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT;
@@ -528,20 +528,28 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		ObjP2.pCadObject = FindObject(
+		ObjP2.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
 		);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		break;
+	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+		if (GetAttributes().m_P1_SNAP_POINT)
+		{
+			KindsOfObjects = OBJKIND_POINT;
+			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+		}
+		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
-		ObjP1.pCadObject = FindObject(
+		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
 		);
-		ObjP2.pCadObject = FindObject(
+		ObjP2.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			2
@@ -583,9 +591,9 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	// Get the objects that define the
 	// Enclosing rectangle
 	//--------------------------------------
-	ObjRect.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjRect.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 	//-------------------------------------
 	// Figure out how big the rectangle
 	// needs to be.  It needs to be at
@@ -628,6 +636,7 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 	CFrontCadDoc* pDoc;
 	int NumberOfObjects;
 
+	printf("-------- Snap To Object ------\n");
 	pDoc = GETVIEW->GetDocument();
 	NumberOfObjects = pDoc->PointInObjectAndSelect(
 		MousePos, 
@@ -635,6 +644,8 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 		8,
 		KindsToSnapTo
 	);
+	printf("Number of Objects = %d\n", NumberOfObjects);
+	printf("------ Exit Snap To Object ----\n");
 	return Result;
 }
 

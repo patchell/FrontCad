@@ -24,23 +24,23 @@ void CCadArrow::Create()
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ARROW_TIP);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ARROW_TOP);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ARROW_END);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ARROW_BOT);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ARROW_ROTATION);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 
 }
 
@@ -103,11 +103,11 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
 		if (Lw < 1)
 			Lw = 1;
-		TIP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
-		TOP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
-		END.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
-		BOT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
-		ROT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+		TIP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+		TOP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+		END.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
+		BOT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
+		ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
@@ -147,13 +147,13 @@ BOOL CCadArrow::PointInThisObject(DOUBLEPOINT point)
 	CADObjectTypes Obj;
 	BOOL rV;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
 	Points[ARROW_TIP] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
 	Points[ARROW_TOP] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
 	Points[ARROW_BACK] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
 	Points[ARROW_BOT] = DOUBLEPOINT(*Obj.pCadPoint);
 	rV = GETAPP.PtEnclosedInPolygon(point, Points,4);
 	return rV;
@@ -358,9 +358,9 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
@@ -420,13 +420,13 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 	double x2, y2;
 
 
-	TIP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
-	TOP.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
-	END.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
-	BOT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	TIP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	TOP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	END.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	BOT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
 	//------------------------------------------------------------
 	// This point defines the angle that the arrow is 
-	ROT.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+	ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
 	ROT.pCadPoint->SetPoint(MousePos);
 	Er = GetAttributes().m_aArrowShape[ARROW_BACK].dX;
 	R = DOUBLEPOINT(*ROT.pCadPoint);
@@ -493,13 +493,13 @@ void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEP
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
 	PolyPoints[ARROW_TIP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
 	PolyPoints[ARROW_TOP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
 	PolyPoints[ARROW_BACK] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
 	PolyPoints[ARROW_BOT] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
 }
 

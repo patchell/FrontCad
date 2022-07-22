@@ -76,9 +76,9 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SKETCH:
 			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+			Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 			Obj.pCadRect->Draw(pDC, mode, ULHC, Scale);
-			ObjCenter.pCadObject = Obj.pCadRect->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			ObjCenter.pCadObject = Obj.pCadRect->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 			pOldPen = pDC->SelectObject(&penLine);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta,Delta),pDC,ULHC,Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta, -Delta), pDC, ULHC, Scale);
@@ -87,9 +87,9 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			break;
 		case ObjectDrawMode::SELECTED:
 			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+			Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 			Obj.pCadRect->Draw(pDC, mode, ULHC, Scale);
-			ObjCenter.pCadObject = Obj.pCadRect->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			ObjCenter.pCadObject = Obj.pCadRect->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 			pOldPen = pDC->SelectObject(&penLine);
 			ObjCenter.pCadPoint->Draw(pDC, mode, ULHC, Scale);
 			break;
@@ -101,7 +101,7 @@ BOOL CCadHoleRect::PointInThisObject(DOUBLEPOINT point)
 {
 	CADObjectTypes Obj;
 	BOOL rV;
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -284,7 +284,7 @@ ObjectDrawState CCadHoleRect::ProcessDrawMode(ObjectDrawState DrawState)
 		Obj.pCadRect->GetAttributes().m_LineWidth = GetAttributes().m_LineWidth;
 		Obj.pCadRect->GetAttributes().m_TransparentFill = TRUE;
 		Obj.pCadRect->SetPointsFromCenter(GetAttributes().m_HoleWidth /2.0, GetAttributes().m_HoleHeight/ 2.0);
-		AddObjectAtTail(Obj.pCadObject);
+		AddObjectAtChildTail(Obj.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Center Point"));
 		break;
@@ -308,12 +308,12 @@ ObjectDrawState CCadHoleRect::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		Obj.pCadRect->SetCenterPoint(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		Obj.pCadRect->SetCenterPoint(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
@@ -345,7 +345,7 @@ ObjectDrawState CCadHoleRect::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		Obj.pCadRect->SetCenterPoint(MousePos);
 		GETVIEW->Invalidate();
 		break;

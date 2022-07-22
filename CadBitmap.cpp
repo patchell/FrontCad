@@ -26,7 +26,7 @@ void CCadBitmap::Create()
 	Obj.pCadRect = new CCadRect;
 	Obj.pCadRect->Create();
 	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 BOOL CCadBitmap::Destroy(CCadObject* pDependentObject)
@@ -85,7 +85,7 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE,0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE,0);
 		rect = Obj.pCadRect->ToCRect(ULHC, Scale);
 
 		switch (mode.DrawMode)
@@ -146,7 +146,7 @@ BOOL CCadBitmap::PointInThisObject(DOUBLEPOINT point)
 	BOOL rV;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -248,7 +248,7 @@ CDoubleSize CCadBitmap::GetSize()
 	//--------------------------------------------------
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 
 	return Obj.pCadRect->GetSize();
 }
@@ -385,7 +385,7 @@ ObjectDrawState CCadBitmap::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		Obj.pCadRect->SetSecondPoint(MousePos);
 		break;
 	}
@@ -420,7 +420,7 @@ void CCadBitmap::RestoreAspectRatio()
 	CADObjectTypes Obj;
 	double AspectRatioBM;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
 	Obj.pCadRect->SetHeight(AspectRatioBM * Obj.pCadRect->GetWidth());
 	GetAttributes().m_MaintainAspectRatio = TRUE;

@@ -93,7 +93,7 @@ BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
 			// children and prepare them
 			//-----------------------------
 			pObj->Destroy(this);
-			pObj = DeleteObject(pObj);
+			pObj = DeleteChildObject(pObj);
 		}
 	}
 	return rV;

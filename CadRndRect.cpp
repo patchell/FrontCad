@@ -29,18 +29,18 @@ void CCadRndRect::Create()
 		Obj.pCadPoint->Create();
 		Obj.pCadPoint->SetSubType(SubType::VERTEX);
 		Obj.pCadPoint->SetSubSubType(i + 1);
-		AddObjectAtTail(Obj.pCadObject);
+		AddObjectAtChildTail(Obj.pCadObject);
 	}
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadRect->SetSubType(SubType::CORNER_RADIUS);
 	Obj.pCadRect->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 
@@ -101,9 +101,9 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
 		if (Lw < 1)
 			Lw = 1;
-		ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
-		ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
-		ObjCornerRadius.pCadObject = FindObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
+		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		ObjCornerRadius.pCadObject = FindChildObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
@@ -216,7 +216,7 @@ CString& CCadRndRect::GetObjDescription()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 	GetDescription().Format(_T("Rnd Rect(%7.3lf,%7.3lf)"), Obj.pCadPoint->GetX(), Obj.pCadPoint->GetY());
 	return GetDescription();
 }
@@ -250,8 +250,8 @@ CDoubleSize CCadRndRect::GetSize()
 	CADObjectTypes ObjP1, ObjP2;
 	double CX, CY;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 	CX = abs(ObjP2.pCadPoint->GetX() - ObjP1.pCadPoint->GetX());
 	CY = abs(ObjP2.pCadPoint->GetY() - ObjP1.pCadPoint->GetY());
 	return CDoubleSize(CX,CY);
@@ -363,7 +363,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		GETVIEW->Invalidate();
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place Second Point"));
@@ -372,7 +372,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_RADIUS_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place Corner Radius Point"));
@@ -382,7 +382,7 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_RADIUS_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_RADIUS_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->EnableAutoScroll(FALSE);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
@@ -416,13 +416,13 @@ ObjectDrawState CCadRndRect::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 		Obj.pCadPoint->SetPoint(MousePos);
 	case ObjectDrawState::PLACE_RADIUS_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		break;
 	}

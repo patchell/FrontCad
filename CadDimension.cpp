@@ -67,9 +67,9 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//--------------------------------------------------
 	if (IsRenderEnabled())
 	{
-		if (GetHead())
+		if (GetChildrenHead())
 		{
-			CCadObject* pObj = GetHead();
+			CCadObject* pObj = GetChildrenHead();
 			while (pObj)
 			{
 				pObj->Draw( pDC, mode, ULHC, Scale);
@@ -361,30 +361,30 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		case ObjectDrawMode::FINAL:
 			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOld = pDC->SelectObject(&penLine);
-			if (GetHead())
+			if (GetChildrenHead())
 			{
-				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
 			}
 			pDC->SelectObject(pOld);
 			break;
 		case ObjectDrawMode::SELECTED:
 			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			pOld = pDC->SelectObject(&penLine);
-			if (GetHead())
+			if (GetChildrenHead())
 			{
-				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
 			}
 			pDC->SelectObject(pOld);
 			break;
 		case ObjectDrawMode::SKETCH:
 			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
 			pOld = pDC->SelectObject(&penLine);
-			if (GetHead())
+			if (GetChildrenHead())
 			{
-				((CCadPoint*)GetHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetTail())->LineTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
+				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
 			}
 			pDC->SelectObject(pOld);
 			break;

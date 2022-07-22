@@ -20,7 +20,7 @@ public:
 	void AddObjectAtTail(CCadObject* pObj);
 	void RemoveObject(CCadObject* pObj);
 	CCadObject* RemoveFromHead();
-	CCadObject* FindObject(ObjectType Type, SubType SubType, UINT SubSubType);
+	CCadObject* FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType);
 	void RemoveAndDestroyALL();
 	void SetRef(DOUBLEPOINT refpt) { m_Ref = refpt; }
 	DOUBLEPOINT GetRef() { return m_Ref; }

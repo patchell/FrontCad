@@ -25,27 +25,27 @@ void CCadHoleRnd2Flat::Create()
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	SolveIntersection();
 }
 
@@ -113,11 +113,11 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale
 		Radius = GetAttributes().m_HoleRadius;
 		dS = Radius / 3.0;
 		nRadius = GETAPP.RoundDoubleToInt(Radius * Scale.GetScaleX());
-		ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-		ObjStart1.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 1);
-		ObjEnd1.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 1);
-		ObjStart2.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 2);
-		ObjEnd2.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 2);
+		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		ObjStart1.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 1);
+		ObjEnd1.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 1);
+		ObjStart2.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 2);
+		ObjEnd2.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 2);
 		start1 = ObjStart1.pCadPoint->ToPixelPoint(ULHC, Scale);
 		end1 = ObjEnd1.pCadPoint->ToPixelPoint(ULHC, Scale);
 		start2 = ObjStart2.pCadPoint->ToPixelPoint(ULHC, Scale);
@@ -172,11 +172,11 @@ void CCadHoleRnd2Flat::SolveIntersection()
 	Radius = GetAttributes().m_HoleRadius;
 	FlatDist = GetAttributes().m_FlatDistanceFromCenter;
 
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	ObjStart1.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
-	ObjEnd1.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
-	ObjStart2.pCadObject = FindObject(ObjectType::POINT, SubType::STARTPOINT, 0);
-	ObjEnd2.pCadObject = FindObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	ObjStart1.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	ObjEnd1.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	ObjStart2.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	ObjEnd2.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
 	//--------------------------------
 	// Start First Flat
 	//--------------------------------
@@ -391,7 +391,7 @@ ObjectDrawState CCadHoleRnd2Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
@@ -426,7 +426,7 @@ ObjectDrawState CCadHoleRnd2Flat::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->Invalidate();
 		break;

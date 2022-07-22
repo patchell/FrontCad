@@ -23,15 +23,15 @@ void CCadText::Create()
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::TEXT_LOCATION);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::TEXT_ROTATION);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadRect = new CCadRect;
 	Obj.pCadRect->Create();
 	Obj.pCadRect->SetSubType(SubType::TEXT_RECT);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 BOOL CCadText::Destroy(CCadObject* pDependentObject)
@@ -90,7 +90,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		LOC.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+		LOC.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
 
 		P1 = LOC.pCadPoint->ToPixelPoint(ULHC, Scale);
 		FontHeight = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontHeight());
@@ -125,7 +125,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		pDC->SetBkMode(OldMode);
 		if (mode.DrawMode == ObjectDrawMode::SELECTED)
 		{
-			RECT.pCadObject = FindObject(ObjectType::RECT, SubType::TEXT_RECT, 0);
+			RECT.pCadObject = FindChildObject(ObjectType::RECT, SubType::TEXT_RECT, 0);
 			penLine.CreatePen(PS_SOLID, 2, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			RECT.pCadRect->Draw(pDC, mode, ULHC, Scale);
@@ -207,7 +207,7 @@ CString& CCadText::GetObjDescription()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
 	GetDescription().Format(_T("Text(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
 	return GetDescription();
 }
@@ -405,7 +405,7 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT,SubType::TEXT_LOCATION,0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT,SubType::TEXT_LOCATION,0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("TEXT:Define Text Angle"));
@@ -446,7 +446,7 @@ ObjectDrawState CCadText::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 		case ObjectDrawState::ROTATE_LBUTTON_DOWN:
-			Obj.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_ROTATION);
+			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_ROTATION);
 			Obj.pCadPoint->SetPoint(MousePos);
 			GETVIEW->Invalidate();
 			break;
@@ -476,9 +476,9 @@ void CCadText::Rotate()
 	//-------------------------------------
 	// Get objects that define text object
 	//-------------------------------------
-	LOC.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
-	ROT.pCadObject = FindObject(ObjectType::POINT, SubType::TEXT_ROTATION, 0);
-	RECT.pCadObject = FindObject(ObjectType::RECT,SubType::TEXT_RECT,0);
+	LOC.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+	ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_ROTATION, 0);
+	RECT.pCadObject = FindChildObject(ObjectType::RECT,SubType::TEXT_RECT,0);
 	X = ROT.pCadPoint->GetX() - LOC.pCadPoint->GetX();	// run
 	Y = LOC.pCadPoint->GetY() - ROT.pCadPoint->GetY();	// rise
 	m_Angle = GETAPP.ArcTan(X, Y);

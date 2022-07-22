@@ -26,7 +26,7 @@ void CCadOrigin::Create()
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::ORIGIN_LOCATION);
 	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 BOOL CCadOrigin::Destroy(CCadObject* pDependentObject)
@@ -54,7 +54,7 @@ DOUBLEPOINT CCadOrigin::GetCenterPoint()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 	return DOUBLEPOINT(*Obj.pCadPoint);
 }
 
@@ -82,7 +82,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CCadObject* pObj = GetHead(); 
+	CCadObject* pObj = GetChildrenHead(); 
 	CPen LinePen, * OldPen = 0;
 	CBrush fillBrush, * oldBrush = 0;
 	CADObjectTypes Obj;
@@ -110,7 +110,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			rectHalfWidth = 10;
 			Radius = double(rectHalfWidth);
 		}
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 		pointLR = Obj.pCadPoint->ToPixelPoint(ULHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
 		pointUL = Obj.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
 		rect.SetRect(pointUL, pointLR);
@@ -189,10 +189,10 @@ int CCadOrigin::PointInObjectAndSelect(
 	{
 		if (PointInThisObject(p))
 		{
-			Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 			ppSelList[index++] = Obj.pCadObject;
 		}
-		pObj = GetHead();
+		pObj = GetChildrenHead();
 		while (pObj)
 		{
 			iX = pObj->PointInObjectAndSelect(
@@ -206,6 +206,7 @@ int CCadOrigin::PointInObjectAndSelect(
 			{
 				index += iX;
 			}
+			pObj->GetNext();
 		}
 	}
 	return index;
@@ -229,7 +230,7 @@ CString& CCadOrigin::GetObjDescription()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 	GetDescription().Format(_T("Origin(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
 	return GetDescription();
 }
@@ -318,7 +319,7 @@ ObjectDrawState CCadOrigin::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 		Obj.pCadPoint->SetPoint(MousePosition);
 	}
 	GETVIEW->Invalidate();
@@ -380,7 +381,7 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
 		GETVIEW->AddOriginAtTail(this);

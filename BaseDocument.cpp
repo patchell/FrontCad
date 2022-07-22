@@ -130,83 +130,74 @@ void CBaseDocument::Serialize(CArchive& ar)
 
 void CBaseDocument::AddObjectAtHead(CCadObject * pObj)
 {
-	if (GetCurrentOrigin())
+	if (pObj->GetType() == ObjectType::ORIGIN)
 	{
-		GetCurrentOrigin()->AddObjectAtHead(pObj);
+		AddOriginAtTail(pObj);
+	}
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);;
 	}
 	else
 	{
-		if (GetHead() == 0)
-		{
-			SetHead(pObj);
-			SetTail(pObj);;
-		}
-		else
-		{
-			pObj->SetNext(GetHead());
-			GetHead()->SetPrev(pObj);
-			SetHead(pObj);
-		}
-		++m_nTotalObjects;
+		pObj->SetNext(GetHead());
+		GetHead()->SetPrev(pObj);
+		SetHead(pObj);
 	}
+	++m_nTotalObjects;
 }
 
 void CBaseDocument::AddObjectAtTail(CCadObject* pObj)
 {
-	if (GetCurrentOrigin())
+	if (pObj->GetType() == ObjectType::ORIGIN)
 	{
-		GetCurrentOrigin()->AddObjectAtTail(pObj);
+		AddOriginAtTail(pObj);
+	}
+	if (GetHead() == 0)
+	{
+		SetHead(pObj);
+		SetTail(pObj);
 	}
 	else
 	{
-		if (GetHead() == 0)
-		{
-			SetHead(pObj);
-			SetTail(pObj);
-		}
-		else
-		{
-			pObj->SetPrev(GetTail());
-			GetTail()->SetNext(pObj);
-			SetTail(pObj);
-		}
-		++m_nTotalObjects;
+		pObj->SetPrev(GetTail());
+		GetTail()->SetNext(pObj);
+		SetTail(pObj);
 	}
+	++m_nTotalObjects;
 }
 
 void CBaseDocument::RemoveObject(CCadObject * pObj)
 {
-	if (GetCurrentOrigin())
+	if (pObj->GetType() == ObjectType::ORIGIN)
 	{
-		GetCurrentOrigin()->RemoveObject(pObj);
+		RemoveOrigin(pObj);
+	}
+	if (pObj == GetHead())
+	{
+		SetHead(pObj->GetNext());
+		if (GetHead())
+			GetHead()->SetPrev(0);
+		else
+			SetTail(0);
+	}
+	else if (pObj == GetTail())
+	{
+		SetTail(pObj->GetPrev());
+		if (GetTail())
+			GetTail()->SetNext(0);
+		else
+			SetHead(0);
 	}
 	else
 	{
-		if (pObj == GetHead())
-		{
-			SetHead(pObj->GetNext());
-			if (GetHead())
-				GetHead()->SetPrev(0);
-			else
-				SetTail(0);
-		}
-		else if (pObj == GetTail())
-		{
-			SetTail(pObj->GetPrev());
-			if (GetTail())
-				GetTail()->SetNext(0);
-			else
-				SetHead(0);
-		}
-		else
-		{
-			pObj->GetNext()->SetPrev(pObj->GetPrev());
-			pObj->GetPrev()->SetNext(pObj->GetNext());
-		}
-		pObj->SetNext(0);
-		pObj->SetPrev(0);
-		--m_nTotalObjects;
+		pObj->GetNext()->SetPrev(pObj->GetPrev());
+		pObj->GetPrev()->SetNext(pObj->GetNext());
 	}
+	pObj->SetNext(0);
+	pObj->SetPrev(0);
+	--m_nTotalObjects;
 }
 
 //----------------------------------------------

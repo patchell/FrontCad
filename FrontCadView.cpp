@@ -650,7 +650,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	);
 	if (pDoc->GetCurrentOrigin())
 	{
-		OriginCenterPoint = DOUBLEPOINT(*(CCadPoint*)pDoc->GetCurrentOrigin()->FindObject(
+		OriginCenterPoint = DOUBLEPOINT(*(CCadPoint*)pDoc->GetCurrentOrigin()->FindChildObject(
 			ObjectType::POINT,
 			SubType::ORIGIN_LOCATION, 
 			SUBSUBTYPE_ANY)
@@ -1865,7 +1865,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (n > 0)
 		{
 			CCadPoint *pCenter;
-			pCenter = (CCadPoint * )ppSelList[0]->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			pCenter = (CCadPoint * )ppSelList[0]->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 			ppSelList[0]->Flip(pCenter, 0);
 		}
 		delete[]ppSelList;
@@ -1882,7 +1882,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (n > 0)
 		{
 			CCadPoint *pCenter;
-			pCenter = (CCadPoint * )ppSelList[0]->FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			pCenter = (CCadPoint * )ppSelList[0]->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 			ppSelList[0]->Flip(pCenter, 1);
 		}
 		delete[]ppSelList;

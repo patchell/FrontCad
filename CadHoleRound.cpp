@@ -26,7 +26,7 @@ void CCadHoleRound::Create()
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 BOOL CCadHoleRound::Destroy(CCadObject* pDependentObject)
@@ -89,7 +89,7 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		Radius = GetAttributes().m_HoleRadius;
 		dS = Radius / 3.0;
 		nRadius = GETAPP.RoundDoubleToInt(Radius * Scale.GetScaleX());
-		ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		rect.SetRect(
 			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(nRadius, nRadius),
 			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) + CSize(nRadius, nRadius)
@@ -185,7 +185,7 @@ CString& CCadHoleRound::GetObjDescription()
 {
 	CADObjectTypes ObjCenter;
 
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	GetDescription().Format(_T("Round Hole(%7.3lf,%7.3lf)"),
 		ObjCenter.pCadPoint->GetX(),
 		ObjCenter.pCadPoint->GetY()
@@ -306,7 +306,7 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadHoleRound = new CCadHoleRound;

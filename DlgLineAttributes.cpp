@@ -74,8 +74,13 @@ void CDlgLineAttributes::OnOK()
 	{
 		case IDOK:
 			m_pLine->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
+			m_pLine->GetAttributes().m_colorSelected = m_Static_Line_SelectedColor.GetColor();
 			m_pLine->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
 			m_pLine->SetLength(m_Edit_LineLength.GetDoubleValue());
+			m_pLine->GetAttributes().m_LockLength = m_Check_LockLength.GetCheck();
+			m_pLine->GetAttributes().m_P1_SNAP_POINT = m_Check_Snap_P1_ToPoint.GetCheck();
+			m_pLine->GetAttributes().m_P2_FIXED_LEN_SNAP_LINE = m_Check_Snap_P2_ToLine.GetCheck();
+			m_pLine->GetAttributes().m_P2_SNAP_POINT = m_Check_Snap_P2_ToPoint.GetCheck();
 			CDialog::OnOK();
 			break;
 	}

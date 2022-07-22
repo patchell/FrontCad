@@ -83,7 +83,7 @@ CCadObject* CClipboard::RemoveFromHead()
 	return pResult;
 }
 
-CCadObject* CClipboard::FindObject(ObjectType Type, SubType SubType, UINT SubSubType)
+CCadObject* CClipboard::FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType)
 {
 	CCadObject* pResult = 0;
 	CCadObject* pObj;

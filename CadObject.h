@@ -61,8 +61,8 @@ class CCadObject
 	CCadObject *m_pNextSel;	//next selected object
 	CCadObject* m_pPrevSel;	//previous selected object
 	//----- child object List for compound objects -----------------------
-	CCadObject* m_pHead;	//head pointer of child object 
-	CCadObject* m_pTail;	//tail pointer of child object 
+	CCadObject* m_pChildHead;	//head pointer of child objects 
+	CCadObject* m_pChildTail;	//tail pointer of child objects 
 	UINT m_nTotalChildObjects;	//total number of child objects
 	//------------------------------------------------
 	//             dependent objects  
@@ -183,15 +183,15 @@ public:
 	//------------------------------------------------------
 	// Manage list of child drawing objects
 	//------------------------------------------------------
-	CCadObject* GetHead() { return m_pHead; }
-	void SetHead(CCadObject* pObj) { m_pHead = pObj; }
-	CCadObject* GetTail() { return m_pTail; }
-	void SetTail(CCadObject* pObj) { m_pTail = pObj; }
+	CCadObject* GetChildrenHead() { return m_pChildHead; }
+	void SetChildrenHead(CCadObject* pObj) { m_pChildHead = pObj; }
+	CCadObject* GetChildrenTail() { return m_pChildTail; }
+	void SetChildrenTail(CCadObject* pObj) { m_pChildTail = pObj; }
 	//-- For the Children
-	void AddObjectAtHead(CCadObject* pObj);
-	void AddObjectAtTail(CCadObject* pObj);
-	void RemoveObject(CCadObject* pObj);
-	CCadObject* DeleteObject(CCadObject* pObj) {
+	void AddObjectAtChildHead(CCadObject* pObj);
+	void AddObjectAtChildTail(CCadObject* pObj);
+	void RemoveChildObject(CCadObject* pObj);
+	CCadObject* DeleteChildObject(CCadObject* pObj) {
 		CCadObject* pObjNext;
 
 		pObjNext = pObj->GetNext();
@@ -199,7 +199,7 @@ public:
 		delete pObj;
 		return pObjNext;
 	}
-	CCadObject* FindObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
+	CCadObject* FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
 	//-------------------------------------------------------------
 	//				List of Dependent Children ------------
 	//-------------------------------------------------------------

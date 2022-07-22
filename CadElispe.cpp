@@ -26,17 +26,17 @@ void CCadElispe::Create()
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create();
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
-	AddObjectAtTail(Obj.pCadObject);
+	AddObjectAtChildTail(Obj.pCadObject);
 }
 
 
@@ -92,8 +92,8 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	CADObjectTypes ObjP1, ObjP2;
 	int Lw;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 	Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * GetLineWidth());
 	if (Lw < 1) Lw = 1;
 
@@ -143,9 +143,9 @@ BOOL CCadElispe::PointInThisObject(DOUBLEPOINT point)
 	double a, b;
 	CADObjectTypes ObjP1, ObjP2, ObjCenter;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	a = ObjP1.pCadPoint->GetX() - ObjCenter.pCadPoint->GetX();
 	b = ObjP1.pCadPoint->GetY() - ObjCenter.pCadPoint->GetY();
 	rV = GETAPP.PointInEllipse(a, b, point, DOUBLEPOINT(*ObjCenter.pCadPoint));
@@ -247,7 +247,7 @@ CDoubleSize CCadElispe::GetSize()
 	//--------------------------------------------------
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 	return Obj.pCadRect->GetSize();
 }
 
@@ -355,9 +355,9 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Ellipse:Place Second Point Defining Shape"));
@@ -366,12 +366,12 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 		pP2 = Obj.pCadPoint;
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 		pP1 = Obj.pCadPoint;
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(GETAPP.CalcCenter(pP1, pP2));
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadElispe = new CCadElispe;
@@ -408,9 +408,9 @@ ObjectDrawState CCadElispe::MouseMove(ObjectDrawState DrawState)
 		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 			break;
 		case ObjectDrawState::PLACE_LBUTTON_DOWN:
-			Obj1.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
-			Obj2.pCadObject = FindObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
-			ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			Obj1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+			Obj2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+			ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 			Obj2.pCadPoint->SetPoint(MousePos);
 			ObjCenter.pCadPoint->SetPoint(GETAPP.CalcCenter(Obj1.pCadPoint, Obj2.pCadPoint));
 			break;

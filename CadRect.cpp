@@ -17,11 +17,11 @@ CCadRect::~CCadRect()
 {
 	CCadObject* pObj, *pNextObj;
 
-	pObj = GetHead();
+	pObj = GetChildrenHead();
 	while (pObj)
 	{
 		pNextObj = pObj->GetNext();
-		pObj->DeleteObject(pObj);
+		pObj->DeleteChildObject(pObj);
 		pObj = pNextObj;
 	}
 }
@@ -41,7 +41,7 @@ BOOL CCadRect::Destroy(CCadObject* pDependentObject)
 			// children and prepare them
 			//-----------------------------
 			pObj->Destroy(this);
-			pObj = DeleteObject(pObj);
+			pObj = DeleteChildObject(pObj);
 		}
 	}
 	return rV;
@@ -62,17 +62,17 @@ void CCadRect::Create()
 		pPoint->Create();
 		pPoint->SetSubType(SubType::VERTEX);
 		pPoint->SetSubSubType(i + 1);
-		AddObjectAtTail(pPoint);
+		AddObjectAtChildTail(pPoint);
 	}
 	pPoint = new CCadPoint;
 	pPoint->Create();
 	pPoint->SetSubType(SubType::CENTERPOINT);
 	pPoint->SetSubSubType(0);
-	AddObjectAtTail(pPoint);
+	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
 	pPoint->Create();
 	pPoint->SetSubType(SubType::PIVOTPOINT);
-	AddObjectAtTail(pPoint);
+	AddObjectAtChildTail(pPoint);
 }
 
 void CCadRect::SetPoints(DOUBLEPOINT P1, DOUBLEPOINT P2, DOUBLEPOINT RotDef)
@@ -109,11 +109,11 @@ void CCadRect::SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT pointRot)
 	//--------------------------------------
 	// Get the objects to set
 	//--------------------------------------
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 2);
-	ObjP3.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 3);
-	ObjP4.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 4);
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	Run = pointRot.dX - p1.dX;	//run
 	Rise = p1.dY - pointRot.dY;	//rise
 	W = sz.dCX;
@@ -169,7 +169,7 @@ CCadRect& CCadRect::SetSecondPoint(DOUBLEPOINT P2)
 	CADObjectTypes ObjP1;
 	DOUBLEPOINT P1;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 	P1 = DOUBLEPOINT(*ObjP1.pCadPoint);
 	SetPoints(P1, P2,P1);
 	return *this;
@@ -181,7 +181,7 @@ CCadRect& CCadRect::SetPointsFromCenter(DOUBLEPOINT P1)
 	CADObjectTypes ObjCenter;
 	DOUBLEPOINT Center;
 
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	Center = DOUBLEPOINT(*ObjCenter.pCadPoint);
 	Diff = (Center - P1) * 2.0;
 
@@ -195,17 +195,17 @@ CCadRect& CCadRect::SetPointsFromCenter(double halfWidth, double halfHeight)
 	CCadPoint* pPoint;
 	DOUBLEPOINT Center;
 
-	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	Center = DOUBLEPOINT(*(CCadPoint*)pPoint);
 	Diff = CDoubleSize(halfWidth, halfHeight);
 
-	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 	pPoint->SetPoint(Center - Diff);
-	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 2);
+	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 	pPoint->SetPoint(Center + CDoubleSize(Diff.dCX, -Diff.dCY));
-	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 3);
+	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
 	pPoint->SetPoint(Center + Diff);
-	pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, 4);
+	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
 	pPoint->SetPoint(Center + CDoubleSize(-Diff.dCX, Diff.dCY));
 	return *this;
 }
@@ -216,12 +216,12 @@ CCadRect& CCadRect::SetCenterPoint(DOUBLEPOINT newCenter)
 	CCadPoint* pCenter, *pPoint;
 	int i;
 
-	pCenter = (CCadPoint*)FindObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	pCenter = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	Diff = newCenter - DOUBLEPOINT(*pCenter);
 	pCenter->SetPoint(newCenter);
 	for (i = 0; i < 4; ++i)
 	{
-		pPoint = (CCadPoint*)FindObject(ObjectType::POINT, SubType::VERTEX, i + 1);
+		pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, i + 1);
 		pPoint->SetPoint(DOUBLEPOINT(*pPoint) + Diff);
 	}
 	return *this;
@@ -233,8 +233,8 @@ CRect CCadRect::ToCRect(DOUBLEPOINT ULHC, CScale& Scale)
 	CADObjectTypes ObjP1, ObjP2;
 	CPoint P1, P2;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
 	P1 = ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale);
 	P2 = ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale);
 	rect.SetRect(P1, P2);
@@ -271,7 +271,7 @@ void CCadRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	CADObjectTypes Obj;
 
 	GETAPP.MkIndentString(psIndent, Indent, ' ');
-	Obj.pCadObject = GetHead();
+	Obj.pCadObject = GetChildrenHead();
 	fprintf(pO, "%s%s(\n",
 		psIndent,
 		CLexer::TokenToString(DocFileParseToken::RECT)
@@ -303,7 +303,7 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 	{
 		if (i == 0)
 		{
-			pPoint = (CCadPoint*)FindObject(
+			pPoint = (CCadPoint*)FindChildObject(
 				ObjectType::POINT,
 				SubType::VERTEX,
 				i + 1);
@@ -314,7 +314,7 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 		}
 		else
 		{
-			pPoint = (CCadPoint*)FindObject(
+			pPoint = (CCadPoint*)FindChildObject(
 				ObjectType::POINT,
 				SubType::VERTEX,
 				i + 1
@@ -327,7 +327,7 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 			else
 				goto exit;
 		}
-		pPoint = (CCadPoint*)FindObject(
+		pPoint = (CCadPoint*)FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			1
@@ -343,7 +343,7 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 
 	if (bFill)
 	{
-		((CCadPoint*)(FindObject(
+		((CCadPoint*)(FindChildObject(
 			ObjectType::POINT,
 			SubType::CENTERPOINT,
 			SUBSUBTYPE_ANY)))->FloodFill(
@@ -423,7 +423,7 @@ CCadPoint* CCadRect::GetRectPoints(CCadPoint** ppPointDest, int n)
 	int index = 0;
 	BOOL loop = TRUE;
 
-	Obj.pCadObject = GetHead();
+	Obj.pCadObject = GetChildrenHead();
 
 	while (Obj.pCadObject && loop)
 	{
@@ -447,7 +447,7 @@ BOOL CCadRect::PointInThisObject(DOUBLEPOINT point)
 
 	for (i = 0; i < 4; ++i)
 	{
-		Vertex.pCadObject =FindObject(
+		Vertex.pCadObject =FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			i + 1
@@ -528,12 +528,12 @@ CString& CCadRect::GetObjDescription()
 	CCadPoint* pP1, * pP2;
 	DOUBLEPOINT P1, P2;
 
-	pP1 = (CCadPoint*)FindObject(
+	pP1 = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		1
 	);
-	pP2 = (CCadPoint*)FindObject(
+	pP2 = (CCadPoint*)FindChildObject(
 		ObjectType::POINT,
 		SubType::VERTEX,
 		3
@@ -585,9 +585,9 @@ double CCadRect::GetWidth()
 	CCadPoint* pP1, * pP2;
 	CCadObject *pObj;
 
-	pObj = GetHead();
-	pP1 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
-	pP2 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	pObj = GetChildrenHead();
+	pP1 = (CCadPoint*)pObj->FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	pP2 = (CCadPoint*)pObj->FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
 	Result = pP2->GetX() - pP1->GetX();
 	return Result;
 }
@@ -597,11 +597,11 @@ void CCadRect::SetWidth(double width)
 	CADObjectTypes Obj;
 	double Xref;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
 	Xref = Obj.pCadPoint->GetX();
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
 	Obj.pCadPoint->SetX(Xref + width);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UR);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UR);
 	Obj.pCadPoint->SetX(Xref + width);
 }
 
@@ -611,9 +611,9 @@ double CCadRect::GetHeight()
 	CCadPoint* pP1, * pP2;
 	CCadObject* pObj;
 
-	pObj = GetHead();
-	pP1 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
-	pP2 = (CCadPoint*)pObj->FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	pObj = GetChildrenHead();
+	pP1 = (CCadPoint*)pObj->FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	pP2 = (CCadPoint*)pObj->FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
 	Result = pP2->GetY() - pP1->GetY();
 	return Result;
 }
@@ -623,11 +623,11 @@ void CCadRect::SetHeight(double Height)
 	CADObjectTypes Obj;
 	double Yref;
 
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_UL);
 	Yref = Obj.pCadPoint->GetY();
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LR);
 	Obj.pCadPoint->SetY(Yref + Height);
-	Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LL);
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, RECT_SUBSUB_LL);
 	Obj.pCadPoint->SetY(Yref + Height);
 }
 
@@ -739,7 +739,7 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, SubType::VERTEX, 1);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
