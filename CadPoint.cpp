@@ -104,13 +104,15 @@ BOOL CCadPoint::IsPointOnTarget(DOUBLEPOINT point)
 	BOOL Result = FALSE;
 	CDoubleSize Difference;
 	double distance;
+
+	Print("Is Point Hovered Over? ");
 	//--------------------------
 	// would like a rectangle
 	// with a 10 pixel margin
 	//-------------------------
 	Difference = *this - point;
 	distance = Difference.Magnitude();
-	if (GETAPP.RoundDoubleToInt(distance * GETVIEW->GetGrid().GetPixelsPerInch().GetScaleX()) < 10)
+	if(distance < GETVIEW->GetGrid().GetSnapGrid().Magnitude())
 		Result = TRUE;
 	return Result;
 }
@@ -123,7 +125,7 @@ void CCadPoint::Move(CDoubleSize Diff)
 
 BOOL CCadPoint::PointInThisObject(DOUBLEPOINT point)
 {
-	return 0;
+	return IsPointOnTarget(point);
 }
 
 int CCadPoint::PointInObjectAndSelect(
@@ -161,8 +163,11 @@ int CCadPoint::PointInObjectAndSelect(
 		//-----------------------------------------------
 		if (IsPointOnTarget(p))
 		{
-			if(IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds))
+			{
 				ppSelList[index++] = this;
+				Print("--Found Point:");
+			}
 		}
 		//------------------------------------
 		// CCadPoint is a terminal object.
@@ -171,6 +176,7 @@ int CCadPoint::PointInObjectAndSelect(
 		// Recursion stops here
 		//-----------------------------------
 	}
+	printf("CCadPoint: Index=%d\n", index);
 	return index;
 }
 
@@ -743,5 +749,13 @@ BOOL CCadPoint::IsPointBetween(CCadPoint* pP1, CCadPoint* pP2)
 
 void CCadPoint::Print(const char* s)
 {
-	printf("%s::X=%7.3lf, Y=%7.3lf\n", s, dX, dY);
+	char* temp = new char[256];
+	printf("%s::X=%7.3lf, Y=%7.3lf SubType:%s  ID=%d\n", 
+		s, 
+		dX, 
+		dY,
+		GetCharSubTypeString(temp,GetSubType()),
+		GetId()
+	);
+	delete[]temp;
 }

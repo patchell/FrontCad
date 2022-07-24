@@ -42,6 +42,36 @@ class CCadObject
 		{ ObjectType::ROUNDEDRECT,OBJKIND_ROUNDEDRECT},
 		{ ObjectType::TEXT,OBJKIND_TEXT}
 	};
+	static inline CString SubTypeStrings[23] = {
+	_T("ANY"),
+	//--- Arc/Ellipse ---
+	_T("RECTSHAPE"),
+	_T("STARTPOINT"),
+	_T("ENDPOINT"),
+	//--- Arrow ---
+	_T("ARROW_TIP"),
+	_T("ARROW_END"),
+	_T("ARROW_TOP"),
+	_T("ARROW_BOT"),
+	_T("ARROW_ROTATION"),
+	//--- Rectangle ---
+	_T("RECT_TOP_CENTER"),
+	_T("RECT_BOT_CENTER"),
+	_T("RECT_LEFT_CENTER"),
+	_T("RECT_RGIHT_CENTER"),
+	_T("CORNER_RADIUS"),
+	//--- Text ---
+	_T("TEXT_LOCATION"),
+	_T("TEXT_ROTATION"),
+	_T("TEXT_RECT"),
+	//--- Misc ---
+	_T("ORIGIN_LOCATION"),
+	_T("CENTERPOINT"),
+	_T("PIVOTPOINT"),
+	_T("MIDPOINT"),
+	_T("VERTEX"),
+	_T("LINE_FIXED_LEN")
+	};
 	//--------------------------------------
 	// Object Properties
 	//--------------------------------------
@@ -149,6 +179,11 @@ public:
 	void SetName(CString& csName) { m_csName = csName; }
 	CString& GetDescription() { return m_csDescription; }
 	virtual CString& GetTypeString(void);
+	CString& GetSubTypeString(SubType SubTypeEnum) { return SubTypeStrings[UINT(SubTypeEnum)]; }
+	char* GetCharSubTypeString(char *pDest, SubType SubTypeEnum) {
+		CString csST = GetSubTypeString(SubTypeEnum);
+		return GETAPP.ConvertCStringToChar(pDest, csST);
+	}
 	virtual CString& GetObjDescription();
 	void CopyObject(CCadObject* pObjDestination);
 	virtual CCadObject* CopyObject() { return NULL; }

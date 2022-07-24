@@ -189,25 +189,17 @@ int CCadOrigin::PointInObjectAndSelect(
 	{
 		if (PointInThisObject(p))
 		{
-			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
-			ppSelList[index++] = Obj.pCadObject;
+			if (IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 		}
-		pObj = GetChildrenHead();
-		while (pObj)
-		{
-			iX = pObj->PointInObjectAndSelect(
-				p, 
-				ppSelList, 
-				index, 
-				n,
-				nKinds
-			);
-			if (iX)
-			{
-				index += iX;
-			}
-			pObj->GetNext();
-		}
+		iX = CCadObject::PointInObjectAndSelect(
+			p, 
+			ppSelList, 
+			index, 
+			n,
+			nKinds
+		);
+		index += iX;
 	}
 	return index;
 }

@@ -170,33 +170,18 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	//		ppSelList...pointer to an array of selected objects
 	//		n.....maximum number of objects to check for
 	//		nKinds..what kind of objects are inlcuded in list
-	//				0-All Objects
-	//				1-Unselected Objects
-	///				2-Selected Objects
 	//	returns:
 	//		number of objects that are under the point
 	//--------------------------------------------
 	CCadObject* pObject = GetHead();
-	int ix;
 	int index = 0;
 
 	while (pObject && (index < n))
 	{
-		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
-		if(ix)
-		{
-			index += ix;
-		}
+		index = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
 		pObject = pObject->GetNext();
 	}
-	pObject = GetOriginHead();
-	while (pObject && (index < n))
-	{
-		ix = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
-		if(ix)
-			index += ix;
-		pObject = pObject->GetNextOrigin();
-	}
+	printf("FrontCadDoc Objects Found:%d\n", index);
 	return index;
 }
 

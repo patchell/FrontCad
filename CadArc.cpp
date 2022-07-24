@@ -255,7 +255,6 @@ int CCadArc::PointInObjectAndSelect(
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	int ix;
 
 	if (index < n || n == 0)
 	{
@@ -264,17 +263,16 @@ int CCadArc::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if(IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds))
 				ppSelList[index++] = this;
-			ix = CCadObject::PointInObjectAndSelect(
-				p,
-				ppSelList,
-				index,
-				n,
-				nKinds
-			);
-			index += ix;
 		}
+		index = CCadObject::PointInObjectAndSelect(
+			p,
+			ppSelList,
+			index,
+			n,
+			nKinds
+		);
 	}
 	return index;
 }

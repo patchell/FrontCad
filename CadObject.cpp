@@ -140,22 +140,19 @@ int CCadObject::PointInObjectAndSelect(
 	//	otherwise, false
 	//--------------------------------------------------
 	CCadObject* pObj;
-	int ix = 0;;
 
 	if (index < n)	//Is there room?
 	{
 		pObj = GetChildrenHead();	//get head of children
 		while (pObj)	//take a look at the children
 		{
-			ix = pObj->PointInObjectAndSelect(
+			index = pObj->PointInObjectAndSelect(
 				p,
 				ppSelList,
 				index,
 				n,
 				nKinds
 			);
-			if (ix > 0)	//any objects found?
-				index += ix;
 			if (index < n)
 				pObj = pObj->GetNext();
 			else

@@ -108,7 +108,6 @@ int CCadDimension::PointInObjectAndSelect(
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	int ix;
 
 	if (index < n || n == 0)
 	{
@@ -117,16 +116,16 @@ int CCadDimension::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			ppSelList[index++] = this;
-			ix = CCadObject::PointInObjectAndSelect(
-				p,
-				ppSelList,
-				index,
-				n,
-				nKinds
-			);
-			index += ix;
+			if (IsItThisKind(nKinds))
+				ppSelList[index++] = this;
 		}
+		index = CCadObject::PointInObjectAndSelect(
+			p,
+			ppSelList,
+			index,
+			n,
+			nKinds
+		);
 	}
 	return index;
 }

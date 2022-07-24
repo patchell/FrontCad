@@ -187,7 +187,6 @@ int CCadLine::PointInObjectAndSelect(
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	int ix;
 
 	if (index < n)
 	{
@@ -198,15 +197,15 @@ int CCadLine::PointInObjectAndSelect(
 		{
 			if(IsItThisKind(nKinds))
 				ppSelList[index++] = this;
-			ix = CCadObject::PointInObjectAndSelect(
-				p,
-				ppSelList,
-				index,
-				n,
-				nKinds
-			);
-			index += ix;
 		}
+		index = CCadObject::PointInObjectAndSelect(
+			p,
+			ppSelList,
+			index,
+			n,
+			nKinds
+		);
+		printf("CCadLine:Index=%d\n", index);
 	}
 	return index;
 }

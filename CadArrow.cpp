@@ -183,7 +183,6 @@ int CCadArrow::PointInObjectAndSelect(
 	//	returns true if point is within object
 	//	otherwise, false
 	//--------------------------------------------------
-	int ix;
 
 	if (index < n || n == 0)
 	{
@@ -192,17 +191,16 @@ int CCadArrow::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if(IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds))
 				ppSelList[index++] = this;
-			ix = CCadObject::PointInObjectAndSelect(
-				p,
-				ppSelList,
-				index,
-				n,
-				nKinds
-			);
-			index += ix;
 		}
+		index = CCadObject::PointInObjectAndSelect(
+			p,
+			ppSelList,
+			index,
+			n,
+			nKinds
+		);
 	}
 	return index;
 }
@@ -486,9 +484,9 @@ int CCadArrow::EditProperties()
 
 	Dlg.SetArrow(this);
 	Id = Dlg.DoModal();
-	if (IDOK == Id)
 	return Id;
 }
+
 void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 {
 	CADObjectTypes Obj;
