@@ -12,7 +12,7 @@ class CCadRndRect:public CCadObject
 public:
 	CCadRndRect();
 	virtual ~CCadRndRect();
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject* pDependentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);

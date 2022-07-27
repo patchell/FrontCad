@@ -17,31 +17,35 @@ CCadArrow::~CCadArrow()
 {
 }
 
-void CCadArrow::Create()
+BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ARROW_TIP);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ARROW_TOP);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ARROW_END);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ARROW_BOT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ARROW_ROTATION);
 	AddObjectAtChildTail(Obj.pCadObject);
 
+	return TRUE;
 }
 
 BOOL CCadArrow::Destroy(CCadObject* pDependentObjects)
@@ -236,7 +240,7 @@ CCadObject * CCadArrow::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadArrow *pArrow = new CCadArrow;
-	pArrow->Create();
+	pArrow->Create(GetParent(), GetOrigin());
 	CCadObject::CopyObject(pArrow);
 	return pArrow;
 }
@@ -370,7 +374,7 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		Rotate(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadArrow = new CCadArrow;
-		Obj.pCadArrow->Create();
+		Obj.pCadArrow->Create(GetParent(), GetOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));

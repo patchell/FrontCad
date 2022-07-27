@@ -18,25 +18,29 @@ CCadElispe::~CCadElispe()
 {
 }
 
-void CCadElispe::Create()
+BOOL CCadElispe::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 
@@ -374,7 +378,7 @@ ObjectDrawState CCadElispe::ProcessDrawMode(ObjectDrawState DrawState)
 		Obj.pCadPoint->SetPoint(GETAPP.CalcCenter(pP1, pP2));
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadElispe = new CCadElispe;
-		Obj.pCadElispe->Create();
+		Obj.pCadElispe->Create(GetParent(), GetOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadElispe);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Ellipse::Place First Point Defining Shape"));

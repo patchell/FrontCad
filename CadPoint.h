@@ -17,7 +17,7 @@ public:
 	CCadPoint(DOUBLEPOINT dp);
 	CCadPoint(DOUBLEPOINT dp, SubType Sub, UINT SubSub);
 	~CCadPoint();
-	BOOL Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual CString& GetObjDescription();
 	virtual BOOL Destroy(CCadObject* pDependentObject);
 	void SetX(double x) { dX = x; }

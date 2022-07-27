@@ -19,7 +19,7 @@ class CCadHoleRnd2Flat:public CCadObject
 public:
 	CCadHoleRnd2Flat();
 	virtual ~CCadHoleRnd2Flat();
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject* pDependentObject);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);

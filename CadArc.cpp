@@ -17,35 +17,39 @@ CCadArc::~CCadArc()
 {
 }
 
-void CCadArc::Create()
+BOOL CCadArc::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadArc::Destroy(CCadObject* pDependentObjects)
@@ -191,7 +195,7 @@ BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
 	P2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 	pRect = new CCadRect;
-	pRect->Create();
+	pRect->Create(NULL, NULL);
 	pRect->SetPoints(DOUBLEPOINT(*P1.pCadPoint), DOUBLEPOINT(*P2.pCadPoint), DOUBLEPOINT(*P1.pCadPoint));
 	if (pRect->PointInThisObject(point))
 	{
@@ -310,7 +314,7 @@ CCadObject * CCadArc::CopyObject(void)
 	//--------------------------------------------------
 	CADObjectTypes newObj;
 	newObj.pCadArc = new CCadArc;
-	newObj.pCadArc->Create();
+	newObj.pCadArc->Create(GetParent(), GetOrigin());
 	CCadObject::CopyObject(newObj.pCadObject);
 	newObj.pCadArc->CopyAttributesFrom(GetPtrToAttributes());
 	return newObj.pCadObject;
@@ -485,7 +489,7 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		Obj1.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj1.pCadArc = new CCadArc;
-		Obj1.pCadArc->Create();
+		Obj1.pCadArc->Create(GetParent(), GetOrigin());
 		GETVIEW->SetObjectTypes(Obj1.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC:Place First Corner of Circle Shape"));

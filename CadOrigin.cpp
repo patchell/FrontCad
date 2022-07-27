@@ -18,15 +18,19 @@ CCadOrigin::~CCadOrigin()
 }
 
 
-void CCadOrigin::Create()
+BOOL CCadOrigin::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ORIGIN_LOCATION);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadOrigin::Destroy(CCadObject* pDependentObject)
@@ -182,7 +186,6 @@ int CCadOrigin::PointInObjectAndSelect(
 	//	otherwise, false
 	//--------------------------------------------------
 	int iX;
-	CCadObject* pObj;
 	CADObjectTypes Obj;
 
 	if (index < n)
@@ -238,7 +241,7 @@ CCadObject * CCadOrigin::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadOrigin *pCO = new CCadOrigin;
-	pCO->Create();
+	pCO->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 	CCadObject::CopyObject(pCO);
 	return pCO;
 }

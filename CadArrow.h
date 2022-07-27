@@ -12,7 +12,7 @@ class CCadArrow :public CCadObject
 public:
 	CCadArrow();
 	virtual ~CCadArrow();
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject* pDependentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual CDoubleSize GetSize();

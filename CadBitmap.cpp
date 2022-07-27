@@ -19,14 +19,18 @@ CCadBitmap::~CCadBitmap()
 	if (m_pBM) delete m_pBM;
 }
 
-void CCadBitmap::Create()
+BOOL CCadBitmap::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadRect = new CCadRect;
-	Obj.pCadRect->Create();
+	Obj.pCadRect->Create(pParent, pOrigin);
 	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadBitmap::Destroy(CCadObject* pDependentObject)

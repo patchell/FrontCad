@@ -81,7 +81,7 @@ class CCadObject
 	UINT m_Id;	//unique ID number
 	ObjectType m_Type;		//specifies the type of object
 	SubType m_SubType;		//Specifies the subtype of the object
-	UINT m_SubSubType;		//Doffertiates between different objects of same subtype
+	UINT m_SubSubType;		//Differentiates between different objects of same subtype
 	BOOL m_Selected;	//indicates that object is in the selected state
 	BOOL m_bAttributesValid;
 	//------------ Links for Main List of Drawing Objects ------------------
@@ -120,18 +120,26 @@ class CCadObject
 	CCadObject* m_pNextClipBoard;
 	CCadObject* m_pPrevClipBoard;
 	//------------------------------------
-	// Parrent Object
+	// Parrent Objects
 	//------------------------------------
 	CCadObject* m_pParentObject;
+	CCadObject* m_pOrigin;
 public:
 	//-------------------------------------
 	// Object Creation/Destruction Methods
 	//-------------------------------------
 	CCadObject();
 	virtual ~CCadObject();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin) {
+		m_pParentObject = pParent;
+		m_pOrigin = pOrigin;
+		return TRUE;
+	}
 	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
 	virtual void SetParent(CCadObject* pP) { m_pParentObject = pP; }
 	virtual CCadObject* GetParent() const { return m_pParentObject; }
+	virtual void SetOrigin(CCadObject* pOrg) { m_pOrigin = pOrg; }
+	virtual CCadObject* GetOrigin() { return m_pOrigin; }
 	UINT GetId() { return m_Id; }
 	ObjectType GetType(void) { return m_Type; }
 	void SetType(ObjectType type) { m_Type = type; }

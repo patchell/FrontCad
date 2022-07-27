@@ -13,7 +13,7 @@ public:
 	CCadRect();
 	virtual ~CCadRect();
 	virtual BOOL Destroy(CCadObject* pDependentObject);
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	//--------------- Set Points In Rectangle --------------
 	void SetPoints(DOUBLEPOINT p1, DOUBLEPOINT p2, DOUBLEPOINT RotDef);
 	void SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT rotation);

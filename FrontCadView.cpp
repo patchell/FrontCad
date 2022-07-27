@@ -738,7 +738,7 @@ void CFrontCadView::OnInitialUpdate()
 	CString csOrgName = _T("Default");
 
 	//------------ Setup Default Origin --------------
-	m_DefaultOrigin.Create();
+	m_DefaultOrigin.Create(NULL, NULL);
 	m_DefaultOrigin.SetName(csOrgName);
 	pDoc->AddOriginAtHead(&m_DefaultOrigin);
 	GetRulerInfo().SetOrigin(&m_DefaultOrigin);
@@ -829,7 +829,7 @@ void CFrontCadView::OnDrawArcCenter()
 		GetObjectTypes().pCadObject = 0;
 	}
 	pArc = new CCadArcCent;
-	pArc->Create();
+	pArc->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pArc);
 	SetDrawMode(DrawingMode::ARC_CENTER);
 	GETAPP.UpdateStatusBar(_T("Arc:Place Center Point"));
@@ -854,7 +854,7 @@ void CFrontCadView::OnDrawArc()
 	}
 	SetDrawMode(DrawingMode::ARC);
 	pArc = new CCadArc;
-	pArc->Create();
+	pArc->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pArc);
 	GETAPP.UpdateStatusBar(_T("Arc:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -878,7 +878,7 @@ void CFrontCadView::OnDrawArrow()
 	}
 	SetDrawMode(DrawingMode::ARROW);
 	pArrow = new CCadArrow;
-	pArrow->Create();
+	pArrow->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pArrow);
 	GETAPP.UpdateStatusBar(_T("Arrow:Place Location of Tip"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -900,7 +900,7 @@ void CFrontCadView::OnDrawEllipse()
 	}
 	SetDrawMode(DrawingMode::ELIPSE);
 	pE = new CCadElispe;
-	pE->Create();
+	pE->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pE);
 	GETAPP.UpdateStatusBar(_T("Ellispe Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -924,7 +924,7 @@ void CFrontCadView::OnDrawLine()
 	}
 	SetDrawMode(DrawingMode::LINE);
 	pL = new CCadLine;
-	pL->Create();
+	pL->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -942,7 +942,7 @@ void CFrontCadView::OnLineLinefixedlen()
 	}
 	SetDrawMode(DrawingMode::LINE);
 	pL = new CCadLine;
-	pL->Create();
+	pL->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING_LINE_FIXED_LEN);
@@ -978,7 +978,7 @@ void CFrontCadView::OnDrawOrigin()
 	}
 	SetDrawMode(DrawingMode::ORIGIN);
 	pO = new CCadOrigin;
-	pO->Create();
+	pO->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pO);
 	GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1002,7 +1002,7 @@ void CFrontCadView::OnDrawPoint()
 	}
 	SetDrawMode(DrawingMode::POINT);
 	pP = new CCadPoint;
-	pP->Create();
+	pP->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pP);
 	GETAPP.UpdateStatusBar(_T("Point:PlacePoint"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1025,7 +1025,7 @@ void CFrontCadView::OnDrawPlaceBitmap()
 	}
 	SetDrawMode(DrawingMode::BITMAP);
 	pBM = new CCadBitmap;
-	pBM->Create();
+	pBM->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pBM);
 	GETAPP.UpdateStatusBar(_T("Bitmap:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1047,7 +1047,7 @@ void CFrontCadView::OnDrawPolygon()
 	}
 	SetDrawMode(DrawingMode::POLYGON);
 	pPG = new CCadPolygon;
-	pPG->Create();
+	pPG->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pPG);
 	GETAPP.UpdateStatusBar(_T("Polygon:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1083,7 +1083,7 @@ void CFrontCadView::OnDrawRectangle()
 	}
 	SetDrawMode(DrawingMode::RECT);
 	pR = new CCadRect;
-	pR->Create();
+	pR->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1107,7 +1107,7 @@ void CFrontCadView::OnDrawRectangularhole()
 	}
 	SetDrawMode(DrawingMode::HOLE_RECT);
 	pRH = new CCadHoleRect;
-//	pRH->Create();
+	pRH->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(new CCadHoleRect);
 	GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Location of Center"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1142,7 +1142,7 @@ void CFrontCadView::OnDrawRoundedrectangle()
 	}
 	SetDrawMode(DrawingMode::RNDRECT);
 	pRR = new CCadRndRect;
-	pRR->Create();
+	pRR->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pRR);
 	GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1165,7 +1165,7 @@ void CFrontCadView::OnDrawRoundhole()
 	SetDrawMode(DrawingMode::HOLE_ROUND);
 	GETAPP.UpdateStatusBar(_T("Round Hole:Place Location of Hole Center"));
 	pHole = new CCadHoleRound;
-	pHole->Create();
+	pHole->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1188,7 +1188,7 @@ void CFrontCadView::OnDrawRoundholewith1flat()
 	}
 	SetDrawMode(DrawingMode::HOLE_RND1F);
 	pHR1F = new CCadHoleRnd1Flat;
-	pHR1F->Create();
+	pHR1F->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pHR1F);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With one Flat:Place location of Center"));
@@ -1210,7 +1210,7 @@ void CFrontCadView::OnDrawRoundholewith2flats()
 	}
 	SetDrawMode(DrawingMode::HOLE_RND2F);
 	pHole = new CCadHoleRnd2Flat;
-	pHole->Create();
+	pHole->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With two Flats:Place Location of Center"));
@@ -1234,7 +1234,7 @@ void CFrontCadView::OnDrawText()
 	}
 	SetDrawMode(DrawingMode::TEXT);
 	pText = new CCadText;
-	pText->Create();
+	pText->Create(NULL, GetDocument()->GetCurrentOrigin());
 	SetObjectTypes(pText);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Text:Place location of Text"));

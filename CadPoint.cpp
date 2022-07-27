@@ -66,8 +66,9 @@ CCadPoint::~CCadPoint()
 {
 }
 
-BOOL CCadPoint::Create()
+BOOL CCadPoint::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
+	CCadObject::Create(pParent, pOrigin);
 	return TRUE;
 }
 
@@ -104,16 +105,18 @@ BOOL CCadPoint::IsPointOnTarget(DOUBLEPOINT point)
 	BOOL Result = FALSE;
 	CDoubleSize Difference;
 	double distance;
-
-	Print("Is Point Hovered Over? ");
+	char* s = new char[256];
+	
 	//--------------------------
 	// would like a rectangle
 	// with a 10 pixel margin
 	//-------------------------
 	Difference = *this - point;
 	distance = Difference.Magnitude();
-	if(distance < GETVIEW->GetGrid().GetSnapGrid().Magnitude())
+	if (distance < GETVIEW->GetGrid().GetSnapGrid().Magnitude())
 		Result = TRUE;
+	sprintf_s(s, 256, "Is the Point Hovered Over? --%s", Result ? "Yes" : "NO!");
+	Print(s);
 	return Result;
 }
 
@@ -176,7 +179,6 @@ int CCadPoint::PointInObjectAndSelect(
 		// Recursion stops here
 		//-----------------------------------
 	}
-	printf("CCadPoint: Index=%d\n", index);
 	return index;
 }
 
@@ -695,21 +697,16 @@ void CCadPoint::PointOnLineAtDistance(
 	switch (LineType)
 	{
 	case LINE_IS_WHATEVER:	//Hard
-		printf("Whatever --------\n");
 		m = pP1->Slope(RotationPoint);
-		printf("Distance = %7.3lf  ", Distance);
 		if(pP1->GetX() < RotationPoint.dX)
 			dX = sqrt((Distance * Distance) / (1 + m * m));
 		else
 			dX = -sqrt((Distance * Distance) / (1 + m * m));
-		printf("dX = %7.3lf  ", dX);
 		dY = m * dX;
-		printf("dY = %7.3lf\n", dY);
 		dX += pP1->GetX();
 		dY += pP1->GetY();
 		break;
 	case LINE_IS_VERTICAL:	//easy
-		printf("Vertical ------\n");
 		SetX(pP1->GetX());
 		if(pP1->GetY() > RotationPoint.dY)
 			SetY(pP1->GetY() - Distance);
@@ -717,7 +714,6 @@ void CCadPoint::PointOnLineAtDistance(
 			SetY(pP1->GetY() + Distance);
 		break;
 	case LINE_IS_HORIZONTAL:	//easy
-		printf("Horizontal ----- \n");
 		if(pP1->GetX() < RotationPoint.dX)
 			SetX(pP1->GetX() + Distance);
 		else

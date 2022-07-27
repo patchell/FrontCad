@@ -18,26 +18,30 @@ CCadHoleRnd1Flat::~CCadHoleRnd1Flat()
 {
 }
 
-void CCadHoleRnd1Flat::Create()
+BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);;
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	SolveIntersection();
+	return TRUE;
 }
 
 
@@ -347,7 +351,7 @@ ObjectDrawState CCadHoleRnd1Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		Obj.pCadHoleRnd1Flat = new CCadHoleRnd1Flat;
-		Obj.pCadHoleRnd1Flat->Create();
+		Obj.pCadHoleRnd1Flat->Create(GetParent(),GetOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		GETAPP.UpdateStatusBar(_T("Round Hole with One Flat Side:Place Center Point"));
 		GETVIEW->Invalidate();

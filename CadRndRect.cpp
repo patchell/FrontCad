@@ -18,29 +18,33 @@ CCadRndRect::~CCadRndRect()
 {
 }
 
-void CCadRndRect::Create()
+BOOL CCadRndRect::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 	int i;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	for (i = 0; i < 2; ++i)
 	{
 		Obj.pCadPoint = new CCadPoint;
-		Obj.pCadPoint->Create();
+		Obj.pCadPoint->Create(pParent, pOrigin);
 		Obj.pCadPoint->SetSubType(SubType::VERTEX);
 		Obj.pCadPoint->SetSubSubType(i + 1);
 		AddObjectAtChildTail(Obj.pCadObject);
 	}
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadRect->SetSubType(SubType::CORNER_RADIUS);
 	Obj.pCadRect->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 
@@ -231,7 +235,7 @@ CCadObject * CCadRndRect::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadRndRect *pCR = new CCadRndRect;
-	pCR->Create();
+	pCR->Create(NULL, GetOrigin());
 	CCadObject::CopyObject(pCR);
 	return pCR;
 }

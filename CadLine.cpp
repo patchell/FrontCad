@@ -30,24 +30,30 @@ CCadLine::~CCadLine()
 {
 }
 
-BOOL CCadLine::Create()
+BOOL CCadLine::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CCadPoint* pPoint;
 	CCadRect* pRect;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	pPoint = new CCadPoint;
-	pPoint->Create();
+	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(1);
+	pPoint->SetParent(this);
 	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
-	pPoint->Create();
+	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(2);
+	pPoint->SetParent(this);
 	AddObjectAtChildTail(pPoint);
 	pRect = new CCadRect;
-	pRect->Create();
+	pRect->Create(pParent, pOrigin);
 	pRect->SetSubType(SubType::RECTSHAPE);
+	pPoint->SetParent(this);
 	AddObjectAtChildTail(pRect);
 	m_Length = 0.0;
 	return TRUE;
@@ -205,7 +211,6 @@ int CCadLine::PointInObjectAndSelect(
 			n,
 			nKinds
 		);
-		printf("CCadLine:Index=%d\n", index);
 	}
 	return index;
 }
@@ -368,6 +373,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
 	CPoint pointSaved;
+	UINT KindsOfObjects;
 
 	switch (DrawState)
 	{
@@ -424,7 +430,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		pNewLine = new CCadLine;
-		pNewLine->Create();
+		pNewLine->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->SetObjectTypes(pNewLine);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
@@ -464,6 +470,11 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			1
 		);
+		if (GetAttributes().m_P1_SNAP_POINT)
+		{
+			KindsOfObjects = OBJKIND_POINT;
+			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+		}
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
 		m_SavedSnapEnable = GETVIEW->GetGrid().EnableSnap(FALSE);
@@ -486,7 +497,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		pNewLine = new CCadLine;
-		pNewLine->Create();
+		pNewLine->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->SetObjectTypes(pNewLine);
 		DrawState = ObjectDrawState::START_DRAWING_LINE_FIXED_LEN;
 		GETVIEW->GetGrid().EnableSnap(m_SavedSnapEnable);
@@ -584,8 +595,8 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	double m1;
 	CCadPoint p1,p2;
 
-	p1.Create();
-	p2.Create();
+	p1.Create(NULL, NULL);
+	p2.Create(NULL,NULL);
 	//--------------------------------------
 	// Get the objects that define the
 	// Enclosing rectangle
@@ -630,7 +641,6 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 	//-------------------------------------------
 	DOUBLEPOINT Result;
 	
-	Result = MousePos;
 	CCadObject* ppObjectList[8];
 	CFrontCadDoc* pDoc;
 	int NumberOfObjects;
@@ -643,6 +653,14 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 		8,
 		KindsToSnapTo
 	);
+	if (NumberOfObjects == 1)
+		Result = ((CCadPoint *)(ppObjectList[0]))->GetPoint();
+	else if (NumberOfObjects > 1)
+	{
+
+	}
+	else
+		Result = MousePos;
 	printf("Number of Objects = %d\n", NumberOfObjects);
 	printf("------ Exit Snap To Object ----\n");
 	return Result;

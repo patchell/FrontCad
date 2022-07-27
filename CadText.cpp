@@ -16,22 +16,29 @@ CCadText::~CCadText()
 {
 }
 
-void CCadText::Create()
+BOOL CCadText::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::TEXT_LOCATION);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::TEXT_ROTATION);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadRect = new CCadRect;
-	Obj.pCadRect->Create();
+	Obj.pCadRect->Create(pParent, pOrigin);
 	Obj.pCadRect->SetSubType(SubType::TEXT_RECT);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadText::Destroy(CCadObject* pDependentObject)
@@ -222,7 +229,7 @@ CCadObject * CCadText::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadText *pCT = new CCadText;
-	pCT->Create();
+	pCT->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 	CCadObject::CopyObject(pCT);
 	return pCT;
 }

@@ -14,7 +14,7 @@ class CCadPolygon : public CCadObject
 public:
 	CCadPolygon();
 	virtual ~CCadPolygon();
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject *pDendentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);

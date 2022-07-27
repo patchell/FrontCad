@@ -33,14 +33,18 @@ CCadPolygon::~CCadPolygon()
 {
 }
 
-void CCadPolygon::Create()
+BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadPolygon::Destroy(CCadObject* pDendentObjects)
@@ -172,7 +176,7 @@ CCadPoint *CCadPolygon::GetCenter()
 		x /= double(n);
 		y /= double(n);
 		pResultPoint = new CCadPoint();
-		pResultPoint->Create();
+		pResultPoint->Create(GetParent(), GetOrigin());
 		pResultPoint->SetPoint(x, y);
 		pResultPoint->SetSubType(SubType::CENTERPOINT);
 		pResultPoint->SetSubSubType(0);
@@ -359,7 +363,7 @@ CCadObject * CCadPolygon::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadPolygon *pP = new CCadPolygon;
-	pP->Create();
+	pP->Create(NULL, GetOrigin());
 	CCadObject::CopyObject(pP);
 	pP->GetAttributes().CopyFrom(GetPtrToAttributes());
 	pP->m_NumVertices = GetNumVerticies();
@@ -509,7 +513,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			GETVIEW->EnableAutoScroll(FALSE);
 			GETVIEW->GetDocument()->AddObjectAtTail(this);
 			pPoly = new CCadPolygon;
-			pPoly->Create();
+			pPoly->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 			GETVIEW->SetObjectTypes(pPoly);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 			GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
@@ -569,7 +573,7 @@ CCadPoint* CCadPolygon::AddPoint(DOUBLEPOINT newPoint)
 	CCadPoint* pPoint;
 
 	pPoint = new CCadPoint;
-	pPoint->Create();
+	pPoint->Create(this, GetOrigin());
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(++m_NumVertices);
 	pPoint->SetPoint(newPoint);

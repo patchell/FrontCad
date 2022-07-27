@@ -17,36 +17,40 @@ CCadHoleRnd2Flat::~CCadHoleRnd2Flat()
 {
 }
 
-void CCadHoleRnd2Flat::Create()
+BOOL CCadHoleRnd2Flat::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
 	SolveIntersection();
+	return TRUE;
 }
 
 BOOL CCadHoleRnd2Flat::Destroy(CCadObject* pDependentObject)
@@ -395,7 +399,7 @@ ObjectDrawState CCadHoleRnd2Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadHoleRnd2Flat = new CCadHoleRnd2Flat;
-		Obj.pCadHoleRnd2Flat->Create();
+		Obj.pCadHoleRnd2Flat->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		GETAPP.UpdateStatusBar(_T("Round Hole with Two Flat Side"));
 		GETVIEW->Invalidate();

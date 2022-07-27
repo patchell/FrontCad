@@ -19,7 +19,7 @@ public://public methodes
 	CCadLine();
 	CCadLine(CCadLine &line);
 	virtual ~CCadLine();
-	BOOL Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);

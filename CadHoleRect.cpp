@@ -18,6 +18,29 @@ CCadHoleRect::~CCadHoleRect()
 {
 }
 
+BOOL CCadHoleRect::Create(CCadObject* pParent, CCadObject* pOrigin)
+{
+	CADObjectTypes Obj;
+
+	if (pParent == NULL)
+		pParent = this;
+	Obj.pCadRect = new CCadRect;
+	Obj.pCadRect->Create(pParent, pOrigin);
+	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
+	Obj.pCadRect->SetSubSubType(0);
+	Obj.pCadRect->GetAttributes().m_colorLine = GetAttributes().m_colorLine;
+	Obj.pCadRect->GetAttributes().m_LineWidth = GetAttributes().m_LineWidth;
+	Obj.pCadRect->GetAttributes().m_TransparentFill = TRUE;
+	Obj.pCadRect->SetPointsFromCenter(GetAttributes().m_HoleWidth / 2.0, GetAttributes().m_HoleHeight / 2.0);
+	AddObjectAtChildTail(Obj.pCadObject);
+	return 0;
+}
+
+BOOL CCadHoleRect::Destroy(CCadObject* pDependentObjects)
+{
+	return 0;
+}
+
 void CCadHoleRect::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -275,15 +298,6 @@ ObjectDrawState CCadHoleRect::ProcessDrawMode(ObjectDrawState DrawState)
 		//---------------------------------------------
 		// Create parts for the Rectangular Hole
 		//---------------------------------------------
-		Obj.pCadRect = new CCadRect;
-		Obj.pCadRect->Create();
-		Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
-		Obj.pCadRect->SetSubSubType(0);
-		Obj.pCadRect->GetAttributes().m_colorLine = GetAttributes().m_colorLine;
-		Obj.pCadRect->GetAttributes().m_LineWidth = GetAttributes().m_LineWidth;
-		Obj.pCadRect->GetAttributes().m_TransparentFill = TRUE;
-		Obj.pCadRect->SetPointsFromCenter(GetAttributes().m_HoleWidth /2.0, GetAttributes().m_HoleHeight/ 2.0);
-		AddObjectAtChildTail(Obj.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Center Point"));
 		break;
@@ -314,9 +328,11 @@ ObjectDrawState CCadHoleRect::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		Obj.pCadRect->SetCenterPoint(MousePos);
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
-		GETVIEW->SetObjectTypes(new CCadHoleRect);
+		Obj.pCadHoleRect = new CCadHoleRect;
+		GETVIEW->SetObjectTypes(Obj.pCadHoleRect);
+		Obj.pCadHoleRect->Create(GetParent(), GetOrigin());
+		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Center Point"));
 		GETVIEW->Invalidate();
 		break;

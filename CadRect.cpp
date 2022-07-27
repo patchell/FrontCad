@@ -47,7 +47,7 @@ BOOL CCadRect::Destroy(CCadObject* pDependentObject)
 	return rV;
 }
 
-void CCadRect::Create()
+BOOL CCadRect::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	//---------------------------------------
 	// Create
@@ -56,23 +56,27 @@ void CCadRect::Create()
 	int i;
 	CCadPoint* pPoint;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	for (i = 0; i < 4; ++i)
 	{
 		pPoint = new CCadPoint;
-		pPoint->Create();
+		pPoint->Create(pParent, pOrigin);
 		pPoint->SetSubType(SubType::VERTEX);
 		pPoint->SetSubSubType(i + 1);
 		AddObjectAtChildTail(pPoint);
 	}
 	pPoint = new CCadPoint;
-	pPoint->Create();
+	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::CENTERPOINT);
 	pPoint->SetSubSubType(0);
 	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
-	pPoint->Create();
+	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::PIVOTPOINT);
 	AddObjectAtChildTail(pPoint);
+	return TRUE;
 }
 
 void CCadRect::SetPoints(DOUBLEPOINT P1, DOUBLEPOINT P2, DOUBLEPOINT RotDef)
@@ -765,7 +769,7 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 			//---------------------------------------------
 			GETVIEW->GetDocument()->AddObjectAtTail(this);
 			Obj.pCadRect = new CCadRect;
-			Obj.pCadRect->Create();
+			Obj.pCadRect->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 			GETVIEW->EnableAutoScroll(FALSE);
 			GETVIEW->SetObjectTypes(Obj.pCadObject);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;

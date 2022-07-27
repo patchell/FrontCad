@@ -18,15 +18,19 @@ CCadHoleRound::~CCadHoleRound()
 {
 }
 
-void CCadHoleRound::Create()
+BOOL CCadHoleRound::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadHoleRound::Destroy(CCadObject* pDependentObject)
@@ -203,7 +207,7 @@ CCadObject * CCadHoleRound::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadHoleRound *pHR = new CCadHoleRound;
-	pHR->Create();
+	pHR->Create(GetParent(), GetOrigin());
 	CCadObject::CopyObject(pHR);
 	return pHR;
 }
@@ -309,7 +313,7 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadHoleRound = new CCadHoleRound;
-		Obj.pCadHoleRound->Create();
+		Obj.pCadHoleRound->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadHoleRound);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Round Hole:Place Center Point"));

@@ -12,7 +12,7 @@ class CCadOrigin:public CCadObject
 public:
 	CCadOrigin();
 	virtual ~CCadOrigin();
-	void Create();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject* pDependentObject);
 	virtual void Move(CDoubleSize Diff);
 	virtual DOUBLEPOINT GetCenterPoint();

@@ -12,7 +12,7 @@ class CCadArcCent :public CCadObject
 public:
 	CCadArcCent();
 	virtual ~CCadArcCent();
-	void Create(void);
+	BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual BOOL Destroy(CCadObject* pDepndentObjects);
 	virtual CString& GetObjDescription();
 	virtual void Move(CDoubleSize Diff);

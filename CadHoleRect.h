@@ -13,6 +13,8 @@ class CCadHoleRect:public CCadObject
 public:
 	CCadHoleRect();
 	virtual ~CCadHoleRect();
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
+	virtual BOOL Destroy(CCadObject* pDependentObjects);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);

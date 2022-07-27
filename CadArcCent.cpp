@@ -18,35 +18,39 @@ CCadArcCent::~CCadArcCent()
 {
 }
 
-void CCadArcCent::Create(void)
+BOOL CCadArcCent::Create(CCadObject* pParent, CCadObject* pOrigin)
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin);
+	if (pParent == NULL)
+		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent,  pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create();
+	Obj.pCadPoint->Create(pParent, pOrigin);
 	Obj.pCadPoint->SetSubType(SubType::RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
+	return TRUE;
 }
 
 BOOL CCadArcCent::Destroy(CCadObject* pDepndentObjects)
@@ -205,7 +209,7 @@ BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
 	P1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 	P2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 	PC.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	rect.Create();
+	rect.Create(NULL, NULL);
 	rect.SetPoints(DOUBLEPOINT(*P1.pCadPoint), DOUBLEPOINT(*P2.pCadPoint), DOUBLEPOINT(*P1.pCadPoint));
 	if (rect.PointInThisObject(point))
 	{
@@ -338,7 +342,7 @@ CCadObject * CCadArcCent::CopyObject(void)
 	CADObjectTypes newObj;
 	
 	newObj.pCadArcCent = new CCadArcCent;
-	newObj.pCadArcCent->Create();
+	newObj.pCadArcCent->Create(GetParent(), GetOrigin());
 	CCadObject::CopyObject(newObj.pCadObject);
 	newObj.pCadArcCent->CopyAttributesFrom(GetPtrToAttributes());
 	return newObj.pCadObject;

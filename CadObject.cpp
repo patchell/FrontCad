@@ -59,6 +59,7 @@ CCadObject::CCadObject()
 	m_pPrevOrigin = 0;
 	//-------------------------------
 	m_pParentObject = 0;
+	m_pOrigin = 0;
 	//---------------------------
 	// Generate Unique ID
 	//---------------------------
