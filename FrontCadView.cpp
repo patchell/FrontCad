@@ -28,6 +28,8 @@ CFrontCadView::CFrontCadView()
 	m_HScrollInfo.cbSize = sizeof(SCROLLINFO);
 	m_R_KeyDown = FALSE;
 	m_GrabbedObject.pCadObject = 0;
+	m_ppObjList = 0;
+	m_NumOfMessListEntries;
 }
 
 CFrontCadView::~CFrontCadView()
@@ -128,6 +130,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_LINE_POLYLINE, &CFrontCadView::OnUpdateLinePolyline)
 	ON_WM_SYSKEYDOWN()
 	ON_WM_SYSKEYUP()
+	ON_WM_MENUSELECT()
 END_MESSAGE_MAP()
 
 
@@ -1378,13 +1381,32 @@ void CFrontCadView::OnUpdateSnapSnapgridproperties(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnSnapSnaptoobject()
 {
-	// TODO: Add your command handler code here
+	CCadLine* pLine;
+
+	m_ppObjList = new CCadObject * [16];
+
+	pLine = new CCadLine;
+	pLine->Create(NULL, NULL);
+	m_ppObjList[0] = pLine;
+	pLine = new CCadLine;
+	pLine->Create(NULL, NULL);
+	m_ppObjList[1] = pLine;
+	pLine = new CCadLine;
+	pLine->Create(NULL, NULL);
+	m_ppObjList[2] = pLine;
+	pLine = new CCadLine;
+	pLine->Create(NULL, NULL);
+	m_ppObjList[3] = pLine;
+	CreateObjectSelectionMenu(
+		m_ppObjList,
+		4,
+		CPoint(200, 200)
+	);
 }
 
 
 void CFrontCadView::OnUpdateSnapSnaptoobject(CCmdUI* pCmdUI)
 {
-	// TODO: Add your command update UI handler code here
 }
 
 
@@ -1426,37 +1448,6 @@ void CFrontCadView::OnUpdateViewZoomout(CCmdUI* pCmdUI)
 	// TODO: Add your command update UI handler code here
 }
 
-
-#define ID_CM_FORWARD				3100
-#define ID_CM_BACKWARD				3101
-#define ID_CM_DELETE				3102
-//#define ID_CM_MOVE					3103
-#define ID_CM_RESTOREASPECTRATIO	3104
-#define ID_CM_ENDDRAWMODE			3105
-#define ID_CM_DESELECT				3106
-#define ID_CM_DESELECT_ALL			3107
-#define ID_CM_EDIT_PROPERIES		3108
-#define ID_CM_PLACE					3109
-
-//place submenu
-#define ID_CM_PLACE_LINE			3200
-#define ID_CM_PLACE_RECT			3201
-#define ID_CM_PLACE_ELLISPE			3202
-#define ID_CM_PLACE_ARC				3203
-#define ID_CM_PLACE_ARC_CENTERED	3204
-#define ID_CM_PLACE_ROUNDED_RECT		3205
-#define ID_CM_PLACE_ARROW			3206
-#define ID_CM_PLACE_POLY			3207
-#define ID_CM_PLACE_FILLEDPOLY		3208
-#define ID_CM_PLACE_LIBCOMP			3209
-#define ID_CM_PLACE_HOLEROUND		3210
-#define ID_CM_PLACE_HOLERECT		3211
-#define ID_CM_PLACE_HOLERND1FLAT	3212
-#define ID_CM_PLACE_HOLERND2FLAT	3213
-#define ID_CM_PLACE_TEXT			3214
-#define ID_CM_PLACE_BITMAP			3215
-#define ID_CM_PLACE_ORIGIN			3216
-#define ID_CM_PLACE_DIMENSION		3217
 
 
 void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
@@ -2779,4 +2770,38 @@ LRESULT CFrontCadView::OnPuMenuHoverIndex(WPARAM index, LPARAM lparam)
 LRESULT CFrontCadView::OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam)
 {
 	return 0;
+}
+
+void CFrontCadView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
+{
+	CChildViewBase::OnMenuSelect(nItemID, nFlags, hSysMenu);
+
+	printf("Menu %d\n", nItemID);
+}
+
+UINT CFrontCadView::CreateObjectSelectionMenu(
+	CCadObject **ppObjList, 
+	UINT n, 
+	CPoint pointLoc
+)
+{
+	CMenu Menu;
+	int i;
+	UINT Id;
+
+	m_ppObjList = ppObjList;
+	m_NumOfMessListEntries = 0;
+	Menu.CreatePopupMenu();
+	for (i = 0; i < n; ++i)
+	{
+		Menu.AppendMenuW(MF_STRING, POPUP_MENU_ITEM_IDS + i, ppObjList[i]->GetTypeString());
+		Menu.EnableMenuItem(POPUP_MENU_ITEM_IDS + i, MF_ENABLED);
+	}
+	Id = Menu.TrackPopupMenu(
+		TPM_RETURNCMD | TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_RIGHTBUTTON,
+		pointLoc.x,
+		pointLoc.y,
+		this
+	);
+	return Id;
 }

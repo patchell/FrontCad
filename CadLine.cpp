@@ -473,7 +473,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT;
-			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+			SnapToObuject(MousePos, KindsOfObjects);
 		}
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
@@ -534,7 +534,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT;
-			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+			SnapToObuject(MousePos, KindsOfObjects);
 		}
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
@@ -550,7 +550,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT;
-			MousePos = SnapToObuject(MousePos, KindsOfObjects);
+			SnapToObuject(MousePos, KindsOfObjects);
 		}
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
@@ -631,7 +631,7 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
 }
 
-DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
+BOOL CCadLine::SnapToObuject(DOUBLEPOINT& MousePos, UINT KindsToSnapTo)
 {
 	//-------------------------------------------
 	// SnapToObuject
@@ -639,7 +639,7 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 	// near an object that this particular object
 	// wants to snap to.
 	//-------------------------------------------
-	DOUBLEPOINT Result;
+	BOOL Result = FALSE;
 	
 	CCadObject* ppObjectList[8];
 	CFrontCadDoc* pDoc;
@@ -654,13 +654,24 @@ DOUBLEPOINT CCadLine::SnapToObuject(DOUBLEPOINT MousePos, UINT KindsToSnapTo)
 		KindsToSnapTo
 	);
 	if (NumberOfObjects == 1)
-		Result = ((CCadPoint *)(ppObjectList[0]))->GetPoint();
+	{
+		MousePos = ((CCadPoint*)(ppObjectList[0]))->GetPoint();
+		Result = TRUE;
+	}
 	else if (NumberOfObjects > 1)
 	{
+		//----------------------------
+		// This is going to be tricky
+		//----------------------------
+		// Create a popup menu
+		//----------------------------
+		if (m_pPopUpMenu == 0)
+		{
 
+		}
 	}
 	else
-		Result = MousePos;
+		Result = TRUE;
 	printf("Number of Objects = %d\n", NumberOfObjects);
 	printf("------ Exit Snap To Object ----\n");
 	return Result;

@@ -244,7 +244,6 @@
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MyBitmap.h" />
     <ClInclude Include="MyEvent.h" />
-    <ClInclude Include="MyPopupMenu.h" />
     <ClInclude Include="MyToolBarSplitter.h" />
     <ClInclude Include="MyToolBarView.h" />
     <ClInclude Include="ObjectAttributs.h" />
@@ -319,7 +318,6 @@
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MyBitmap.cpp" />
     <ClCompile Include="MyEvent.cpp" />
-    <ClCompile Include="MyPopupMenu.cpp" />
     <ClCompile Include="MyToolBarSplitter.cpp" />
     <ClCompile Include="MyToolBarView.cpp" />
     <ClCompile Include="ObjectAttributes.cpp" />

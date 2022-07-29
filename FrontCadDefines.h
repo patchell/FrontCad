@@ -4,6 +4,47 @@
 #define GETAPP	(theApp)
 #define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
 
+//---------------------------------------
+// IDs for context menus
+//---------------------------------------
+
+constexpr auto ID_CM_FORWARD = 0x2000;
+constexpr auto ID_CM_BACKWARD = 0x2001;
+constexpr auto ID_CM_DELETE = 0x2002;
+constexpr auto  ID_CM_RESTOREASPECTRATIO = 0x2003;
+constexpr auto  ID_CM_ENDDRAWMODE = 0x2004;
+constexpr auto  ID_CM_DESELECT = 0x2005;
+constexpr auto  ID_CM_DESELECT_ALL = 0x2006;
+constexpr auto  ID_CM_EDIT_PROPERIES = 0x2007;
+constexpr auto  ID_CM_PLACE = 0x208;
+
+//place submenu
+constexpr auto ID_CM_PLACE_LINE = 0x2100;
+constexpr auto  ID_CM_PLACE_RECT = 0x2101;
+constexpr auto  ID_CM_PLACE_ELLISPE = 0x2102;
+constexpr auto  ID_CM_PLACE_ARC = 0x2103;
+constexpr auto  ID_CM_PLACE_ARC_CENTERED = 0x2104;
+constexpr auto  ID_CM_PLACE_ROUNDED_RECT = 0x2105;
+constexpr auto  ID_CM_PLACE_ARROW = 0x2106;
+constexpr auto  ID_CM_PLACE_POLY = 0x2107;
+constexpr auto  ID_CM_PLACE_FILLEDPOLY = 0x2108;
+constexpr auto ID_CM_PLACE_LIBCOMP = 0x2109;
+constexpr auto  ID_CM_PLACE_HOLEROUND = 0x210A;
+constexpr auto  ID_CM_PLACE_HOLERECT = 0x210B;
+constexpr auto  ID_CM_PLACE_HOLERND1FLAT = 0x210C;
+constexpr auto  ID_CM_PLACE_HOLERND2FLAT = 0x210D;
+constexpr auto  ID_CM_PLACE_TEXT = 0x210E;
+constexpr auto  ID_CM_PLACE_BITMAP = 0x210F;
+constexpr auto ID_CM_PLACE_ORIGIN = 0x2110;
+constexpr auto ID_CM_PLACE_DIMENSION = 0x2111;
+
+//----------------------------------
+// ID Constants for Selecting an
+// Object(s) that the cursor is near
+//----------------------------------
+
+constexpr auto POPUP_MENU_ITEM_IDS = 0X3000;
+
 //----------------------------------
 // Constants for Line Types
 //----------------------------------

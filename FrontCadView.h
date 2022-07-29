@@ -65,7 +65,8 @@ class CFrontCadView : public CChildViewBase
 	CADObjectTypes m_GrabbedObject;	//vertex that is being dragged
 	CADObjectTypes m_CadObj;
 	CFrontCadChildFrame* m_pParentFrame;
-
+	CCadObject** m_ppObjList;
+	UINT nNumOfObjListItems;
 	DECLARE_DYNCREATE(CFrontCadView)
 protected:
 	CFrontCadView();           // protected constructor used by dynamic creation
@@ -391,5 +392,7 @@ public:
 	afx_msg void OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg LRESULT OnPuMenuHoverIndex(WPARAM index, LPARAM lparam);
 	afx_msg LRESULT OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam);
+	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
+	UINT CreateObjectSelectionMenu(CCadObject** ppObjList, UINT n, CPoint pointLoc);
 };
 
