@@ -78,6 +78,20 @@ CString& CCadPoint::GetObjDescription()
 	return GetDescription();
 }
 
+CString& CCadPoint::GetTypeString()
+{
+	//--------------------------------------------------
+	// GetTypeString
+	//	returns a string that describes the type of
+	// object this is
+	// parameters:
+	//
+	// return value:pointer to a string
+	//--------------------------------------------------
+	static CString csTypeName = CString(_T("POINT"));
+	return csTypeName;
+}
+
 
 BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
 {

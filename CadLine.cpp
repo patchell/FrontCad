@@ -42,18 +42,15 @@ BOOL CCadLine::Create(CCadObject* pParent, CCadObject* pOrigin)
 	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(1);
-	pPoint->SetParent(this);
 	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
 	pPoint->Create(pParent, pOrigin);
 	pPoint->SetSubType(SubType::VERTEX);
 	pPoint->SetSubSubType(2);
-	pPoint->SetParent(this);
 	AddObjectAtChildTail(pPoint);
 	pRect = new CCadRect;
 	pRect->Create(pParent, pOrigin);
 	pRect->SetSubType(SubType::RECTSHAPE);
-	pPoint->SetParent(this);
 	AddObjectAtChildTail(pRect);
 	m_Length = 0.0;
 	return TRUE;
@@ -126,52 +123,55 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		if (Lw < 1) Lw = 1;
 		switch (mode.DrawMode)
 		{
-			case ObjectDrawMode::FINAL:
-				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-				pOld = pDC->SelectObject(&penLine);
+		case ObjectDrawMode::FINAL:
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			pOld = pDC->SelectObject(&penLine);
+			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+			pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+			pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+			pDC->SelectObject(pOld);
+			break;
+		case ObjectDrawMode::SELECTED:
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			pOld = pDC->SelectObject(&penLine);
+			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+			pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+			pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+			pDC->SelectObject(pOld);
+			break;
+		case ObjectDrawMode::SKETCH:
+			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
+			pOld = pDC->SelectObject(&penLine);
+			switch (GetCurrentDrawState())
+			{
+			case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+			case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::PLACE_LBUTTON_DOWN:
+			case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				pDC->SelectObject(pOld);
 				break;
-			case ObjectDrawMode::SELECTED:
-				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
-				pOld = pDC->SelectObject(&penLine);
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
-				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-				pDC->SelectObject(pOld);
-				break;
-			case ObjectDrawMode::SKETCH:
-				penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
-				pOld = pDC->SelectObject(&penLine);
-				switch (GetCurrentDrawState())
-				{
-				case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-				case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
-					break;
-				case ObjectDrawState::PLACE_LBUTTON_DOWN:
-				case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
-					pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-					pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
-					pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
-					pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-					pDC->SelectObject(pOld);
-					break;
-				}//end of switch draw state
-				break;
+			}//end of switch draw state
+			break;
 		}	//end of switch(mode)
 		//-------------------------------------
 		// Draw the Children
 		//-------------------------------------
-//		pObj = GetChildrenHead();
-//		while (pObj)
-//		{
-//			pObj->Draw(pDC, mode, ULHC, Scale);
-//			pObj = pObj->GetNext();
-//		}
+		pObj.pCadObject = GetChildrenHead();
+		while (pObj.pCadObject)
+		{
+			if (pObj.pCadObject->GetType() == ObjectType::POINT)
+			{
+				pObj.pCadObject->Draw(pDC, mode, ULHC, Scale);
+			}
+			pObj.pCadObject = pObj.pCadObject->GetNext();
+		}
 	}	//end of if(rederEnabled)
 }
 
@@ -435,7 +435,9 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			1
 		);
 		ObjectKinds = OBJKIND_SELECT | OBJKIND_POINT;
+		MousePos.Print("Mouse Position");
 		SnapToObject(MousePos, ObjectKinds, ObjP1.pCadObject, TRUE);
+		MousePos.Print("Mouse Position Snapped");
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
@@ -560,7 +562,6 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 			if (SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
 			{
 				ObjP1.pCadPoint->SetPoint(MousePos);
-				ObjP1.pCadPoint->Print("????");
 			}
 		}
 		else
@@ -596,9 +597,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			2
 		);
-		ObjP1.pCadPoint->Print("P1->::");
 		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
-		ObjP2.pCadPoint->Print("Move Mouse To:Line");
 		break;
 	}
 	GETVIEW->Invalidate();
@@ -682,7 +681,6 @@ BOOL CCadLine::SnapToObject(
 	CFrontCadDoc* pDoc;
 	int NumberOfObjects;
 
-//	printf("-------- Snap To Object ------\n");
 	pDoc = GETVIEW->GetDocument();
 	NumberOfObjects = pDoc->PointInObjectAndSelect(
 		MousePos,
@@ -693,7 +691,7 @@ BOOL CCadLine::SnapToObject(
 	);
 	if (NumberOfObjects == 1)
 	{
-		if(!(KindsToSnapTo && OBJKIND_SELECT))
+		if(KindsToSnapTo & OBJKIND_SELECT)
 			MousePos = ((CCadPoint*)(ppObjectList[0]))->GetPoint();
 		Result = TRUE;
 	}
@@ -707,8 +705,6 @@ BOOL CCadLine::SnapToObject(
 	}
 	else
 		Result = FALSE;
-	printf("Number of Objects = %d\n", NumberOfObjects);
-//	printf("------ Exit Snap To Object ----\n");
 	return Result;
 }
 

@@ -63,7 +63,7 @@ class CFrontCadView : public CChildViewBase
 	// Misc Variables
 	//---------------------------------
 	CADObjectTypes m_GrabbedObject;	//vertex that is being dragged
-	CADObjectTypes m_CadObj;
+	CADObjectTypes m_CadObj;		//Object Being Drawn
 	CFrontCadChildFrame* m_pParentFrame;
 	//----------------------------------
 	CCadObject** m_ppObjList;

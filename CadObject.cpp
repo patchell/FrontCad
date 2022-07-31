@@ -179,7 +179,7 @@ CString& CCadObject::GetTypeString(void)
 	//
 	// return value:pointer to a string
 	//--------------------------------------------------
-	static CString csTypeName = CString(_T("CCadOject Base Class"));
+	static CString csTypeName = CString(_T("BASE"));
 	return csTypeName;
 }
 
@@ -226,7 +226,6 @@ void CCadObject::CopyObject(CCadObject* pObjCopy)
 
 void CCadObject::AddObjectAtChildHead(CCadObject* pObj)
 {
-	pObj->SetParent(this);
 	pObj->SetDependentParentHead(this);
 	if (GetChildrenHead() == 0)
 	{
@@ -244,7 +243,6 @@ void CCadObject::AddObjectAtChildHead(CCadObject* pObj)
 
 void CCadObject::AddObjectAtChildTail(CCadObject* pObj)
 {
-	pObj->SetParent(this);
 	pObj->SetDependentParentHead(this);
 	if (GetChildrenHead() == 0)
 	{

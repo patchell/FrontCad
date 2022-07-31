@@ -145,7 +145,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBitmap memDCbitmap;
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
-	CCadObject* pDrawingObjectList, * pOriginList;
+	CCadObject* pDrawingObjectList;
 	CCadPoint ULHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
@@ -156,7 +156,6 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
 	pOldbm = memDC.SelectObject(&memDCbitmap);
 	pDrawingObjectList = pDoc->GetHead();
-	pOriginList = pDoc->GetOriginHead();
 	CScale Scale = GetGrid().GetPixelsPerInch();
 	mode.DrawMode = ObjectDrawMode::FINAL;
 
@@ -168,11 +167,6 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	{
 		pDrawingObjectList->Draw(&memDC, mode, ULHC, Scale);
 		pDrawingObjectList = pDrawingObjectList->GetNext();
-	}
-	while (pOriginList)
-	{
-		pOriginList->Draw(&memDC, mode, ULHC, Scale);
-		pOriginList = pOriginList->GetNextOrigin();
 	}
 	if (GetObjectTypes().pCadObject)	//is an object being draw?
 	{
@@ -718,8 +712,8 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 		//--------------------------------------------
 		if (m_CadObj.pCadObject) 
 			m_DrawState = m_CadObj.pCadObject->MouseMove(m_DrawState);
-		else
-			Invalidate();
+//		else
+//			Invalidate();
 		break;
 	}
 
@@ -736,7 +730,7 @@ void CFrontCadView::OnInitialUpdate()
 	//------------ Setup Default Origin --------------
 	m_DefaultOrigin.Create(NULL, NULL);
 	m_DefaultOrigin.SetName(csOrgName);
-	pDoc->AddOriginAtHead(&m_DefaultOrigin);
+	pDoc->AddObjectAtHead(&m_DefaultOrigin);
 	GetRulerInfo().SetOrigin(&m_DefaultOrigin);
 	pDoc->SetCurrentOrigin(&m_DefaultOrigin);
 	// This will be finished up later when

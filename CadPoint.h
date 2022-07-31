@@ -19,6 +19,7 @@ public:
 	~CCadPoint();
 	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
 	virtual CString& GetObjDescription();
+	virtual CString& GetTypeString();
 	virtual BOOL Destroy(CCadObject* pDependentObject);
 	void SetX(double x) { dX = x; }
 	double GetX() { return dX; }
