@@ -262,6 +262,7 @@ int CCadArcCent::EditProperties()
 
 int CCadArcCent::PointInObjectAndSelect(
 	DOUBLEPOINT p,
+	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
 	int index,
 	int n,
@@ -292,11 +293,15 @@ int CCadArcCent::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if (IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds) && DontExclude(pExcludeObject))
+			{
 				ppSelList[index++] = this;
+				ShouldWeSelectThisObjectAndDidIt(nKinds);
+			}
 		}
 		index = CCadObject::PointInObjectAndSelect(
 			p,
+			pExcludeObject,
 			ppSelList,
 			index,
 			n,

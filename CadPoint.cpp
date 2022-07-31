@@ -115,8 +115,9 @@ BOOL CCadPoint::IsPointOnTarget(DOUBLEPOINT point)
 	distance = Difference.Magnitude();
 	if (distance < GETVIEW->GetGrid().GetSnapGrid().Magnitude())
 		Result = TRUE;
-	sprintf_s(s, 256, "Is the Point Hovered Over? --%s", Result ? "Yes" : "NO!");
-	Print(s);
+//	sprintf_s(s, 256, "Is the Point Hovered Over? --%s", Result ? "Yes" : "NO!");
+//	Print(s);
+	delete[] s;
 	return Result;
 }
 
@@ -133,7 +134,8 @@ BOOL CCadPoint::PointInThisObject(DOUBLEPOINT point)
 
 int CCadPoint::PointInObjectAndSelect(
 	DOUBLEPOINT p, 
-	CCadObject** ppSelList, 
+	CCadObject* pExcludeObject,
+	CCadObject** ppSelList,
 	int index, 
 	int n,
 	UINT nKinds
@@ -164,12 +166,12 @@ int CCadPoint::PointInObjectAndSelect(
 		//-----------------------------------------------
 		// is the point on target?
 		//-----------------------------------------------
-		if (IsPointOnTarget(p))
+		if (PointInThisObject(p))
 		{
-			if (IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds) && DontExclude(pExcludeObject))
 			{
 				ppSelList[index++] = this;
-				Print("--Found Point:");
+				ShouldWeSelectThisObjectAndDidIt(nKinds);
 			}
 		}
 		//------------------------------------
@@ -280,8 +282,7 @@ BOOL CCadPoint::FloodFill(
 
 CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT ULHC, CScale& Scale)
 {
-	CPoint result;
-	DOUBLEPOINT dp = (*this - ULHC);	//offset to client window
+	DOUBLEPOINT dp = (GetPoint() - ULHC);	//offset to client window
 	dp = dp * Scale;	//convert to pixels
 	return CPoint(dp);
 }

@@ -29,7 +29,8 @@ CFrontCadView::CFrontCadView()
 	m_R_KeyDown = FALSE;
 	m_GrabbedObject.pCadObject = 0;
 	m_ppObjList = 0;
-	m_NumOfMessListEntries;
+	m_NumOfMessListEntries = 0;
+	nLastItemIndex = -1;
 }
 
 CFrontCadView::~CFrontCadView()
@@ -470,6 +471,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				//-------------------------------------
 				n = pDoc->PointInObjectAndSelect(
 					MousePos,
+					NULL,
 					ppSel,
 					DEFALT_SELECT_BUFFER_SIZE,
 					OBJKIND_ALL
@@ -487,6 +489,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 			ppSel = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 			if (n = pDoc->PointInObjectAndSelect(
 				GetCurrentMousePosition(),
+				NULL,
 				ppSel,
 				DEFALT_SELECT_BUFFER_SIZE,
 				OBJKIND_ALL)
@@ -651,18 +654,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 		GetGrid().GetSnapGrid(),
 		GetGrid().IsSnapOn()
 	);
-	if (pDoc->GetCurrentOrigin())
-	{
-		OriginCenterPoint = DOUBLEPOINT(*(CCadPoint*)pDoc->GetCurrentOrigin()->FindChildObject(
-			ObjectType::POINT,
-			SubType::ORIGIN_LOCATION, 
-			SUBSUBTYPE_ANY)
-		);
-		OriginCenterPoint = pointMousePos - OriginCenterPoint;
-		ToolBarSetMousePosition(OriginCenterPoint);
-	}
-	else
-		ToolBarSetMousePosition(GetCurrentMousePosition());
+	ToolBarSetMousePosition(GetCurrentMousePosition());
 	//----------------------------------------------------
 	// Prosses mouse position to find out if it is
 	// In the View Client Area
@@ -724,7 +716,8 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 		// If we get here, we are in the midst of
 		// actually drawing an object
 		//--------------------------------------------
-		if (m_CadObj.pCadObject) m_DrawState = m_CadObj.pCadObject->MouseMove(m_DrawState);
+		if (m_CadObj.pCadObject) 
+			m_DrawState = m_CadObj.pCadObject->MouseMove(m_DrawState);
 		else
 			Invalidate();
 		break;
@@ -1449,7 +1442,6 @@ void CFrontCadView::OnUpdateViewZoomout(CCmdUI* pCmdUI)
 }
 
 
-
 void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 {
 	//----------------------------------------------------------
@@ -1849,6 +1841,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		ppSelList = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
+			NULL,
 			ppSelList,
 			DEFALT_SELECT_BUFFER_SIZE,
 			OBJKIND_ALL
@@ -1866,6 +1859,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		ppSelList = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 		n = pDoc->PointInObjectAndSelect(
 			GetCurrentMousePosition(),
+			NULL,
 			ppSelList,
 			DEFALT_SELECT_BUFFER_SIZE,
 			OBJKIND_ALL
@@ -2296,10 +2290,10 @@ DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 
 void CFrontCadView::DrawCursor(
 	CDC* pDC, 
-	DOUBLEPOINT pos,
-	CRect* pRect, 
+	DOUBLEPOINT pos,// Cursor Position
+	CRect* pRect,	// Client Rectangle
 	DOUBLEPOINT ULHC,
-	CScale Scale, 
+	CScale &Scale, 
 	COLORREF color
 )
 {
@@ -2320,18 +2314,15 @@ void CFrontCadView::DrawCursor(
 	//		color....Color to Draw Cursor
 	//-------------------------------------------
 	CPen pen, * pOldPen;
-	pen.CreatePen(PS_SOLID, 1, color);
-	pOldPen = pDC->SelectObject(&pen);
 	int w, h;
 	CPoint p;
-//	CCadPoint Org = GetDocument()->GetCurrentOrigin()->GetCenter(Org);
 
-	pos -= GetRulerInfo().GetUpperLeft();
-	pos = pos * Scale;
-	pos = GETAPP.RoundToNearest(pos,CDoubleSize(1.0,1.0));
-	p = CPoint(GETAPP.RoundDoubleToInt(pos.dX), GETAPP.RoundDoubleToInt(pos.dY));
-	w = pRect->Width();
-	h = pRect->Height();
+	pen.CreatePen(PS_SOLID, 1, color);
+	pOldPen = pDC->SelectObject(&pen);
+
+	p = pos.ToPixelPoint(ULHC, Scale.GetScaleX(), Scale.GetScaleY());
+	w = pRect->Width() - 1;
+	h = pRect->Height() - 1;
 	pDC->MoveTo(0, p.y);
 	pDC->LineTo(w, p.y);
 	pDC->MoveTo(p.x, 0);
@@ -2375,7 +2366,7 @@ DOUBLEPOINT CFrontCadView::CalculateNewULHC(
 	Temp = CurrentScale.GetScaleY() / NextScale.GetScaleY();
 	Temp *= (pointLocation.dY - pointULHC.dY);
 	Uy = pointLocation.dY - Temp;
-	pointResult = CCadPoint(Ux, Uy);
+	pointResult = DOUBLEPOINT(Ux, Uy);
 	return pointResult;
 }
 
@@ -2394,23 +2385,22 @@ void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 	//-----------------------------------------
 	CScale CurrentScale, NextScale;
 	DOUBLEPOINT pointNewULHC;
-	DOUBLEPOINT ptULHC = GetRulerInfo().GetUpperLeft();
+	DOUBLEPOINT ptCurrentULHC;
 	CFrontCadDoc* pDoc;
+	CPoint p;
 
+	ptCurrentULHC = GetRulerInfo().GetUpperLeft();
 	CurrentScale = GetGrid().GetPixelsPerInch();
-	if (GetGrid().ZoomIn())	// did a zoom
+	p = point.ToPixelPoint(ptCurrentULHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
+	if (GetGrid().ZoomIn())	// did a zoom?
 	{
-		NextScale = GetGrid().GetPixelsPerInch();
-		pointNewULHC = CalculateNewULHC(
-			CurrentScale,
-			NextScale,
-			point,
-			ptULHC
-		);
+		NextScale = GetGrid().GetInchesPerPixel();
+		pointNewULHC = point.ULHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		//---------------------------------
 		// Clean up ULHC ie Snap
 		//--------------------------------
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		pointNewULHC.Print("Zoom In New ULHC");
 		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
@@ -2441,18 +2431,16 @@ void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 	DOUBLEPOINT pointNewULHC;
 	DOUBLEPOINT ptULHC = GetRulerInfo().GetUpperLeft();
 	CFrontCadDoc* pDoc = GetDocument();
+	CPoint p;
 
 	CurrentScale = GetGrid().GetPixelsPerInch();
+	p = point.ToPixelPoint(ptULHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
 	if (GetGrid().ZoomOut())	// did a zoom
 	{
-		NextScale = GetGrid().GetPixelsPerInch();
-		pointNewULHC = CalculateNewULHC(
-			CurrentScale,
-			NextScale,
-			point,
-			ptULHC
-		);
+		NextScale = GetGrid().GetInchesPerPixel();
+		pointNewULHC = point.ULHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		pointNewULHC.Print("Zoom Out New ULHC");
 		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
@@ -2774,8 +2762,24 @@ LRESULT CFrontCadView::OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam)
 
 void CFrontCadView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
+	int Index;
+
 	CChildViewBase::OnMenuSelect(nItemID, nFlags, hSysMenu);
 
+	if ((nItemID & POPUP_MENU_ITEM_IDS) == POPUP_MENU_ITEM_IDS)
+	{
+		Index = nItemID - POPUP_MENU_ITEM_IDS;
+		if (nLastItemIndex >= 0)
+			m_ppObjList[nLastItemIndex]->SetSelected(FALSE);
+		nLastItemIndex = Index;
+		m_ppObjList[Index]->SetSelected(TRUE);
+	}
+	else if ((nItemID == 0) && (nLastItemIndex >= 0) &&  m_ppObjList)
+	{
+		m_ppObjList[nLastItemIndex]->SetSelected(FALSE);
+		nLastItemIndex = -1;
+		m_ppObjList = 0;
+	}
 	printf("Menu %d\n", nItemID);
 }
 

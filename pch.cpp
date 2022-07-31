@@ -4,13 +4,30 @@
 
 // if you love a klugue and you're happy, clap your hands
 
+DOUBLEPOINT DOUBLEPOINT::ULHCfromPixelPoint(CPoint point, double cX, double cY)
+{
+	//--------------------------------------------------
+	// ULHCfromPixelPoint
+	// Does the oposite of ToPixel Point. "this" defines
+	// the double point value where the point of
+	// interest is.
+	// 
+	// point.....The pixel in the window to map to
+	// cX,cY.....Scale factor in InchesPerPixel
+	//--------------------------------------------------
+	DOUBLEPOINT ULHC;
+
+	ULHC.dX = dX - double(point.x) * cX;
+	ULHC.dY = dY - double(point.y) * cY ;
+	ULHC.Print("**** ULHC ****");
+	return ULHC;
+}
+
 CPoint DOUBLEPOINT::ToPixelPoint(DOUBLEPOINT ULHC,  double cX, double cY)
 {
 	CPoint Result;
-	double y;
 
-	y = ULHC.dX;
-	Result.x = GETAPP.RoundDoubleToInt((dX + y) * cX);
-	Result.y = GETAPP.RoundDoubleToInt((dY + ULHC.dY) * cY);
+	Result.x = GETAPP.RoundDoubleToInt((dX - ULHC.dX) * cX);
+	Result.y = GETAPP.RoundDoubleToInt((dY - ULHC.dY) * cY);
 	return Result;
 }

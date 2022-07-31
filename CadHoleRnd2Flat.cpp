@@ -206,6 +206,7 @@ void CCadHoleRnd2Flat::SolveIntersection()
 
 int CCadHoleRnd2Flat::PointInObjectAndSelect(
 	DOUBLEPOINT p,
+	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
 	int index,
 	int n,
@@ -236,11 +237,15 @@ int CCadHoleRnd2Flat::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if (IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds) && DontExclude(pExcludeObject))
+			{
 				ppSelList[index++] = this;
+				ShouldWeSelectThisObjectAndDidIt(nKinds);
+			}
 		}
 		index = CCadObject::PointInObjectAndSelect(
 			p,
+			pExcludeObject,
 			ppSelList,
 			index,
 			n,

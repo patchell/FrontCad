@@ -3,7 +3,6 @@
 constexpr auto LINE_KIND_NORMAL = 0;
 constexpr auto LINE_KIND_FIXED = 1;
 
-class CMyPopupMenu;
 
 class CCadLine :public CCadObject
 {
@@ -15,7 +14,6 @@ protected:
 	inline static SLineAttributes m_CurrentAttributes;
 	inline static BOOL m_AttributesGood;
 	inline static BOOL m_RenderEnable = TRUE;
-	inline static CMyPopupMenu* m_pPopUpMenu = 0;
 	double m_Length;
 	SLineAttributes m_Attrib;
 public://public methodes
@@ -31,7 +29,8 @@ public://public methodes
 	);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
-		CCadObject ** ppSelList, 
+		CCadObject* pExcludeObject,
+		CCadObject ** ppSelList,
 		int index, 
 		int n,
 		UINT nKinds
@@ -47,7 +46,12 @@ public://public methodes
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual void ProcessZoom(CScale& InchesPerPixel);
-	BOOL SnapToObuject(DOUBLEPOINT& MousePos, UINT KindsToSnapTo);
+	BOOL SnapToObject(
+		DOUBLEPOINT& MousePos, 
+		UINT KindsToSnapTo,
+		CCadObject *pExcludeObject,
+		BOOL bChoose
+	);
 	virtual int EditProperties(void);
 	//-------------------------------------
 	//attribute Methods

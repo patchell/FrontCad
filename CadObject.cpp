@@ -20,6 +20,7 @@ CCadObject::CCadObject()
 	// return value:
 	//	none
 	//--------------------------------------------------
+	m_CurrentDrawState = ObjectDrawState::NULL_STATE;
 	m_Type = ObjectType::BASE;
 	m_SubType = SubType::ANY;
 	m_SubSubType = 0;
@@ -118,7 +119,8 @@ void CCadObject::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 int CCadObject::PointInObjectAndSelect(
 	DOUBLEPOINT p, 
-	CCadObject** ppSelList, 
+	CCadObject* pExcludeObject,
+	CCadObject** ppSelList,
 	int index, 
 	int n,
 	UINT nKinds
@@ -147,13 +149,17 @@ int CCadObject::PointInObjectAndSelect(
 		pObj = GetChildrenHead();	//get head of children
 		while (pObj)	//take a look at the children
 		{
-			index = pObj->PointInObjectAndSelect(
-				p,
-				ppSelList,
-				index,
-				n,
-				nKinds
-			);
+			if (this != pExcludeObject)
+			{
+				index = pObj->PointInObjectAndSelect(
+					p,
+					pExcludeObject,
+					ppSelList,
+					index,
+					n,
+					nKinds
+				);
+			}
 			if (index < n)
 				pObj = pObj->GetNext();
 			else

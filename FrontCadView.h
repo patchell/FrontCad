@@ -65,8 +65,10 @@ class CFrontCadView : public CChildViewBase
 	CADObjectTypes m_GrabbedObject;	//vertex that is being dragged
 	CADObjectTypes m_CadObj;
 	CFrontCadChildFrame* m_pParentFrame;
+	//----------------------------------
 	CCadObject** m_ppObjList;
 	UINT nNumOfObjListItems;
+	int nLastItemIndex;
 	DECLARE_DYNCREATE(CFrontCadView)
 protected:
 	CFrontCadView();           // protected constructor used by dynamic creation
@@ -357,7 +359,7 @@ public:
 		DOUBLEPOINT pos,
 		CRect* pRect, 
 		DOUBLEPOINT ULHC,
-		CScale Scale, 
+		CScale &Scale, 
 		COLORREF color
 	);
 	//------------------------------------------

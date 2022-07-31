@@ -151,6 +151,7 @@ void CFrontCadDoc::Serialize(CArchive& ar)
 // CFrontCadDoc commands
 int CFrontCadDoc::PointInObjectAndSelect(
 	DOUBLEPOINT p,
+	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
 	int n,
 	UINT nKinds		//kinds of object to select
@@ -178,7 +179,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 
 	while (pObject && (index < n))
 	{
-		index = pObject->PointInObjectAndSelect(p, ppSelList, index, n, nKinds);
+		index = pObject->PointInObjectAndSelect(p, pExcludeObject, ppSelList, index, n, nKinds);
 		pObject = pObject->GetNext();
 	}
 	printf("FrontCadDoc Objects Found:%d\n", index);

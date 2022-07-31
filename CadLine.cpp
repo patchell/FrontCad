@@ -118,6 +118,7 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	CPen *pOld, penLine;
 	int Lw;
 	CRect rect;
+	CADObjectTypes pObj;
 
 	if (IsRenderEnabled())
 	{
@@ -128,34 +129,49 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			case ObjectDrawMode::FINAL:
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetChildrenHead())
-				{
-					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
-				}
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SELECTED:
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetChildrenHead())
-				{
-					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
-				}
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				pDC->SelectObject(pOld);
 				break;
 			case ObjectDrawMode::SKETCH:
 				penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
 				pOld = pDC->SelectObject(&penLine);
-				if (GetChildrenHead())
+				switch (GetCurrentDrawState())
 				{
-					((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-					((CCadPoint*)GetChildrenHead()->GetNext())->LineTo(pDC, ULHC, Scale);
-				}
-				pDC->SelectObject(pOld);
+				case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+				case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+					break;
+				case ObjectDrawState::PLACE_LBUTTON_DOWN:
+				case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+					pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+					pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+					pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+					pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+					pDC->SelectObject(pOld);
+					break;
+				}//end of switch draw state
 				break;
 		}	//end of switch(mode)
+		//-------------------------------------
+		// Draw the Children
+		//-------------------------------------
+//		pObj = GetChildrenHead();
+//		while (pObj)
+//		{
+//			pObj->Draw(pDC, mode, ULHC, Scale);
+//			pObj = pObj->GetNext();
+//		}
 	}	//end of if(rederEnabled)
 }
 
@@ -171,6 +187,7 @@ BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
 
 int CCadLine::PointInObjectAndSelect(
 	DOUBLEPOINT p,
+	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
 	int index,
 	int n,
@@ -201,11 +218,15 @@ int CCadLine::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if(IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds) && DontExclude(pExcludeObject))
+			{
 				ppSelList[index++] = this;
+				ShouldWeSelectThisObjectAndDidIt(nKinds);
+			}
 		}
 		index = CCadObject::PointInObjectAndSelect(
 			p,
+			pExcludeObject,
 			ppSelList,
 			index,
 			n,
@@ -369,11 +390,11 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
+	UINT ObjectKinds;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
 	CPoint pointSaved;
-	UINT KindsOfObjects;
 
 	switch (DrawState)
 	{
@@ -413,6 +434,8 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			1
 		);
+		ObjectKinds = OBJKIND_SELECT | OBJKIND_POINT;
+		SnapToObject(MousePos, ObjectKinds, ObjP1.pCadObject, TRUE);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
@@ -470,11 +493,6 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			1
 		);
-		if (GetAttributes().m_P1_SNAP_POINT)
-		{
-			KindsOfObjects = OBJKIND_POINT;
-			SnapToObuject(MousePos, KindsOfObjects);
-		}
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
 		m_SavedSnapEnable = GETVIEW->GetGrid().EnableSnap(FALSE);
@@ -504,6 +522,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		break;
 	}
+	SetCurrentDrawState(DrawState);
 	return DrawState;
 }
 
@@ -529,15 +548,25 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 
 	switch (DrawState)
 	{
-	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:	//MouseMove
+		ObjP1.pCadObject = FindChildObject(
+			ObjectType::POINT, 
+			SubType::VERTEX, 
+			1
+		);
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
-			KindsOfObjects = OBJKIND_POINT;
-			SnapToObuject(MousePos, KindsOfObjects);
+			KindsOfObjects = OBJKIND_POINT | OBJKIND_SELECT;
+			if (SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
+			{
+				ObjP1.pCadPoint->SetPoint(MousePos);
+				ObjP1.pCadPoint->Print("????");
+			}
 		}
+		else
+			ObjP1.pCadPoint->SetPoint(MousePos);
 		break;
-	case ObjectDrawState::PLACE_LBUTTON_DOWN:
+	case ObjectDrawState::PLACE_LBUTTON_DOWN:	//MouseMove
 		ObjP2.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
@@ -545,15 +574,18 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		break;
-	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN://MouseMove
 		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
-			KindsOfObjects = OBJKIND_POINT;
-			SnapToObuject(MousePos, KindsOfObjects);
+			KindsOfObjects = OBJKIND_POINT | OBJKIND_SELECT;
+			if (SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
+			{
+				ObjP1.pCadPoint->SetPoint(MousePos);
+			}
 		}
 		break;
-	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN://MouseMove
 		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
@@ -631,10 +663,15 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
 }
 
-BOOL CCadLine::SnapToObuject(DOUBLEPOINT& MousePos, UINT KindsToSnapTo)
+BOOL CCadLine::SnapToObject(
+	DOUBLEPOINT& MousePos, 
+	UINT KindsToSnapTo, 
+	CCadObject *pExcludeObject,
+	BOOL bChoose
+)
 {
 	//-------------------------------------------
-	// SnapToObuject
+	// SnapToObject
 	//	We check to see if the mouse cursor is
 	// near an object that this particular object
 	// wants to snap to.
@@ -645,17 +682,19 @@ BOOL CCadLine::SnapToObuject(DOUBLEPOINT& MousePos, UINT KindsToSnapTo)
 	CFrontCadDoc* pDoc;
 	int NumberOfObjects;
 
-	printf("-------- Snap To Object ------\n");
+//	printf("-------- Snap To Object ------\n");
 	pDoc = GETVIEW->GetDocument();
 	NumberOfObjects = pDoc->PointInObjectAndSelect(
-		MousePos, 
+		MousePos,
+		pExcludeObject,
 		ppObjectList, 
 		8,
 		KindsToSnapTo
 	);
 	if (NumberOfObjects == 1)
 	{
-		MousePos = ((CCadPoint*)(ppObjectList[0]))->GetPoint();
+		if(!(KindsToSnapTo && OBJKIND_SELECT))
+			MousePos = ((CCadPoint*)(ppObjectList[0]))->GetPoint();
 		Result = TRUE;
 	}
 	else if (NumberOfObjects > 1)
@@ -665,15 +704,11 @@ BOOL CCadLine::SnapToObuject(DOUBLEPOINT& MousePos, UINT KindsToSnapTo)
 		//----------------------------
 		// Create a popup menu
 		//----------------------------
-		if (m_pPopUpMenu == 0)
-		{
-
-		}
 	}
 	else
-		Result = TRUE;
+		Result = FALSE;
 	printf("Number of Objects = %d\n", NumberOfObjects);
-	printf("------ Exit Snap To Object ----\n");
+//	printf("------ Exit Snap To Object ----\n");
 	return Result;
 }
 

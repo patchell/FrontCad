@@ -12,6 +12,7 @@ public:
 	virtual ~CFrontCadDoc();
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
+		CCadObject* pExcludeObject,
 		CCadObject** ppSelList,
 		int n,
 		UINT nKinds		//kinds of object to select

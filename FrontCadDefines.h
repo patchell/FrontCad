@@ -262,6 +262,8 @@ constexpr auto OBJKIND_POLYGON = 0x00008000;
 constexpr auto OBJKIND_RECT = 0x00010000;
 constexpr auto OBJKIND_ROUNDEDRECT = 0x00020000;
 constexpr auto OBJKIND_TEXT = 0x00040000;
+constexpr auto OBJKIND_CHOOSE = 0x40000000;
+constexpr auto OBJKIND_SELECT = 0x80000000;
 
 //----------------------------------
 // CCadObject derived types

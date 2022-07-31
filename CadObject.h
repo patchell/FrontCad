@@ -75,7 +75,7 @@ class CCadObject
 	//--------------------------------------
 	// Object Properties
 	//--------------------------------------
-
+	ObjectDrawState m_CurrentDrawState;
 	CString m_csName;
 	CString m_csDescription;
 	UINT m_Id;	//unique ID number
@@ -147,6 +147,8 @@ public:
 	void SetSubType(SubType subtype) { m_SubType = subtype; }
 	UINT GetSubSubType() { return m_SubSubType; }
 	void SetSubSubType(UINT SST) { m_SubSubType = SST; }
+	ObjectDrawState GetCurrentDrawState() { return m_CurrentDrawState; }
+	void SetCurrentDrawState(ObjectDrawState State) { m_CurrentDrawState = State; }
 	BOOL AttributesAreValid() {
 		return m_bAttributesValid;
 	}
@@ -176,11 +178,24 @@ public:
 	virtual BOOL PointInThisObject(DOUBLEPOINT point) { return FALSE; }
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
+		CCadObject* pExcludeObject,
 		CCadObject** ppSelList,
 		int index,
 		int n,
 		UINT nKinds
 	);
+	virtual BOOL DontExclude(CCadObject* ExcludeThisObject) {
+		return (this != ExcludeThisObject);
+	}
+	virtual BOOL ShouldWeSelectThisObjectAndDidIt(UINT nKind) {
+		BOOL rV = FALSE;
+		if (nKind & OBJKIND_SELECT)
+		{
+			rV = TRUE;
+			SetSelected(TRUE);
+		}
+		return rV;
+	}
 	virtual BOOL IsSelected(void) const { return m_Selected; }
 	virtual void SetSelected(BOOL Flag) { m_Selected = Flag; }
 	CString& GetName() { return m_csName; }

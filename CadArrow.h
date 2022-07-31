@@ -21,6 +21,7 @@ public:
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT pPoint,
+		CCadObject* pExcludeObject,
 		CCadObject** ppSelList,
 		int index,
 		int n,

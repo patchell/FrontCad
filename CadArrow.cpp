@@ -165,6 +165,7 @@ BOOL CCadArrow::PointInThisObject(DOUBLEPOINT point)
 
 int CCadArrow::PointInObjectAndSelect(
 	DOUBLEPOINT p,
+	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
 	int index,
 	int n,
@@ -195,11 +196,15 @@ int CCadArrow::PointInObjectAndSelect(
 		//---------------------------------------
 		if (PointInThisObject(p))
 		{
-			if (IsItThisKind(nKinds))
+			if (IsItThisKind(nKinds) && DontExclude(pExcludeObject))
+			{
 				ppSelList[index++] = this;
+				ShouldWeSelectThisObjectAndDidIt(nKinds);
+			}
 		}
 		index = CCadObject::PointInObjectAndSelect(
 			p,
+			pExcludeObject,
 			ppSelList,
 			index,
 			n,
