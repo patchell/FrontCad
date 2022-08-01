@@ -314,7 +314,7 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 			if (pPoint)
 				pPoint->MoveTo(pDC, ULHC, Scale);
 			else
-				goto exit;
+				goto exit;	//error
 		}
 		else
 		{
@@ -329,36 +329,32 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 				pPoint->Draw(pDC, mode, ULHC, Scale);
 			}
 			else
-				goto exit;
+				goto exit;	//error
 		}
-		pPoint = (CCadPoint*)FindChildObject(
-			ObjectType::POINT,
-			SubType::VERTEX,
-			1
-		);
-		if (pPoint)
-		{
-			pPoint->LineTo(pDC, ULHC, Scale);
-			pPoint->Draw(pDC, mode, ULHC, Scale);
-		}
-		else
-			goto exit;
 	}	//end of for loop
 
-	if (bFill)
-	{
-		((CCadPoint*)(FindChildObject(
-			ObjectType::POINT,
-			SubType::CENTERPOINT,
-			SUBSUBTYPE_ANY)))->FloodFill(
-				pDC,
-				GetAttributes().m_colorLine,
-				ULHC,
-				Scale
-			);
-	}
 exit:
 	return;
+}
+
+void CCadRect::FillRect(
+	CDC* pDC, 
+	MODE mode, 
+	DOUBLEPOINT  ULHC, 
+	CScale& Scale, 
+	COLORREF colorBoarder
+)
+{
+	((CCadPoint*)(FindChildObject(
+		ObjectType::POINT,
+		SubType::CENTERPOINT,
+		SUBSUBTYPE_ANY
+	)))->FloodFill(
+			pDC,
+			colorBoarder,
+			ULHC,
+			Scale
+	);
 }
 
 void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
@@ -382,42 +378,40 @@ void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		int Lw;
 		CSize rectLWcomp;
 		MODE pointMode = mode;;
+		COLORREF colorBoarder;
 
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
-		if (Lw < 1 || ObjectDrawMode::SKETCH == mode.DrawMode)
-		{
+		if (Lw < 1)
 			Lw = 1;
-			rectLWcomp = CSize(0, 0);
-		}
-		else
-			rectLWcomp = CSize(Lw / 2, Lw / 2);
-		//SetRect(rect, P1, P2, rectLWcomp);
+		colorBoarder = CreateThePen(mode, &penLine, Lw);
+		CreateTheBrush(mode, &brushFill);
+		ppenOld = pDC->SelectObject(&penLine);
+		pbrushOld = pDC->SelectObject(&brushFill);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
-			ppenOld = pDC->SelectObject(&penLine);
-			pbrushOld = pDC->SelectObject(&brushFill);
-			DrawRect(pDC, mode, ULHC, Scale, GetAttributes().m_TransparentFill == FALSE);
-			pDC->SelectObject(pbrushOld);
-			pDC->SelectObject(ppenOld);
-			break;
-		case ObjectDrawMode::SELECTED:
-			pointMode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
-			ppenOld = pDC->SelectObject(&penLine);
-			DrawRect(pDC, pointMode, ULHC, Scale, FALSE);
-			pDC->SelectObject(ppenOld);
+			DrawRect(
+				pDC, 
+				mode, 
+				ULHC, 
+				Scale, 
+				GetAttributes().m_TransparentFill == FALSE
+			);
+			if (!GetAttributes().m_TransparentFill)
+				FillRect(pDC, mode, ULHC, Scale, colorBoarder);
 			break;
 		case ObjectDrawMode::SKETCH:
-			pointMode.PointsMode = SelectedPointsMode::POINT_BOTH_RECT_FILLED;
-			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSketch);
-			ppenOld = pDC->SelectObject(&penLine);
-			DrawRect(pDC, pointMode, ULHC, Scale,FALSE);
-			pDC->SelectObject(ppenOld);
+			DrawRect(
+				pDC,
+				mode,
+				ULHC,
+				Scale,
+				GetAttributes().m_TransparentFill == FALSE
+			);
 			break;
 		}	//end of switch draw mode
+		pDC->SelectObject(pbrushOld);
+		pDC->SelectObject(ppenOld);
 	}	//end of if render
 }
 
@@ -835,3 +829,47 @@ int CCadRect::EditProperties()
 	Id = Dlg.DoModal();
 	return Id;
 }
+
+COLORREF CCadRect::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	COLORREF rColor = RGB(192, 192, 192);
+
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+		{
+			rColor = GetAttributes().m_colorSelected;
+			pen->CreatePen(PS_SOLID, Lw, rColor);
+		}
+		else
+		{
+			rColor = GetAttributes().m_colorLine;
+			pen->CreatePen(PS_SOLID, Lw, rColor);
+		}
+		break;
+	case ObjectDrawMode::SKETCH:
+		rColor = GetAttributes().m_colorSelected;
+		pen->CreatePen(PS_DOT, Lw, rColor);
+		break;
+	}
+
+	return rColor;
+}
+
+void CCadRect::CreateTheBrush(MODE mode, CBrush* brushFill)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		else
+			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		break;
+	}
+}
+

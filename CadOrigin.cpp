@@ -119,21 +119,8 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		pointUL = Obj.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
 		rect.SetRect(pointUL, pointLR);
 		rect.NormalizeRect();
-		switch (mode.DrawMode)
-		{
-		case ObjectDrawMode::FINAL:
-			LinePen.CreatePen(PS_SOLID, LineWidth, GetAttributes().m_colorLine);
-			OldPen = pDC->SelectObject(&LinePen);
-			break;
-		case ObjectDrawMode::SELECTED:
-			LinePen.CreatePen(PS_SOLID, LineWidth, GetAttributes().m_colorLine);
-			OldPen = pDC->SelectObject(&LinePen);
-			break;
-		case ObjectDrawMode::SKETCH:
-			LinePen.CreatePen(PS_DOT, LineWidth, GetAttributes().m_colorLine);
-			OldPen = pDC->SelectObject(&LinePen);
-			break;
-		}
+		CreateThePen(mode, &LinePen, LineWidth);
+		OldPen = pDC->SelectObject(&LinePen);
 		fillBrush.CreateStockObject(NULL_BRUSH);
 		oldBrush = pDC->SelectObject(&fillBrush);
 		pDC->Ellipse(&rect);
@@ -401,4 +388,20 @@ int CCadOrigin::EditProperties()
 	Dlg.SetOrigin(this);
 	Id = Dlg.DoModal();
 	return Id;
+}
+
+void CCadOrigin::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+		else
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
+		break;
+	}
 }

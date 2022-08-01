@@ -110,6 +110,8 @@ public:
 	CCadPoint& CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint);
 	BOOL IsPointBetween(CCadPoint* pP1, CCadPoint* pP2);
 	void Print(const char* s);
+	void CreateThePen(MODE mode, CPen* pen, int Lw);
+	void CreateTheBrush(MODE mode, CBrush* brushFill);
 	//----------------------------------
 	// Operators
 	//----------------------------------

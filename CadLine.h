@@ -53,6 +53,7 @@ public://public methodes
 		BOOL bChoose
 	);
 	virtual int EditProperties(void);
+	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	//-------------------------------------
 	//attribute Methods
 	//-------------------------------------

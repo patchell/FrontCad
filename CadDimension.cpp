@@ -352,9 +352,10 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CPen* pOld, penLine;
+	CPen* pOldPen, penLine;
 	int Lw;
 	CRect rect;
+	CADObjectTypes ObjP1,ObjP2;
 
 	if (IsRenderEnabled())
 	{
@@ -363,34 +364,45 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			pOld = pDC->SelectObject(&penLine);
-			if (GetChildrenHead())
-			{
-				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
-			}
-			pDC->SelectObject(pOld);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
-			pOld = pDC->SelectObject(&penLine);
-			if (GetChildrenHead())
-			{
-				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
-			}
-			pDC->SelectObject(pOld);
+			if(IsSelected())
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			else
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			pOldPen = pDC->SelectObject(&penLine);
+			ObjP1.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				1
+			);
+			ObjP2.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				2
+			);
+			ObjP1.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			ObjP2.pCadPoint->LineTo(pDC, ULHC, Scale);
+			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::SKETCH:
-			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
-			pOld = pDC->SelectObject(&penLine);
-			if (GetChildrenHead())
-			{
-				((CCadPoint*)GetChildrenHead())->MoveTo(pDC, ULHC, Scale);
-				((CCadPoint*)GetChildrenTail())->LineTo(pDC, ULHC, Scale);
-			}
-			pDC->SelectObject(pOld);
+			penLine.CreatePen(
+				PS_DOT, 
+				1, 
+				GetAttributes().m_colorSelected
+			);
+			pOldPen = pDC->SelectObject(&penLine);
+			ObjP1.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				1
+			);
+			ObjP2.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				2
+			);
+			ObjP1.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			ObjP2.pCadPoint->LineTo(pDC, ULHC, Scale);
+			pDC->SelectObject(pOldPen);
 			break;
 		}	//end of switch(mode)
 	}	//end of if(rederEnabled)

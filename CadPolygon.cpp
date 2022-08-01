@@ -190,13 +190,10 @@ void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Sca
 {
 	CCadPoint* pCenter;
 
-	if (GetNumVerticies() >= 3 && GetAttributes().m_TransparentFill == FALSE)
+	pCenter = GetCenter();
+	if (pCenter)
 	{
-		pCenter = GetCenter();
-		if (pCenter)
-		{
-			pCenter->FloodFill(pDC, GetAttributes().m_colorFill, ULHC, Scale);
-		}
+		pCenter->FloodFill(pDC, GetAttributes().m_colorLine, ULHC, Scale);
 	}
 }
 
@@ -213,36 +210,32 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
+	CPen* pOldPen, penLine;
+	CBrush* pOldBrush, brushFill;
+	int Lw;	//line width in pixels
 
 	if (IsRenderEnabled())
 	{
-		CPen *oldpen, penLine;
-		int Lw;	//line width in pixels
-		if ((Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * m_Attrib.m_LineWidth)) < 1) Lw = 1;
+		if ((Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * m_Attrib.m_LineWidth)) < 1) 
+			Lw = 1;
 
+		CreateThePen(mode, &penLine, Lw);
+		CreateTheBrush(mode, &brushFill);
+		pOldPen = pDC->SelectObject(&penLine);
+		pOldBrush = pDC->SelectObject(&brushFill);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			oldpen = pDC->SelectObject(&penLine);
-			if (DrawPolygon(pDC, mode, ULHC, Scale))
-				FillPolygon(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(oldpen);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorFill);
-			oldpen = pDC->SelectObject(&penLine);
-			mode.LinesMode = SelectedLinesMode::HIGHLIGHT;
-			mode.PointsMode = SelectedPointsMode::POINT_FILLED_RECT;
-			DrawPolygon(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(oldpen);
-			break;
 		case ObjectDrawMode::SKETCH:
-			penLine.CreatePen(PS_DASH, 1, GetAttributes().m_colorSelect);
-			oldpen = pDC->SelectObject(&penLine);
-			DrawPolygon(pDC, mode, ULHC, Scale);
-			pDC->SelectObject(oldpen);
+			if (DrawPolygon(pDC, mode, ULHC, Scale))
+			{
+				if(!GetAttributes().m_TransparentFill)
+					FillPolygon(pDC, mode, ULHC, Scale);
+			}
 			break;
 		}
+		pDC->SelectObject(pOldPen);
+		pDC->SelectObject(pOldBrush);
 	}
 }
 
@@ -645,4 +638,47 @@ int CCadPolygon::EditProperties()
 	Dlg.SetPolygon(this);
 	Id = Dlg.DoModal();
 	return Id;
+}
+
+
+COLORREF CCadPolygon::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	COLORREF rColor = RGB(192,192,192);
+
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+		{
+			rColor = GetAttributes().m_colorSelected;
+			pen->CreatePen(PS_SOLID, Lw, rColor);
+		}
+		else
+		{
+			rColor = GetAttributes().m_colorLine;
+			pen->CreatePen(PS_SOLID, Lw,rColor);
+		}
+		break;
+	case ObjectDrawMode::SKETCH:
+		rColor = GetAttributes().m_colorSelected;
+		pen->CreatePen(PS_DOT, Lw, rColor);
+		break;
+	}
+	return rColor;
+}
+
+void CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		else
+			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		break;
+	}
 }

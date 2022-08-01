@@ -16,9 +16,10 @@ void SArcAttributes::LoadSettings(SArcAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csString;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC"), _T("COLOR"), RGB(128, 128, 192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ARC"), _T("COLOR"), RGB(192, 192, 192));
 	csString  = GETAPP.GetProfileStringW(_T("ARC"), _T("WIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ARC"), _T("COLOR_SELECTED"), RGB(255, 0, 0));
 }
 
 void SArcAttributes::SaveSettings(SArcAttributes* pAttrib)
@@ -35,6 +36,7 @@ void SArcAttributes::SaveSettings(SArcAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ARC"), _T("COLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ARC"), _T("COLOR_SELECTED"), pAttrib->m_colorSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ARC"), _T("WIDTH"), csString);
 }
@@ -616,8 +618,8 @@ void SPolyAttributes::LoadSettings(SPolyAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csVal;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("POLYGON"), _T("LINECOLOR"), RGB(128,128,192));
-	pAttrib->m_colorSelect = GETAPP.GetProfileIntW(_T("POLYGON"), _T("SELECTCOLOR"), RGB(255, 0, 64));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("POLYGON"), _T("LINECOLOR"), RGB(192,192,192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("POLYGON"), _T("SELECTCOLOR"), RGB(255, 0, 64));
 	pAttrib->m_colorFill = GETAPP.GetProfileIntW(_T("POLYGON"), _T("FILLCOLOR"), RGB(255, 0, 0));
 	csVal = GETAPP.GetProfileStringW(_T("POLYGON"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
@@ -638,7 +640,7 @@ void SPolyAttributes::SaveSettings(SPolyAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("POLYGON"), _T("LINECOLOR"), pAttrib->m_colorLine);
-	GETAPP.WriteProfileInt(_T("POLYGON"), _T("SELECTCOLOR"),pAttrib->m_colorSelect);
+	GETAPP.WriteProfileInt(_T("POLYGON"), _T("SELECTCOLOR"),pAttrib->m_colorSelected);
 	GETAPP.WriteProfileInt(_T("POLYGON"), _T("FILLCOLOR"), pAttrib->m_colorFill);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("POLYGON"), _T("LINEWIDTH"), csString);
@@ -879,7 +881,8 @@ void SRectHoleAttributes::LoadSettings(SRectHoleAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csString;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("RECTHOLE"), _T("LINECOLOR"), RGB(128, 128, 129));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("RECTHOLE"), _T("LINECOLOR"), RGB(192, 192, 192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("RECTHOLE"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	csString = GETAPP.GetProfileStringW(_T("RECTHOLE"), _T("LINEWIDTH"), _T("0.04"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
 	csString = GETAPP.GetProfileStringW(_T("RECTHOLE"), _T("HOLEWIDTH"), _T("0.25"));
@@ -900,6 +903,7 @@ void SRectHoleAttributes::SaveSettings(SRectHoleAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("RECTHOLE"), _T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("RECTHOLE"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("RECTHOLE"), _T("LINEWIDTH"), csString);
 	csString.Format(_T("%lf"), pAttrib->m_HoleWidth);
@@ -927,7 +931,8 @@ void SRoundHoleAttributes::LoadSettings(SRoundHoleAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csString;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE"), _T("LINECOLOR"), RGB(128, 128, 192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE"), _T("LINECOLOR"), RGB(192, 192, 192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ROUNDHOLE"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE"), _T("LINEWIDTH"), _T("0.04"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE"), _T("RADIUS"), _T("0.125"));
@@ -948,6 +953,7 @@ void SRoundHoleAttributes::SaveSettings(SRoundHoleAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE"), _T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ROUNDHOLE"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ROUNDHOLE"), _T("LINEWIDTH"), _T("0.04"));
 	csString.Format(_T("%lf"), pAttrib->m_HoleRadius);
@@ -974,7 +980,8 @@ void SRndHole1FlatAttributes::LoadSettings(SRndHole1FlatAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csString;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), RGB(128, 128, 192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), RGB(192, 192, 192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("LINEWIDTH"), _T("0.04"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("RADIUS"), _T("0.125"));
@@ -996,6 +1003,7 @@ void SRndHole1FlatAttributes::SaveSettings(SRndHole1FlatAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
 
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("LINEWIDTH"), csString);
@@ -1027,7 +1035,8 @@ void SRndHole2FlatAttributes::LoadSettings(SRndHole2FlatAttributes* pAttrib)
 	//------------------------------------------------/
 	CString csString;
 
-	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_2_FLAT"), _T("LINECOLOR"), RGB(128, 128, 192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("ROUNDHOLE_2_FLAT"), _T("LINECOLOR"), RGB(192, 192, 192));
+	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ROUNDHOLE_2_FLAT"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_2_FLAT"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
@@ -1053,6 +1062,7 @@ void SRndHole2FlatAttributes::SaveSettings(SRndHole2FlatAttributes* pAttrib)
 	CString csString;
 
 	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("LINECOLOR"), pAttrib->m_colorLine);
+	GETAPP.WriteProfileInt(_T("ROUNDHOLE_1_FLAT"), _T("SELECTEDCOLOR"), pAttrib->m_colorSelected);
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("LINEWIDTH"), csString);
 
@@ -1229,7 +1239,7 @@ void SPointAttributes::LoadSettings(SPointAttributes* pAttrib)
 	//	pAttrib......pointer to attribute structure
 	//				to load settings into
 	//------------------------------------------------/
-	pAttrib->m_colorNormal = GETAPP.GetProfileIntW(_T("POINT"), _T("NORMAL_COLOR"), RGB(32,128,192));
+	pAttrib->m_colorLine = GETAPP.GetProfileIntW(_T("POINT"), _T("NORMAL_COLOR"), RGB(192,192,192));
 	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("POINT"), _T("SELECTED_COLOR"), RGB(255,0,80));
 }
 
@@ -1244,6 +1254,6 @@ void SPointAttributes::SaveSettings(SPointAttributes* pAttrib)
 	//	pAttrib......pointer to attribute structure
 	//				to save settings from
 	//------------------------------------------------/
-	GETAPP.WriteProfileInt(_T("POINT"), _T("NORMAL_COLOR"), pAttrib->m_colorNormal);
+	GETAPP.WriteProfileInt(_T("POINT"), _T("NORMAL_COLOR"), pAttrib->m_colorLine);
 	GETAPP.WriteProfileInt(_T("POINT"), _T("SELECTED_COLOR"), pAttrib->m_colorSelected);
 }

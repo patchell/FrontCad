@@ -27,6 +27,7 @@ public:
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BOOL bFill);
+	void FillRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, COLORREF colorBoarder);
 	//------------------------------------------------------------------
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
 	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
@@ -54,6 +55,8 @@ public:
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual int EditProperties();
+	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
+	void CreateTheBrush(MODE mode, CBrush* brushFill);
 	//------------------------------------------
 	// Attribute Methods
 	//-----------------------------------------

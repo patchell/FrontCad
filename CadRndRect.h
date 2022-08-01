@@ -38,6 +38,8 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
+	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
+	void CreateTheBrush(MODE mode, CBrush* brushFill);
 	virtual int EditProperties();
 	//------------------------------------------
 	// Attribute Methods

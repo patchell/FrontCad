@@ -224,32 +224,26 @@ void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//--------------------------------------------------
 	CPoint PP;
 	int x=0, y=0;
-	CBrush brNULL,*oldBrush;
+	CBrush brushFill,*oldBrush;
 	CPen penOutline, * oldPen;
 	CRect rect;
 	
 	if (IsRenderEnabled())
 	{
-		brNULL.CreateStockObject(NULL_BRUSH);
-		oldBrush = pDC->SelectObject(&brNULL);
 		PP = ToPixelPoint(ULHC, Scale);
 		rect.SetRect(PP - CSize(2, 2), PP + CSize(2, 2));
+		CreateThePen(mode, &penOutline, 1);
+		CreateTheBrush(mode, &brushFill);
+		oldBrush = pDC->SelectObject(&brushFill);
+		oldPen = pDC->SelectObject(&penOutline);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penOutline.CreatePen(PS_SOLID, 1, GetAttributes().m_colorNormal);
-			oldPen = pDC->SelectObject(&penOutline);
-			pDC->Rectangle(&rect);
-			pDC->SelectObject(oldPen);
-			break;
 		case ObjectDrawMode::SKETCH:
-		case ObjectDrawMode::SELECTED:
-			penOutline.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
-			oldPen = pDC->SelectObject(&penOutline);
 			pDC->Rectangle(&rect);
-			pDC->SelectObject(oldPen);
 			break;
 		}
+		pDC->SelectObject(oldPen);
 		pDC->SelectObject(oldBrush);
 	}
 }
@@ -769,4 +763,36 @@ void CCadPoint::Print(const char* s)
 		GetId()
 	);
 	delete[]temp;
+}
+
+void CCadPoint::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+		else
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
+		break;
+	}
+}
+
+void CCadPoint::CreateTheBrush(MODE mode, CBrush* brushFill)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		else
+			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		break;
+	}
 }

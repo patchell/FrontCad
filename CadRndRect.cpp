@@ -108,45 +108,23 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 		ObjCornerRadius.pCadObject = FindChildObject(ObjectType::POINT, SubType::CORNER_RADIUS, 0);
+		CreateThePen(mode, &penLine, Lw);
+		CreateTheBrush(mode, &brushFill);
+		pOldPen = pDC->SelectObject(&penLine);
+		pOldBr = pDC->SelectObject(&brushFill);
+		rect.SetRect(
+			ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
+			ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
+		);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			pOldPen = pDC->SelectObject(&penLine);
-			pOldBr = pDC->SelectObject(&brushFill);
-			rect.SetRect(
-				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
-			);
-			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(ULHC,Scale));
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOldPen);
-			break;
-		case ObjectDrawMode::SELECTED:
-			brushFill.CreateStockObject(NULL_BRUSH);
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
-			pOldPen = pDC->SelectObject(&penLine);
-			pOldBr = pDC->SelectObject(&brushFill);
-			rect.SetRect(
-				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
-			);
-			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(ULHC, Scale));
-			pDC->SelectObject(pOldBr);
-			pDC->SelectObject(pOldPen);
-			break;
 		case ObjectDrawMode::SKETCH:
-			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorLine);
-			pOldPen = pDC->SelectObject(&penLine);
-			rect.SetRect(
-				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
-			);
-			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(ULHC, Scale));
-			pDC->SelectObject(pOldPen);
+			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(ULHC,Scale));
 			break;
 		}
+		pDC->SelectObject(pOldBr);
+		pDC->SelectObject(pOldPen);
 	}
 }
 
@@ -437,3 +415,48 @@ ObjectDrawState CCadRndRect::MouseMove(ObjectDrawState DrawState)
 	GETVIEW->Invalidate();
 	return DrawState;
 }
+
+
+COLORREF CCadRndRect::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	COLORREF rColor = RGB(192, 192, 192);
+
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+		{
+			rColor = GetAttributes().m_colorLineSelected;
+			pen->CreatePen(PS_SOLID, Lw, rColor);
+		}
+		else
+		{
+			rColor = GetAttributes().m_colorLine;
+			pen->CreatePen(PS_SOLID, Lw, rColor);
+		}
+		break;
+	case ObjectDrawMode::SKETCH:
+		rColor = GetAttributes().m_colorLineSelected;
+		pen->CreatePen(PS_DOT, Lw, rColor);
+		break;
+	}
+
+	return rColor;
+}
+
+void CCadRndRect::CreateTheBrush(MODE mode, CBrush* brushFill)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			brushFill->CreateStockObject(NULL_BRUSH);
+		else
+			brushFill->CreateSolidBrush(GetAttributes().m_colorFill);
+		break;
+	case ObjectDrawMode::SKETCH:
+		brushFill->CreateStockObject(NULL_BRUSH);
+		break;
+	}
+}
+

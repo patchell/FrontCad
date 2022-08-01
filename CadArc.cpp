@@ -126,7 +126,10 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+			if(IsSelected())
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			else
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOldPen = pDC->SelectObject(&penLine);
 			rect.SetRect(
 				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
@@ -136,19 +139,6 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 				&rect, 
 				ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale),
 				ObjEnd.pCadPoint->ToPixelPoint(ULHC,Scale)
-			);
-			pDC->SelectObject(pOldPen);
-			break;
-		case ObjectDrawMode::SELECTED:
-			pOldPen = pDC->SelectObject(&penLine);
-			rect.SetRect(
-				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
-			);
-			pDC->Arc(
-				&rect,
-				ObjStart.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale)
 			);
 			pDC->SelectObject(pOldPen);
 			break;

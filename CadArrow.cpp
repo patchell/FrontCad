@@ -115,17 +115,16 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
-			pOldPen = pDC->SelectObject(&penLine);
-			pOldBr = pDC->SelectObject(&brushFill);
-			pDC->Polygon(ArrowPoints, 4);
-			pDC->SelectObject(pOldPen);
-			pDC->SelectObject(pOldBr);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
-			brushFill.CreateStockObject(NULL_BRUSH);
+			if (IsSelected())
+			{
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+				brushFill.CreateStockObject(NULL_BRUSH);
+			}
+			else
+			{
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+				brushFill.CreateSolidBrush(GetAttributes().m_colorFill);
+			}
 			pOldPen = pDC->SelectObject(&penLine);
 			pOldBr = pDC->SelectObject(&brushFill);
 			pDC->Polygon(ArrowPoints, 4);

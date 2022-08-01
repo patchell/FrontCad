@@ -24,14 +24,9 @@ BOOL CCadHoleRect::Create(CCadObject* pParent, CCadObject* pOrigin)
 
 	if (pParent == NULL)
 		pParent = this;
-	Obj.pCadRect = new CCadRect;
-	Obj.pCadRect->Create(pParent, pOrigin);
-	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
-	Obj.pCadRect->SetSubSubType(0);
-	Obj.pCadRect->GetAttributes().m_colorLine = GetAttributes().m_colorLine;
-	Obj.pCadRect->GetAttributes().m_LineWidth = GetAttributes().m_LineWidth;
-	Obj.pCadRect->GetAttributes().m_TransparentFill = TRUE;
-	Obj.pCadRect->SetPointsFromCenter(GetAttributes().m_HoleWidth / 2.0, GetAttributes().m_HoleHeight / 2.0);
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create(pParent, pOrigin);
+	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return 0;
 }
@@ -82,15 +77,27 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	// return value:none
 	//--------------------------------------------------
 	CPen* pOldPen, penLine;
-	CADObjectTypes Obj;
+	CBrush* pOldBrush, brushFill;
 	CADObjectTypes ObjCenter;
 	double Delta = 0.075;
 	DOUBLEPOINT CENTER;
 	int Lw;
-
+	CRect Rect;
+	CCadPoint P1, P2;
+	double W2, H2;
 
 	if (IsRenderEnabled())
 	{
+		brushFill.CreateStockObject(NULL_BRUSH);
+		W2 = GetAttributes().m_HoleWidth / 2.0;
+		H2 = GetAttributes().m_HoleHeight / 2.0;
+		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		P1 = *ObjCenter.pCadPoint + CDoubleSize(-W2, -H2);
+		P2 = *ObjCenter.pCadPoint + CDoubleSize(W2, H2);
+		Rect.SetRect(
+			P1.ToPixelPoint(ULHC, Scale), 
+			P2.ToPixelPoint(ULHC, Scale)
+		);
 		Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * GetAttributes().m_LineWidth);
 		if (Lw < 1) Lw = 1;
 
@@ -98,23 +105,18 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		{
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SKETCH:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
-			Obj.pCadRect->Draw(pDC, mode, ULHC, Scale);
-			ObjCenter.pCadObject = Obj.pCadRect->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			pOldBrush = pDC->SelectObject(&brushFill);
+			if(IsSelected())
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			else
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOldPen = pDC->SelectObject(&penLine);
+			pDC->Rectangle(&Rect);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta,Delta),pDC,ULHC,Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta, -Delta), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, Delta), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, -Delta), pDC, ULHC, Scale);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
-			Obj.pCadRect->Draw(pDC, mode, ULHC, Scale);
-			ObjCenter.pCadObject = Obj.pCadRect->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-			pOldPen = pDC->SelectObject(&penLine);
-			ObjCenter.pCadPoint->Draw(pDC, mode, ULHC, Scale);
+			pDC->SelectObject(pOldBrush);
 			break;
 		}
 	}

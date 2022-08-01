@@ -50,6 +50,8 @@ public:
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual int EditProperties();
+	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
+	void CreateTheBrush(MODE mode, CBrush* brushFill);
 	void CopyAttributesFrom(SPolyAttributes* pPA);
 	void CopyAttributesTo(SPolyAttributes* pA);
 	//------------------------------------------

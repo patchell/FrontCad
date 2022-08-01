@@ -136,6 +136,7 @@ public:
 		return TRUE;
 	}
 	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
+	int Print(int Indent);
 	virtual void SetParent(CCadObject* pP) { m_pParentObject = pP; }
 	virtual CCadObject* GetParent() const { return m_pParentObject; }
 	virtual void SetOrigin(CCadObject* pOrg) { m_pOrigin = pOrg; }

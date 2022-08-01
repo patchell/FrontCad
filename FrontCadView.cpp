@@ -149,6 +149,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CCadPoint ULHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
+	static int count;
 
 	ULHC = GetRulerInfo().GetUpperLeft();
 	GetClientRect(&rectClient);
@@ -1938,10 +1939,8 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	switch (nType)
 	{
 	case SIZE_MAXIMIZED:
-		printf("Size 1\n");
 		break;
 	case SIZE_MINIMIZED:
-		printf("Size 2\n");
 		break;
 	case SIZE_RESTORED:
 //		printf("Set Window Size To (%d,%d)\n", cx, cy);
@@ -1952,10 +1951,8 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 		Invalidate();
 		break;
 	case SIZE_MAXHIDE:
-		printf("Size 4\n");
 		break;
 	case SIZE_MAXSHOW:
-		printf("Size 5\n");
 		break;
 	}
 	CChildViewBase::OnSize(nType, cx, cy);
@@ -2090,11 +2087,10 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Xinches = GetGrid().GetMajorGrid().dCX;
 		break;
 	case SB_ENDSCROLL:
-		printf("End ");
 		Update = FALSE;
 		break;
 	}
-	printf("nPos = %d  Xinches = %8.3lf  Update=%d\n", nPos, Xinches,Update);
+//	printf("nPos = %d  Xinches = %8.3lf  Update=%d\n", nPos, Xinches,Update);
 	DoHScroll(Xinches, Update);
 	CChildViewBase::OnHScroll(nSBCode, nPos, pScrollBar);
 }
@@ -2635,7 +2631,7 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 		pDoc->SetCurrentOrigin(pCORG);
 		GetRulerInfo().SetOrigin(pCORG);
 		PostMessageToRulers(RW_ZOOM);
-		printf("Origin Changed\n");
+//		printf("Origin Changed\n");
 		break;
 	}
 	return 0;
@@ -2757,6 +2753,7 @@ LRESULT CFrontCadView::OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam)
 void CFrontCadView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
 	int Index;
+	CCadObject* pParent;
 
 	CChildViewBase::OnMenuSelect(nItemID, nFlags, hSysMenu);
 
@@ -2764,17 +2761,39 @@ void CFrontCadView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 	{
 		Index = nItemID - POPUP_MENU_ITEM_IDS;
 		if (nLastItemIndex >= 0)
+		{
 			m_ppObjList[nLastItemIndex]->SetSelected(FALSE);
+			pParent = m_ppObjList[nLastItemIndex]->GetParent();
+			while (pParent)
+			{
+				pParent->SetSelected(FALSE);
+				pParent = pParent->GetParent();
+			}
+		}
 		nLastItemIndex = Index;
 		m_ppObjList[Index]->SetSelected(TRUE);
+//		printf(">>> Set Selected %d  ID:%d Sel=%d\n", Index, m_ppObjList[Index]->GetId(), m_ppObjList[Index] ->IsSelected());
+		pParent = m_ppObjList[Index]->GetParent();
+		while (pParent)
+		{
+			pParent->SetSelected(TRUE);
+			pParent = pParent->GetParent();
+		}
+//		m_ppObjList[Index]->Print(2);
 	}
 	else if ((nItemID == 0) && (nLastItemIndex >= 0) &&  m_ppObjList)
 	{
 		m_ppObjList[nLastItemIndex]->SetSelected(FALSE);
-		nLastItemIndex = -1;
+		pParent = m_ppObjList[nLastItemIndex]->GetParent();
+		while (pParent)
+		{
+			pParent->SetSelected(FALSE);
+			pParent = pParent->GetParent();
+		}
 		m_ppObjList = 0;
+		nLastItemIndex = -1;
 	}
-	printf("Menu %d\n", nItemID);
+	Invalidate();
 }
 
 UINT CFrontCadView::CreateObjectSelectionMenu(
@@ -2801,5 +2820,6 @@ UINT CFrontCadView::CreateObjectSelectionMenu(
 		pointLoc.y,
 		this
 	);
+	m_ppObjList = 0;
 	return Id;
 }

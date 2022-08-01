@@ -11,7 +11,7 @@ CCadBitmap::CCadBitmap():CCadObject()
 		m_LastAttributes.CopyFrom(GETAPP.GetBitmapAttributes());
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 	}
-	CopyAttributesFrom(&m_CurrentAttributes);
+CopyAttributesFrom(&m_CurrentAttributes);
 }
 
 CCadBitmap::~CCadBitmap()
@@ -54,7 +54,7 @@ void CCadBitmap::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadBitmap::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadBitmap::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -81,15 +81,15 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	// return value:none
 	//--------------------------------------------------
 	CADObjectTypes Obj;
-	CPen penLine, *ppenOld;
+	CPen penLine, * ppenOld;
 	CBrush brushFill, * pbrushOld;
 	CRect rect;
 	CDC bmDC;
-	CBitmap *bitmapOld;
+	CBitmap* bitmapOld;
 
 	if (IsRenderEnabled())
 	{
-		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE,0);
+		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
 		rect = Obj.pCadRect->ToCRect(ULHC, Scale);
 
 		switch (mode.DrawMode)
@@ -99,41 +99,27 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			bitmapOld = bmDC.SelectObject(this->m_pBM);
 			pDC->StretchBlt(
 				rect.left,
-				rect.top, 
-				rect.Width(), 
-				rect.Height(), 
-				&bmDC, 
-				0, 
-				0, 
-				GetAttributes().m_BitmapSize.ToCSize().cx,
-				GetAttributes().m_BitmapSize.ToCSize().cy, 
-				SRCCOPY
-			);
-			bmDC.SelectObject(bitmapOld);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-			ppenOld = pDC->SelectObject(&penLine);
-			brushFill.CreateStockObject(NULL_BRUSH);
-			pbrushOld = pDC->SelectObject(&brushFill);
-			bmDC.CreateCompatibleDC(pDC);
-			bitmapOld = bmDC.SelectObject(this->m_pBM);
-			pDC->StretchBlt(
-				rect.left,
 				rect.top,
 				rect.Width(),
-				rect.Height(), 
-				&bmDC, 
-				0, 
-				0, 
+				rect.Height(),
+				&bmDC,
+				0,
+				0,
 				GetAttributes().m_BitmapSize.ToCSize().cx,
 				GetAttributes().m_BitmapSize.ToCSize().cy,
 				SRCCOPY
 			);
 			bmDC.SelectObject(bitmapOld);
-			pDC->Rectangle(&rect);
-			pDC->SelectObject(pbrushOld);
-			pDC->SelectObject(ppenOld);
+			if (IsSelected())
+			{
+				penLine.CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+				ppenOld = pDC->SelectObject(&penLine);
+				brushFill.CreateStockObject(NULL_BRUSH);
+				pbrushOld = pDC->SelectObject(&brushFill);
+				pDC->Rectangle(&rect);
+				pDC->SelectObject(pbrushOld);
+				pDC->SelectObject(ppenOld);
+			}
 			break;
 		case ObjectDrawMode::SKETCH:
 			penLine.CreatePen(PS_DOT, 1, RGB(255, 0, 0));

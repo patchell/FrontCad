@@ -121,29 +121,17 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	{
 		Lw = int(Scale.m_ScaleX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
+		CreateThePen(mode, &penLine, Lw);
+		pOld = pDC->SelectObject(&penLine);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-			pOld = pDC->SelectObject(&penLine);
 			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 			pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 			pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-			pDC->SelectObject(pOld);
-			break;
-		case ObjectDrawMode::SELECTED:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
-			pOld = pDC->SelectObject(&penLine);
-			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-			pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
-			pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
-			pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-			pDC->SelectObject(pOld);
 			break;
 		case ObjectDrawMode::SKETCH:
-			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorSelected);
-			pOld = pDC->SelectObject(&penLine);
 			switch (GetCurrentDrawState())
 			{
 			case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
@@ -155,11 +143,11 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-				pDC->SelectObject(pOld);
 				break;
 			}//end of switch draw state
 			break;
 		}	//end of switch(mode)
+		pDC->SelectObject(pOld);
 		//-------------------------------------
 		// Draw the Children
 		//-------------------------------------
@@ -435,9 +423,9 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			1
 		);
 		ObjectKinds = OBJKIND_SELECT | OBJKIND_POINT;
-		MousePos.Print("Mouse Position");
+//		MousePos.Print("Mouse Position");
 		SnapToObject(MousePos, ObjectKinds, ObjP1.pCadObject, TRUE);
-		MousePos.Print("Mouse Position Snapped");
+//		MousePos.Print("Mouse Position Snapped");
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
@@ -676,10 +664,13 @@ BOOL CCadLine::SnapToObject(
 	// wants to snap to.
 	//-------------------------------------------
 	BOOL Result = FALSE;
-	
+	UINT Id;
+
 	CCadObject* ppObjectList[8];
 	CFrontCadDoc* pDoc;
 	int NumberOfObjects;
+	CPoint pointMouse;
+	CScale PixelsPerInch;
 
 	pDoc = GETVIEW->GetDocument();
 	NumberOfObjects = pDoc->PointInObjectAndSelect(
@@ -702,6 +693,18 @@ BOOL CCadLine::SnapToObject(
 		//----------------------------
 		// Create a popup menu
 		//----------------------------
+		PixelsPerInch = GETVIEW->GetGrid().GetPixelsPerInch();
+		pointMouse = MousePos.ToPixelPoint(
+			GETVIEW->GetRulerInfo().GetUpperLeft(),
+			PixelsPerInch.GetScaleX(),
+			PixelsPerInch.GetScaleY()
+		);
+		GETVIEW->ClientToScreen(&pointMouse);
+		Id = GETVIEW->CreateObjectSelectionMenu(
+			ppObjectList,
+			NumberOfObjects,
+			pointMouse
+		);
 	}
 	else
 		Result = FALSE;
@@ -716,4 +719,20 @@ int CCadLine::EditProperties(void)
 	Dlg.SetLine(this);
 	Id = Dlg.DoModal();
 	return Id;
+}
+
+void CCadLine::CreateThePen(MODE mode, CPen* pen, int Lw)
+{
+	switch (mode.DrawMode)
+	{
+	case ObjectDrawMode::FINAL:
+		if (IsSelected())
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+		else
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		break;
+	case ObjectDrawMode::SKETCH:
+		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
+		break;
+	}
 }

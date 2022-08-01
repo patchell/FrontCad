@@ -121,7 +121,6 @@ void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
-		case ObjectDrawMode::SELECTED:
 		case ObjectDrawMode::SKETCH:
 			pDC->SelectStockObject(NULL_BRUSH);
 			pOldPen = pDC->SelectObject(&penLine);
@@ -409,13 +408,13 @@ void CCadHoleRnd1Flat::CreateThePen(MODE mode, CPen* pen, int Lw)
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:
-		pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
-		break;
-	case ObjectDrawMode::SELECTED:
-		pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		if(IsSelected())
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
+		else
+			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 		break;
 	case ObjectDrawMode::SKETCH:
-		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorLine);
+		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
 		break;
 	}
 }

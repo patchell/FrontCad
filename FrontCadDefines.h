@@ -340,36 +340,16 @@ constexpr auto RECT_SUBSUB_UR = 4;
 enum class ObjectDrawMode {
 	NOP = -1,
 	FINAL=0,
-	SELECTED,
 	SKETCH,
 	ARCSTART,
 	ARCEND,
 	GRABBED,
-	ENDDRAWMODE
-};
-
-enum class SelectedPointsMode {
-	NOP,
-	POINT_ENCLOSED_IN_RECT,
-	POINT_FILLED_RECT,
-	POINT_BOTH_RECT_FILLED,
-};
-
-enum class SelectedLinesMode {
-	NOP,
-	MIDPOINT,
-	HIGHLIGHT,
-	BOTH
 };
 
 struct MODE {
-	ObjectDrawMode DrawMode : 4;
-	SelectedPointsMode PointsMode : 2;
-	SelectedLinesMode LinesMode : 2;
+	ObjectDrawMode DrawMode;
 	MODE() {
 		DrawMode = ObjectDrawMode::NOP;
-		PointsMode = SelectedPointsMode::NOP;
-		LinesMode = SelectedLinesMode::NOP;
 	}
 };
 

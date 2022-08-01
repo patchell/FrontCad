@@ -108,20 +108,19 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:
-		penLine.CreatePen(PS_SOLID, Lw, GetLineColor());
-		if (GetTransparent())
+		if (IsSelected())
+		{
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
 			brushFill.CreateStockObject(NULL_BRUSH);
+		}
 		else
-			brushFill.CreateSolidBrush(GetFillColor());
-		pOldPen = pDC->SelectObject(&penLine);
-		pOldBr = pDC->SelectObject(&brushFill);
-		pDC->Ellipse(&rect);
-		pDC->SelectObject(pOldBr);
-		pDC->SelectObject(pOldPen);
-		break;
-	case ObjectDrawMode::SELECTED:
-		penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
-		brushFill.CreateStockObject(NULL_BRUSH);
+		{
+			penLine.CreatePen(PS_SOLID, Lw, GetLineColor());
+			if (GetTransparent())
+				brushFill.CreateStockObject(NULL_BRUSH);
+			else
+				brushFill.CreateSolidBrush(GetFillColor());
+		}
 		pOldPen = pDC->SelectObject(&penLine);
 		pOldBr = pDC->SelectObject(&brushFill);
 		pDC->Ellipse(&rect);

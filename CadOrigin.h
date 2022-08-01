@@ -44,6 +44,7 @@ public:
 	void CopyAttributesTo(SOriginAttributes* pAttrb);
 	void CopyAttributesFrom(SOriginAttributes* pAttrb);
 	virtual int EditProperties();
+	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
 	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }

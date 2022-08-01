@@ -130,7 +130,7 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			OldMode = pDC->SetBkMode(OPAQUE);
 		pDC->TextOutW(P1.x, P1.y, GetText());
 		pDC->SetBkMode(OldMode);
-		if (mode.DrawMode == ObjectDrawMode::SELECTED)
+		if (IsSelected())
 		{
 			RECT.pCadObject = FindChildObject(ObjectType::RECT, SubType::TEXT_RECT, 0);
 			penLine.CreatePen(PS_SOLID, 2, GetAttributes().m_colorSelected);

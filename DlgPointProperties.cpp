@@ -37,7 +37,7 @@ BOOL CDlgPointProperties::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	m_Static_NormalColor.SetColor(m_pPoint->GetAttributes().m_colorNormal);
+	m_Static_NormalColor.SetColor(m_pPoint->GetAttributes().m_colorLine);
 	m_Static_SelectedColor.SetColor(m_pPoint->GetAttributes().m_colorSelected);
 	return TRUE;  
 }
@@ -47,7 +47,7 @@ void CDlgPointProperties::OnOK()
 {
 	if (m_pPoint)
 	{
-		m_pPoint->GetAttributes().m_colorNormal = m_Static_NormalColor.GetColor();
+		m_pPoint->GetAttributes().m_colorLine = m_Static_NormalColor.GetColor();
 		m_pPoint->GetAttributes().m_colorSelected = m_Static_SelectedColor.GetColor();
 	}
 	CDialog::OnOK();

@@ -80,6 +80,21 @@ CCadObject::~CCadObject()
 	//--------------------------------------------------
 }
 
+int CCadObject::Print(int Indent)
+{
+	char* s = new char[256];
+	char* sI = new char[256];
+	CCadObject* pParent;
+	pParent = GetParent();
+	if (pParent) Indent = pParent->Print(Indent);
+	GETAPP.MkIndentString(sI, Indent);
+	printf("%s%s:%d Selected=%d\n",sI,GETAPP.ConvertCStringToChar(s,GetTypeString()),GetId(), IsSelected());
+	delete[] sI;
+	delete[] s;
+	Indent += 2;
+	return Indent;
+}
+
 void CCadObject::Move(CDoubleSize Diff)
 {
 	//--------------------------------------------------
