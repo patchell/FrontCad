@@ -5,6 +5,63 @@
 #define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
 
 //---------------------------------------
+// Snap Order Class
+//---------------------------------------
+enum class SnapType {
+	SNAP_NONE,
+	SNAP_GRID,
+	SNAP_POINT,
+	SNAP_LINE,
+	SNAP_CENTER,
+	SNAP_TANGENT
+};
+struct SnapOrder
+{
+	CString m_csName;
+	SnapType m_Id;
+	UINT m_Order;
+	BOOL m_Enabled;
+	SnapOrder* m_pNext;
+	SnapOrder* m_pPrev;
+	SnapOrder() {
+		m_Id = SnapType::SNAP_NONE;
+		m_Order = 0;
+		m_Enabled = FALSE;
+		m_pNext = 0;
+		m_pPrev = 0;
+	}
+	SnapOrder* GetNext() { return m_pNext; }
+	void SetNext(SnapOrder* pSO) { m_pNext = pSO; }
+	SnapOrder* GetPrev() { return m_pPrev; }
+	void SetPrev(SnapOrder* pSO) { m_pPrev = pSO; }
+	int GetIndex(CString csSearchFor) {
+
+	}
+};
+
+class SnapOrderList {
+	SnapOrder* m_pHead;
+	SnapOrder* m_pTail;
+	UINT m_nNumberOfObjects;
+public:
+	SnapOrderList() {
+		m_pHead = 0;
+		m_pTail = 0;
+		m_nNumberOfObjects = 0;
+	}
+	void SetHead(SnapOrder* pSO) { m_pHead = pSO; }
+	SnapOrder* GetHead() { return m_pHead; }
+	void SetTail(SnapOrder* pSO) { m_pTail = pSO; }
+	SnapOrder* GetTail() { return m_pTail; }
+	UINT GetNumberOfSnaps() { return m_nNumberOfObjects; }
+	void SetNumberOfSnaps(UINT n) { m_nNumberOfObjects = n; }
+	void AddSnapAtHead(SnapOrder* pSO);
+	void AddSnapAtTail(SnapOrder* pSO);
+	BOOL InsertSnap(SnapOrder* pPrevSO, SnapOrder* pSO);
+	SnapOrder* Remove(SnapOrder* pSO, BOOL bDelete = FALSE);
+};
+
+//---------------------------------------
 // IDs for context menus
 //---------------------------------------
 
@@ -264,6 +321,9 @@ constexpr auto OBJKIND_ROUNDEDRECT = 0x00020000;
 constexpr auto OBJKIND_TEXT = 0x00040000;
 constexpr auto OBJKIND_CHOOSE = 0x40000000;
 constexpr auto OBJKIND_SELECT = 0x80000000;
+
+
+constexpr auto MAX_SNAPS = 16;
 
 //----------------------------------
 // CCadObject derived types

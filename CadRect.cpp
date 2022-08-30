@@ -332,6 +332,16 @@ void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BO
 				goto exit;	//error
 		}
 	}	//end of for loop
+	pPoint = (CCadPoint*)FindChildObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		1
+	);
+	if (pPoint)
+	{
+		pPoint->LineTo(pDC, ULHC, Scale);
+		pPoint->Draw(pDC, mode, ULHC, Scale);
+	}
 
 exit:
 	return;
@@ -345,16 +355,23 @@ void CCadRect::FillRect(
 	COLORREF colorBoarder
 )
 {
-	((CCadPoint*)(FindChildObject(
+	CCadPoint* pPoint;
+
+	pPoint = (CCadPoint*)(FindChildObject(
 		ObjectType::POINT,
 		SubType::CENTERPOINT,
 		SUBSUBTYPE_ANY
-	)))->FloodFill(
+	));
+	if (pPoint)
+	{
+		pPoint->Print("Rect Center Point");
+		pPoint->FloodFill(
 			pDC,
 			colorBoarder,
 			ULHC,
 			Scale
-	);
+		);
+	}
 }
 
 void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
@@ -380,7 +397,7 @@ void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 		MODE pointMode = mode;;
 		COLORREF colorBoarder;
 
-		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
+		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.dSX);
 		if (Lw < 1)
 			Lw = 1;
 		colorBoarder = CreateThePen(mode, &penLine, Lw);
@@ -743,6 +760,7 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
+		MousePos.Print("Rect Point 1");
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
 		break;
@@ -766,7 +784,8 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 			//----------------------------------------------
 			// Just a regular orthoganol Rectangle
 			//---------------------------------------------
-			GETVIEW->GetDocument()->AddObjectAtTail(this);
+			MousePos.Print("Rect Point 2");
+				GETVIEW->GetDocument()->AddObjectAtTail(this);
 			Obj.pCadRect = new CCadRect;
 			Obj.pCadRect->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 			GETVIEW->EnableAutoScroll(FALSE);
@@ -865,7 +884,7 @@ void CCadRect::CreateTheBrush(MODE mode, CBrush* brushFill)
 		if (IsSelected())
 			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
 		else
-			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
+			brushFill->CreateSolidBrush(GetAttributes().m_colorFill);
 		break;
 	case ObjectDrawMode::SKETCH:
 		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);

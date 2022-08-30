@@ -8,25 +8,25 @@ class CScale :public SCALE
 {
 public:
 	CScale() {
-		m_ScaleX = 0.0;
-		m_ScaleY = 0.0;
+		dSX = 0.0;
+		dSY = 0.0;
 	};
 	CScale(double x, double y) {
-		m_ScaleX = x;
-		m_ScaleY = y;
+		dSX = x;
+		dSY = y;
 	}
 	CScale(double xy) {
-		m_ScaleX = xy;
-		m_ScaleY = xy;
+		dSX = xy;
+		dSY = xy;
 	}
 	virtual ~CScale() {}
-	double GetScaleX() { return m_ScaleX; }
-	double GetScaleY() { return m_ScaleY; }
+	double GetScaleX() { return dSX; }
+	double GetScaleY() { return dSY; }
 	operator SCALE() const  {
 		SCALE Result;
 
-		Result.m_ScaleX = m_ScaleX;
-		Result.m_ScaleY = m_ScaleY;
+		Result.dSX = dSX;
+		Result.dSY = dSY;
 		return Result;
 	}
 };

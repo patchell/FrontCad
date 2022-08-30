@@ -29,6 +29,7 @@ class CFrontCadView : public CChildViewBase
 	CCadOrigin m_DefaultOrigin;
 	//----------------SnapGrid et all ------------------------
 	CGrid m_Grid;
+	UINT m_SnapOrder[MAX_SNAPS];
 	//----------------- Rulers --------------------------------------------
 	CRulerInfo m_RulerInfo;
 	//----------------Scrolling and Document View ---------------------------
@@ -396,5 +397,8 @@ public:
 	afx_msg LRESULT OnPuMenuSelectedIndex(WPARAM index, LPARAM lparam);
 	afx_msg void OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu);
 	UINT CreateObjectSelectionMenu(CCadObject** ppObjList, UINT n, CPoint pointLoc);
+	CCadObject* SnapToObject(DOUBLEPOINT MousePos, UINT KindsToSnapTo, CCadObject* pExcludeObject, BOOL bChoose);
+	afx_msg void OnSnapSnaporder();
+	afx_msg void OnUpdateSnapSnaporder(CCmdUI* pCmdUI);
 };
 

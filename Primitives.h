@@ -2,11 +2,14 @@
 
 //----------------------------------
 struct SCALE {
-	double m_ScaleX;
-	double m_ScaleY;
+	double dSX;
+	double dSY;
 	SCALE() {
-		m_ScaleX = 0.0; 
-		m_ScaleY = 0.0;
+		dSX = 0.0; 
+		dSY = 0.0;
+	}
+	void Print(const char* s) {
+		printf("%s (dSX,dSY)=(%7.3lf,%7.3lf)\n", s, dSX, dSY);
 	}
 } ;
 
@@ -77,6 +80,7 @@ struct DOUBLEPOINT {
 	void Print(const char* s) {
 		printf("%s:POINT(%7.3lf,%7.3lf\n", s, dX, dY);
 	}
+	DOUBLEPOINT Raw(CPoint p, DOUBLEPOINT ULHC, SCALE Scale);
 };	//end of class DOUBLEPOINT
 
 //---------------------------------------
@@ -85,8 +89,8 @@ struct DOUBLEPOINT {
 
 inline DOUBLEPOINT operator * (DOUBLEPOINT pt, SCALE& scale) {
 	DOUBLEPOINT result;
-	result.dX = pt.dX * scale.m_ScaleX;
-	result.dY = pt.dY * scale.m_ScaleY;
+	result.dX = pt.dX * scale.dSX;
+	result.dY = pt.dY * scale.dSY;
 	return result;
 }
 

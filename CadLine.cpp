@@ -119,7 +119,7 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Lw = int(Scale.m_ScaleX * GetLineWidth());
+		Lw = int(Scale.dSX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
 		CreateThePen(mode, &penLine, Lw);
 		pOld = pDC->SelectObject(&penLine);
@@ -378,7 +378,6 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	UINT Id;
-	UINT ObjectKinds;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
@@ -422,10 +421,6 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			1
 		);
-		ObjectKinds = OBJKIND_SELECT | OBJKIND_POINT;
-//		MousePos.Print("Mouse Position");
-		SnapToObject(MousePos, ObjectKinds, ObjP1.pCadObject, TRUE);
-//		MousePos.Print("Mouse Position Snapped");
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
@@ -535,6 +530,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	DOUBLEPOINT SecondPoint;
 	CADObjectTypes ObjP1, ObjP2;
 	UINT KindsOfObjects = 0;
+	CCadObject* pSnapedObject;
 
 	switch (DrawState)
 	{
@@ -547,7 +543,26 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT | OBJKIND_SELECT;
-			if (SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
+			pSnapedObject = GETVIEW->SnapToObject(MousePos, KindsOfObjects, this, FALSE);
+			if (pSnapedObject)
+			{
+				//--------------------------------
+				// We know where we want to go so
+				// we need to do the default
+				// processing for
+				// WAITFORMOUSE_DOWN_LBUTTON_UP
+				// and go onto
+				// PLACE_LBUTTON_DOWN
+				//-------------------------------
+				if (pSnapedObject->GetType() == ObjectType::POINT)
+				{
+					CCadPoint* pCP = (CCadPoint*)pSnapedObject;
+					ObjP1.pCadPoint->SetPoint(pCP->GetPoint());
+					DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
+					GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
+				}
+			}
+			else
 			{
 				ObjP1.pCadPoint->SetPoint(MousePos);
 			}
@@ -568,7 +583,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		if (GetAttributes().m_P1_SNAP_POINT)
 		{
 			KindsOfObjects = OBJKIND_POINT | OBJKIND_SELECT;
-			if (SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
+			if (GETVIEW->SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
 			{
 				ObjP1.pCadPoint->SetPoint(MousePos);
 			}
@@ -648,67 +663,6 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	// Update enclosing rectangle
 	//------------------------------------
 	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
-}
-
-BOOL CCadLine::SnapToObject(
-	DOUBLEPOINT& MousePos, 
-	UINT KindsToSnapTo, 
-	CCadObject *pExcludeObject,
-	BOOL bChoose
-)
-{
-	//-------------------------------------------
-	// SnapToObject
-	//	We check to see if the mouse cursor is
-	// near an object that this particular object
-	// wants to snap to.
-	//-------------------------------------------
-	BOOL Result = FALSE;
-	UINT Id;
-
-	CCadObject* ppObjectList[8];
-	CFrontCadDoc* pDoc;
-	int NumberOfObjects;
-	CPoint pointMouse;
-	CScale PixelsPerInch;
-
-	pDoc = GETVIEW->GetDocument();
-	NumberOfObjects = pDoc->PointInObjectAndSelect(
-		MousePos,
-		pExcludeObject,
-		ppObjectList, 
-		8,
-		KindsToSnapTo
-	);
-	if (NumberOfObjects == 1)
-	{
-		if(KindsToSnapTo & OBJKIND_SELECT)
-			MousePos = ((CCadPoint*)(ppObjectList[0]))->GetPoint();
-		Result = TRUE;
-	}
-	else if (NumberOfObjects > 1)
-	{
-		//----------------------------
-		// This is going to be tricky
-		//----------------------------
-		// Create a popup menu
-		//----------------------------
-		PixelsPerInch = GETVIEW->GetGrid().GetPixelsPerInch();
-		pointMouse = MousePos.ToPixelPoint(
-			GETVIEW->GetRulerInfo().GetUpperLeft(),
-			PixelsPerInch.GetScaleX(),
-			PixelsPerInch.GetScaleY()
-		);
-		GETVIEW->ClientToScreen(&pointMouse);
-		Id = GETVIEW->CreateObjectSelectionMenu(
-			ppObjectList,
-			NumberOfObjects,
-			pointMouse
-		);
-	}
-	else
-		Result = FALSE;
-	return Result;
 }
 
 int CCadLine::EditProperties(void)

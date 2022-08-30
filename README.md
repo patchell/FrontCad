@@ -68,3 +68,11 @@ Wow, what an ordeal.  Since May, I have made a lot of changes because things jus
 just getting too cumbersom, so I made some basic changes to the drawing objects that should, hopefully, make things a bit better.
 With this push, it is at the very least drawing lines.  I did not do any pushes so I at least knew that I had a working
 copy of the program.
+
+August 30, 2022
+
+I took a bit of a vacation from FrontCad.  I am truing to figure out how I should implement Snaps.
+I thought I had a good way to do it, but it was totally bogus.
+Anyway, today, I made drawing a rectangle work a lot better.
+
+

@@ -98,7 +98,7 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			P1.ToPixelPoint(ULHC, Scale), 
 			P2.ToPixelPoint(ULHC, Scale)
 		);
-		Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * GetAttributes().m_LineWidth);
+		Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetAttributes().m_LineWidth);
 		if (Lw < 1) Lw = 1;
 
 		switch (mode.DrawMode)

@@ -115,7 +115,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 
 	if (IsRenderEnabled())
 	{
-		Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.m_ScaleX);
+		Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.dSX);
 		if (Lw < 1)
 			Lw = 1;
 		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);

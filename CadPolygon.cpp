@@ -216,7 +216,7 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		if ((Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * m_Attrib.m_LineWidth)) < 1) 
+		if ((Lw = GETAPP.RoundDoubleToInt(Scale.dSX * m_Attrib.m_LineWidth)) < 1)
 			Lw = 1;
 
 		CreateThePen(mode, &penLine, Lw);

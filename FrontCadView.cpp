@@ -132,6 +132,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_WM_SYSKEYDOWN()
 	ON_WM_SYSKEYUP()
 	ON_WM_MENUSELECT()
+	ON_COMMAND(ID_SNAP_SNAPORDER, &CFrontCadView::OnSnapSnaporder)
+	ON_UPDATE_COMMAND_UI(ID_SNAP_SNAPORDER, &CFrontCadView::OnUpdateSnapSnaporder)
 END_MESSAGE_MAP()
 
 
@@ -1400,11 +1402,24 @@ void CFrontCadView::OnUpdateSnapSnaptoobject(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnSnapSnaptotangent()
 {
-	// TODO: Add your command handler code here
 }
 
 
 void CFrontCadView::OnUpdateSnapSnaptotangent(CCmdUI* pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
+}
+
+
+void CFrontCadView::OnSnapSnaporder()
+{
+	CDlgSnapOrder Dlg;
+
+	Dlg.DoModal();
+}
+
+
+void CFrontCadView::OnUpdateSnapSnaporder(CCmdUI* pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
 }
@@ -2225,59 +2240,6 @@ BOOL CFrontCadView::PostMessageToRulers(UINT msg, LPARAM data)
 	return rV;
 }
 
-
-DOUBLEPOINT CFrontCadView::ConvertMousePosition(
-	CPoint MousePoint,	//mouse position client ref
-	DOUBLEPOINT ULHC,	//upper left corner of client in inches
-	CScale Scale,		//Inches per Pixel
-	CDoubleSize SnapGrid,
-	BOOL SnapGridIsEnabled
-)
-{
-	//-------------------------------------------------
-	// ConvertMousePosition
-	//		This method is used to calculate the mouse
-	// psition on the worksheet.  Becasue the worksheet
-	// is much bigger than the size of the screen, the
-	// actual mouse position is the combination of
-	// the mouse position in the view and the current
-	// scroll position of the view.
-	//
-	// parameters:
-	//	MousePoint......Position of mouse pointer in view
-	//  ULHC............Upper Left Hand Corner Coordinate
-	//	Scale...........Inches Per Pixel Scale
-	//	SnapGrid........Snap to closest.
-	//	SnapGridIsEnabled..Snap if true
-	// 
-	// returns:
-	//		The Value, in inches, of the point.
-	//-------------------------------------------------
-	// Add the Upper Left Hand corner to the mouse point
-	// the units of this value will be "pixels"
-	//----------------------------------------------
-	// Convert from pixels to inches
-	//-----------------------------------------------
-	double X, Y;
-	DOUBLEPOINT MousePos;
-
-	X = double(MousePoint.x) * Scale.GetScaleX() + ULHC.dX;
-	Y = double(MousePoint.y) * Scale.GetScaleY() + ULHC.dY;
-	if (SnapGridIsEnabled)
-	{
-		X = GETAPP.Snap(X, SnapGrid.dCX);
-		Y = GETAPP.Snap(Y, SnapGrid.dCY);
-	}
-	else
-		printf("Not Snapped\n");
-	MousePos = DOUBLEPOINT(X, Y);
-	m_DeltaMousePos = MousePos - m_LastMousePos;
-	m_LastMousePos = m_CurMousePos;
-	m_CurMousePos = MousePos;
-	return m_CurMousePos;
-}
-
-
 void CFrontCadView::DrawCursor(
 	CDC* pDC, 
 	DOUBLEPOINT pos,// Cursor Position
@@ -2803,7 +2765,7 @@ UINT CFrontCadView::CreateObjectSelectionMenu(
 )
 {
 	CMenu Menu;
-	int i;
+	UINT i;
 	UINT Id;
 
 	m_ppObjList = ppObjList;
@@ -2823,3 +2785,126 @@ UINT CFrontCadView::CreateObjectSelectionMenu(
 	m_ppObjList = 0;
 	return Id;
 }
+
+
+CCadObject* CFrontCadView::SnapToObject(
+	DOUBLEPOINT MousePos,
+	UINT KindsToSnapTo,
+	CCadObject* pExcludeObject,
+	BOOL bChoose
+)
+{
+	//-------------------------------------------
+	// SnapToObject
+	//	We check to see if the mouse cursor is
+	// near an object that this particular object
+	// wants to snap to.
+	// 
+	// Parameters:
+	// MousePos........Current Cursor location
+	// KindsToSnapTo...Kind of objects to snap to
+	// pExcludeObject..Exclude this object and
+	//                 All of its children from
+	//                 Being Snapped to
+	// bChoose.........???
+	// 
+	// return: NULL if nothing was found
+	//         or a Pointer to the objeect that
+	//	       was found
+	//-------------------------------------------
+	CCadObject* pResult = NULL;
+	UINT Id;
+	CCadObject* ppObjectList[8];
+	CFrontCadDoc* pDoc;
+	int NumberOfObjects;
+	CPoint pointMouse;
+	CScale PixelsPerInch;
+
+	pDoc = GETVIEW->GetDocument();
+	NumberOfObjects = pDoc->PointInObjectAndSelect(
+		MousePos,
+		pExcludeObject,
+		ppObjectList,
+		8,
+		KindsToSnapTo
+	);
+	if (NumberOfObjects == 1)
+	{
+		if (KindsToSnapTo & OBJKIND_SELECT)
+			pResult = ppObjectList[0];
+
+	}
+	else if (NumberOfObjects > 1)
+	{
+		//----------------------------
+		// This is going to be tricky
+		//----------------------------
+		// Create a popup menu
+		//----------------------------
+		PixelsPerInch = GETVIEW->GetGrid().GetPixelsPerInch();
+		pointMouse = MousePos.ToPixelPoint(
+			GETVIEW->GetRulerInfo().GetUpperLeft(),
+			PixelsPerInch.GetScaleX(),
+			PixelsPerInch.GetScaleY()
+		);
+		GETVIEW->ClientToScreen(&pointMouse);
+		Id = GETVIEW->CreateObjectSelectionMenu(
+			ppObjectList,
+			NumberOfObjects,
+			pointMouse
+		);
+		if (Id)
+		{
+			Id -= POPUP_MENU_ITEM_IDS;
+			pResult = ppObjectList[Id];
+		}
+	}
+	else
+		pResult = NULL;
+	return pResult;
+}
+
+DOUBLEPOINT CFrontCadView::ConvertMousePosition(
+	CPoint MousePoint,	//mouse position client ref
+	DOUBLEPOINT ULHC,	//upper left corner of client in inches
+	CScale Scale,		//Inches per Pixel
+	CDoubleSize SnapGrid,
+	BOOL SnapGridIsEnabled
+)
+{
+	//-------------------------------------------------
+	// ConvertMousePosition
+	//		This method is used to calculate the mouse
+	// psition on the worksheet.  Becasue the worksheet
+	// is much bigger than the size of the screen, the
+	// actual mouse position is the combination of
+	// the mouse position in the view and the current
+	// scroll position of the view.
+	//
+	// parameters:
+	//	MousePoint......Position of mouse pointer in view
+	//  ULHC............Upper Left Hand Corner Coordinate
+	//	Scale...........Inches Per Pixel Scale
+	//	SnapGrid........Snap to closest.
+	//	SnapGridIsEnabled..Snap if true
+	// 
+	// returns:
+	//		The Value, in inches, of the point.
+	//-------------------------------------------------
+	// Add the Upper Left Hand corner to the mouse point
+	// the units of this value will be "pixels"
+	//----------------------------------------------
+	// Convert from pixels to inches
+	//-----------------------------------------------
+	DOUBLEPOINT MousePos;
+
+	MousePos.Raw(MousePoint, ULHC, SCALE(Scale));
+//	MousePos.Print("RAW:");
+	MousePos.Snap(DOUBLESIZE(SnapGrid), SnapGridIsEnabled);
+	m_DeltaMousePos = MousePos - m_LastMousePos;
+	m_LastMousePos = m_CurMousePos;
+	m_CurMousePos = MousePos;
+	return m_CurMousePos;
+}
+
+

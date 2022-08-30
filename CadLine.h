@@ -46,12 +46,6 @@ public://public methodes
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual void ProcessZoom(CScale& InchesPerPixel);
-	BOOL SnapToObject(
-		DOUBLEPOINT& MousePos, 
-		UINT KindsToSnapTo,
-		CCadObject *pExcludeObject,
-		BOOL bChoose
-	);
 	virtual int EditProperties(void);
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	//-------------------------------------

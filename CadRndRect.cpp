@@ -102,7 +102,7 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.m_ScaleX);
+		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.dSX);
 		if (Lw < 1)
 			Lw = 1;
 		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);

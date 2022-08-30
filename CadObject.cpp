@@ -164,7 +164,7 @@ int CCadObject::PointInObjectAndSelect(
 		pObj = GetChildrenHead();	//get head of children
 		while (pObj)	//take a look at the children
 		{
-			if (this != pExcludeObject)
+			if (pObj != pExcludeObject)
 			{
 				index = pObj->PointInObjectAndSelect(
 					p,
@@ -510,3 +510,5 @@ CCadObject* CCadObject::FindDepParentObject(ObjectType Type, SubType SubType, UI
 	}
 	return pResult;
 }
+
+

@@ -359,7 +359,7 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Lw = int(Scale.m_ScaleX * GetLineWidth());
+		Lw = int(Scale.dSX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
 		switch (mode.DrawMode)
 		{

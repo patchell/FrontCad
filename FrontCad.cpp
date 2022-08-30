@@ -484,8 +484,8 @@ DOUBLEPOINT CFrontCadApp::CalcCenter(DOUBLEPOINT p1, DOUBLEPOINT p2)
 {
 	DOUBLEPOINT Result;
 
-	Result.dX = (p1.dX + p2.dX) / 2.0;
-	Result.dY = (p1.dY + p2.dY) / 2.0;
+	Result.dX = p1.dX + (p1.dX + p2.dX) / 2.0;
+	Result.dY = p1.dY +(p1.dY + p2.dY) / 2.0;
 	return Result;
 }
 
@@ -493,8 +493,10 @@ DOUBLEPOINT CFrontCadApp::CalcCenter(CCadPoint* pP1, CCadPoint* pP2)
 {
 	DOUBLEPOINT Result;
 
-	Result.dX = (pP2->GetX() - pP1->GetX()) / 2.0;
-	Result.dY = (pP2->GetY() - pP1->GetY()) / 2.0;
+	pP1->Print("P1");
+	pP2->Print("P2");
+	Result.dX = pP2->GetX() - (pP2->GetX() - pP1->GetX()) / 2.0;
+	Result.dY = pP2->GetY() - (pP2->GetY() - pP1->GetY()) / 2.0;
 	return Result;;
 }
 

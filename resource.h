@@ -14,7 +14,9 @@
 #define IDD_DIALOG_ORIGIN_ATTRIBUTES    318
 #define IDD_DIALOG_POINT_PROPERTIES     320
 #define IDD_DIALOG_DOUBLE_VALUE         322
+#define IDD_DIALOG_SNAP_ORDER           324
 #define IDD_DIALOG_TEXT_PROPERTIES      326
+#define IDD_DIALOG_SNAP_TYPE            327
 #define IDD_DIALOG_LINE_ATTRB           328
 #define IDD_DIALOG_RECTPROPERTIES       330
 #define IDD_DIALOG_ELLIPSE_PROPERTIES   332
@@ -73,26 +75,52 @@
 #define IDC_CHECK3                      1030
 #define IDC_CHECK_P2_TO_LINE            1030
 #define IDC_EDIT_LINEWIDTH              1031
+#define IDC_STATIC_SNAP_LEVEL_1         1031
+#define IDC_STATIC_SNAP_LEVEL_2         1032
 #define IDC_EDIT_CORNERRADIUS           1033
+#define IDC_STATIC_SNAP_LEVEL_3         1033
 #define IDC_EDIT_CORNERRADIUS_Y         1034
+#define IDC_STATIC_SNAP_LEVEL_4         1034
 #define IDC_CHECK_MAINTAIN_ASPECT_RATIO 1035
+#define IDC_STATIC_SNAP_LEVEL_5         1035
 #define IDC_EDIT_FILENAME               1036
+#define IDC_EDIT_SNAP_LEVEL_1           1036
 #define IDC_BUTTON_CHOOSE_FILE          1037
+#define IDC_EDIT_SNAP_LEVEL_2           1037
+#define IDC_EDIT_SNAP_LEVEL_3           1038
 #define IDC_EDIT_START_X                1039
+#define IDC_EDIT_SNAP_LEVEL_4           1039
 #define IDC_EDIT_START_Y                1040
+#define IDC_EDIT_SNAP_LEVEL_5           1040
 #define IDC_EDIT_END_X                  1041
+#define IDC_CHECK1                      1041
 #define IDC_EDIT_END_Y                  1042
+#define IDC_BUTTON1                     1042
 #define IDC_EDIT_START_ANGLE            1043
+#define IDC_CHECK2                      1043
+#define IDC_LISTSNAP_POOL               1043
 #define IDC_EDIT_END_ANGLE              1044
+#define IDC_BUTTON2                     1044
+#define IDC_LIST_SNAP_LIST              1044
 #define IDC_EDIT_L1                     1045
+#define IDC_CHECK4                      1045
+#define IDC_BUTTON6                     1045
+#define IDC_BUTTON_SNAP_LIST_FROM       1045
 #define IDC_EDIT_L2                     1046
+#define IDC_BUTTON3                     1046
+#define IDC_BUTTON_SNAP_SEL_TO          1046
 #define IDC_STATIC_COLOR                1047
+#define IDC_CHECK5                      1047
+#define IDC_BUTTON_MOVE_UP              1047
 #define IDC_EDIT_WIDTH                  1048
+#define IDC_BUTTON4                     1048
 #define IDC_RNDHOLE1FLAT_WIDTH          1049
 #define IDC_EDIT_NEWNAME                1049
 #define IDC_EDIT_ROUNDHOLE_RADIUS       1049
+#define IDC_CHECK6                      1049
 #define IDC_RNDHOLE1FLAT_RADIUS         1050
 #define IDC_EDIT_ROUNDHOLE_WIDTH        1050
+#define IDC_BUTTON5                     1050
 #define IDC_RNDHOLE1FLAT_FLAT           1051
 #define IIDC_CHECK_RECT_NOFILL          1057
 #define IDC_CHECK_ELLIPSE_NOFILL        1058
@@ -163,14 +191,15 @@
 #define ID_HOLE_ROUNDHOLE1FLAT          32815
 #define ID_HOLE_ROUNDHOLE2FLATS         32816
 #define ID_HOLE_SQUAREHOLE              32817
+#define ID_SNAP_SNAPORDER               32818
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        324
-#define _APS_NEXT_COMMAND_VALUE         32818
-#define _APS_NEXT_CONTROL_VALUE         1031
+#define _APS_NEXT_RESOURCE_VALUE        330
+#define _APS_NEXT_COMMAND_VALUE         32819
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

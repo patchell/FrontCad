@@ -228,6 +228,8 @@
     <ClInclude Include="DlgRndRectProperties.h" />
     <ClInclude Include="DlgRoundHoleProp.h" />
     <ClInclude Include="DlgSelectOrigin.h" />
+    <ClInclude Include="DlgSnapOrder.h" />
+    <ClInclude Include="DlgSnapSelector.h" />
     <ClInclude Include="DlgSquareHoleProp.h" />
     <ClInclude Include="DlgTextProperties.h" />
     <ClInclude Include="DoubleSize.h" />
@@ -304,6 +306,8 @@
     <ClCompile Include="DlgRndRectProperties.cpp" />
     <ClCompile Include="DlgRoundHoleProp.cpp" />
     <ClCompile Include="DlgSelectOrigin.cpp" />
+    <ClCompile Include="DlgSnapOrder.cpp" />
+    <ClCompile Include="DlgSnapSelector.cpp" />
     <ClCompile Include="DlgSquareHoleProp.cpp" />
     <ClCompile Include="DlgTextProperties.cpp" />
     <ClCompile Include="DoubleSize.cpp" />

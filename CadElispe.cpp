@@ -98,7 +98,7 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
-	Lw = GETAPP.RoundDoubleToInt(Scale.m_ScaleX * GetLineWidth());
+	Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetLineWidth());
 	if (Lw < 1) Lw = 1;
 
 	rect.SetRect(

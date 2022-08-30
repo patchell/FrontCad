@@ -245,6 +245,12 @@
     <ClInclude Include="DlgDoubleData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DlgSnapOrder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DlgSnapSelector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
@@ -452,6 +458,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DlgDoubleData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgSnapOrder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DlgSnapSelector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -181,8 +181,8 @@ public:
 	CCadPoint operator*(CScale const &s) {
 		CCadPoint result;
 
-		result.dX = dX * s.m_ScaleX;
-		result.dY = dY * s.m_ScaleY;
+		result.dX = dX * s.dSX;
+		result.dY = dY * s.dSY;
 		return result;
 	}
 	BOOL operator!=(CCadPoint const &p) {

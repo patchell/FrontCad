@@ -82,6 +82,8 @@
 #include "DlgOriginAttributes.h"
 #include "DlgPointProperties.h"
 #include "DlgDoubleData.h"
+#include "DlgSnapSelector.h"
+#include "DlgSnapOrder.h"
 //------------ Views -----------------------
 #include "Grid.h"
 #include "RulerInfo.h"
