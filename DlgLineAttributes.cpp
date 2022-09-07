@@ -53,16 +53,20 @@ BOOL CDlgLineAttributes::OnInitDialog()
 		m_Edit_LineLength.SetDecimalPlaces(3);
 		m_Edit_LineLength.SetDoubleValue(m_pLine->GetLength());
 		m_Check_Snap_P2_ToLine.SetCheck(m_pLine->GetAttributes().m_P2_FIXED_LEN_SNAP_LINE);
+		m_Edit_LineLength.SetFocus();
+		m_Edit_LineLength.SetSel(0,-1);
 	}
 	else
 	{
 		m_Check_LockLength.ShowWindow(SW_HIDE);
 		m_Edit_LineLength.ShowWindow(SW_HIDE);
 		m_Check_Snap_P2_ToLine.ShowWindow(SW_HIDE);
+		m_Edit_Width.SetFocus();
+		m_Edit_Width.SetSel(0, -1);
 	}
 	m_Check_Snap_P1_ToPoint.SetCheck(m_pLine->GetAttributes().m_P1_SNAP_POINT);
 	m_Check_Snap_P2_ToPoint.SetCheck(m_pLine->GetAttributes().m_P2_SNAP_POINT);
-	return TRUE;  // return TRUE unless you set the focus to a control
+	return FALSE;  // return TRUE unless you set the focus to a control
 }
 
 

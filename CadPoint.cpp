@@ -428,8 +428,8 @@ void CCadPoint::Reflect(CCadPoint* pReflect)
 
 	deltaX = dX - pReflect->dX;
 	deltaY = dY - pReflect->dY;
-	dX -= 2.0 * deltaX;
-	dY -= 2.0 * deltaY;
+	dX = pReflect->dX - deltaX;
+	dY = pReflect->dY - deltaY;
 }
 
 BOOL CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
@@ -440,6 +440,7 @@ BOOL CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
 	//-----------------------------------
 	double m = 0.0;
 	BOOL bVerticalSlope = FALSE;
+
 	if (dX != pPoint->dX)
 		*pSlope = (dY - pPoint->dY) / (dX - pPoint->dX);
 	else

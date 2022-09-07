@@ -493,7 +493,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			CopyAttributesTo(&m_CurrentAttributes);
 			m_AttributesDirty = TRUE;
 			DrawState = ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN;
-			GETAPP.UpdateStatusBar(_T("Line:Place Right Angle Point"));
+			GETAPP.UpdateStatusBar(_T("Fixed Len Line:Place Right Angle Point"));
 		}
 		else
 		{
@@ -531,7 +531,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
-		GETAPP.UpdateStatusBar(_T("Line:Second Point"));
+		GETAPP.UpdateStatusBar(_T("Fixed Len Line:Second Point"));
 		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
@@ -570,10 +570,44 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		pNewLine = new CCadLine;
 		pNewLine->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+		Corner.pCadPoint = new CCadPoint;
+		Corner.pCadPoint->SetSubType(SubType::RIGHTANGLE_VERTEX);
+		Corner.pCadPoint->SetOrigin(GetOrigin());
+		Corner.pCadPoint->SetParent(this);
+		pNewLine->AddObjectAtChildTail(Corner.pCadObject);
 		pNewLine->SetLength(GetLength());
 		GETVIEW->SetObjectTypes(pNewLine);
-		DrawState = ObjectDrawState::START_DRAWING_LINE_FIXED_LEN;
-		GETAPP.UpdateStatusBar(_T("Fixed Line:Place Set up Next Line"));
+
+		GETVIEW->GetCursorPosition(&pointSaved);
+		Id = pNewLine->EditProperties();
+		if (Id == IDOK)
+		{
+			CopyAttributesTo(&m_CurrentAttributes);
+			m_AttributesDirty = TRUE;
+			DrawState = ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN;
+			GETAPP.UpdateStatusBar(_T("Fixed Len Line:Place Right Angle Point"));
+		}
+		else
+		{
+			//------- End Drawing ------
+			if (m_AttributesDirty)
+			{
+				Id = GETVIEW->MessageBoxW(_T("Do you want to keep\nThe current\nAttributes?"), _T("Keep Or Toss"), MB_YESNO);
+				if (IDYES == Id)
+				{
+					m_CurrentAttributes.CopyTo(&m_LastAttributes);
+				}
+				m_AttributesDirty = FALSE;
+			}
+			if (GETVIEW->IsAutoScrollEnabled())
+				GETVIEW->EnableAutoScroll(FALSE);
+			DrawState = ObjectDrawState::NULL_STATE;
+			GETAPP.UpdateStatusBar(_T(""));
+		}
+		//---- Restore Cursor position
+		GETVIEW->SetCursorPosition(pointSaved);
+
+
 		SetCurrentDrawState(DrawState);
 		break;
 	}
@@ -723,7 +757,7 @@ BOOL CCadLine::CalcFixedPoint(
 	double b;
 	double a;
 	double m, mOrth;
-	double y, Y, yIntercept;
+	double y, yIntercept;
 	BOOL bHorizontalSlope;
 	BOOL bVerticalSlope;
 
@@ -732,13 +766,12 @@ BOOL CCadLine::CalcFixedPoint(
 		//-----------------------
 		// Simple case
 		//-----------------------
-		printf("Simple Case\n");
+		pPtP2->PointOnLineAtDistance(pPtP1, MousePos, m_Length);
 	}
 	else
 	{
 		a = pPtRtAgl->DistanceTo(pPtP1);
 		b = m_Length *m_Length - a * a;
-		printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
 		if (b < 0)	//this is an error
 		{
 			//------------------------------
@@ -756,10 +789,9 @@ BOOL CCadLine::CalcFixedPoint(
 			printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
 			bHorizontalSlope = pPtP1->OrthogonalSlope(&mOrth, pPtRtAgl);
 			bVerticalSlope = pPtP1->Slope(&m, pPtRtAgl);
-			if (!bVerticalSlope && bHorizontalSlope)
+			if (bHorizontalSlope)
 			{
 				//Horizontal Slop
-				printf("Horizontal Slope Case\n");
 				if (MousePos.dY > pPtRtAgl->GetY())
 				{
 					pPtP2->SetX(pPtRtAgl->GetX());
@@ -770,23 +802,35 @@ BOOL CCadLine::CalcFixedPoint(
 					pPtP2->SetX(pPtRtAgl->GetX());
 					pPtP2->SetY(pPtRtAgl->GetY() - b);
 				}
-
 			}
 			else if (bVerticalSlope)
 			{
 				// Vertical Slope
 				printf("Vertical Slope Case\n");
+				if (MousePos.dX > pPtRtAgl->GetX())
+				{
+					pPtP2->SetX(pPtRtAgl->GetX() + b);
+					pPtP2->SetY(pPtRtAgl->GetY());
+				}
+				else
+				{
+					pPtP2->SetX(pPtRtAgl->GetX() - b);
+					pPtP2->SetY(pPtRtAgl->GetY());
+				}
 			}
 			else
 			{
-				printf("Any Other Case\n");
 				//somewhre in between slope
-				pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, m_Length);
-				pPtP2->Slope(&m, pPtP1);
-				yIntercept =  pPtP1->YIntercept(m);
-				y = m * MousePos.dX + yIntercept;
+				yIntercept = pPtRtAgl->YIntercept(mOrth);
+				y = mOrth * MousePos.dX + yIntercept;
 				if (MousePos.dY - y > 0.0)
-					pPtP2->Reflect(pPtRtAgl);
+				{
+					pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, b);
+				}
+				else
+				{
+					pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, -b);
+				}
 			}
 		}
 	}
