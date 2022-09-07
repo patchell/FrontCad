@@ -45,6 +45,12 @@ public://public methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
+	BOOL CalcFixedPoint(
+		DOUBLEPOINT MousePos, 
+		CCadPoint* pPtRtAgl, 
+		CCadPoint* pPtP1, 
+		CCadPoint* P2
+	);
 	virtual void ProcessZoom(CScale& InchesPerPixel);
 	virtual int EditProperties(void);
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
@@ -62,8 +68,8 @@ public://public methodes
 	//--------------------------------------------------
 	// Line Length
 	//--------------------------------------------------
-	void SetLength(double l) { m_Length = l; }
 	double GetLength() { return m_Length; }
+	void SetLength(double l) { m_Length = l; }
 	//--------------------------------------------------
 	// Static Functions
 	//--------------------------------------------------

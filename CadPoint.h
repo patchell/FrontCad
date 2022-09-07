@@ -34,6 +34,10 @@ public:
 		dX = dP.dX;
 		dY = dP.dY;
 	}
+	void SetPoint(CCadPoint* pT) {
+		dX = pT->dX;
+		dY = pT->dY;
+	}
 	//------------------------------------
 	// Drawing Manipulation Methods
 	//------------------------------------
@@ -74,9 +78,10 @@ public:
 	//----------------------------------
 	// Pointy Things to do with lines
 	//----------------------------------
-	double Slope(CCadPoint* pPoint);
-	double Slope(DOUBLEPOINT point);
-	double OrthogonalSlope(CCadPoint point);
+	void Reflect(CCadPoint* pReflect);
+	BOOL Slope(double *pSlope, CCadPoint* pPoint);
+	BOOL Slope(double* pSlope, DOUBLEPOINT point);
+	BOOL OrthogonalSlope(double *Slope, CCadPoint *pPoint);
 	UINT LineIs(DOUBLEPOINT OtherPoint);
 	double YIntercept(double m);
 	double XIntercept(double m);
@@ -88,27 +93,29 @@ public:
 		CCadPoint& dest2	//solution #2
 	);
 	BOOL PointOnLineAtDistance(
-		DOUBLEPOINT P1,
-		DOUBLEPOINT ROT,
-		double Distance
+		DOUBLEPOINT P1,	//point (Pivot origin)
+		DOUBLEPOINT P2,	//A point that dfines the line
+		double Distance	//Distance from Pivot point
 	);
 	void PointOnLineAtDistance(
-		CCadPoint* pP1, 
-		double m, 
-		double Distance
+		CCadPoint* pP1,		//pivot point
+		double m,			// slope of line
+		double Distance		//distance from pivot
 	);
 	void PointOnLineAtDistance(
-		DOUBLEPOINT P1, 
-		double m, 
-		double Distance
+		DOUBLEPOINT P1,		//pivot point
+		double m,			//// slope of line
+		double Distance		//distance from pivot
 	);
 	void PointOnLineAtDistance(
-		CCadPoint* P1,	//starting point
+		CCadPoint* P1,				//starting point
 		DOUBLEPOINT RotationPoint,
 		double Distance
 	);
 	CCadPoint& CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint);
 	BOOL IsPointBetween(CCadPoint* pP1, CCadPoint* pP2);
+	double DistanceTo(CCadPoint* pP);
+	//-------------------------------------------------
 	void Print(const char* s);
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	void CreateTheBrush(MODE mode, CBrush* brushFill);

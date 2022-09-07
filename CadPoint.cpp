@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "CadPoint.h"
 
 CCadPoint::CCadPoint()
 {
@@ -414,44 +415,79 @@ int CCadPoint::EditProperties()
 	return 0;
 }
 
-double CCadPoint::Slope(CCadPoint* pPoint)
+void CCadPoint::Reflect(CCadPoint* pReflect)
+{
+	//-------------------------------------
+	// Reflect
+	// 
+	// Reflects this point around point
+	// pReflect
+	//-------------------------------------
+	
+	double deltaX, deltaY;
+
+	deltaX = dX - pReflect->dX;
+	deltaY = dY - pReflect->dY;
+	dX -= 2.0 * deltaX;
+	dY -= 2.0 * deltaY;
+}
+
+BOOL CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
 	double m = 0.0;
+	BOOL bVerticalSlope = FALSE;
 	if (dX != pPoint->dX)
-		m = (dY - pPoint->dY) / (dX - pPoint->dX);
-	return m;
+		*pSlope = (dY - pPoint->dY) / (dX - pPoint->dX);
+	else
+		bVerticalSlope = TRUE;
+	return bVerticalSlope;
 }
 
-double CCadPoint::Slope(DOUBLEPOINT point)
+BOOL CCadPoint::Slope(double* pSlope, DOUBLEPOINT point)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
 	double m = 0.0;
+	BOOL bVerticalSlope = FALSE;
+
 	if (dX != point.dX)
-		m = (dY - point.dY) / (dX - point.dX);
-	return m;
+		*pSlope = (dY - point.dY) / (dX - point.dX);
+	else
+		bVerticalSlope = TRUE;
+	return bVerticalSlope;
 }
 
-double CCadPoint::OrthogonalSlope(CCadPoint point)
+BOOL CCadPoint::OrthogonalSlope(double* pSlope, CCadPoint *pPoint)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2 that is perpendicular
 	//-----------------------------------
-	double m = 0.0;
-	if (dY != point.dY)
-		m = -(dX - point.dX) / (dY - point.dY);
-	return m;
+	BOOL bHorizontalSlope = FALSE;
+
+	if (dY != pPoint->dY)
+		*pSlope = -(dX - pPoint->dX) / (dY - pPoint->dY);
+	else
+		bHorizontalSlope = TRUE;
+	return bHorizontalSlope;
 }
 
 UINT CCadPoint::LineIs(DOUBLEPOINT OtherPoint)
 {
+	//-----------------------------------------
+	// LisneIs
+	// Determins if the line is Horizontal, 
+	// Vertical, or somewhere in between
+	// The line is between this and the
+	// OtherPoint
+	//-----------------------------------------
+
 	UINT rV = LINE_IS_WHATEVER;	//line is whatever
 
 	if (dY == OtherPoint.dY)
@@ -546,7 +582,7 @@ BOOL CCadPoint::PointOnLineAtDistance(DOUBLEPOINT P1, DOUBLEPOINT P2, double Dis
 	// distance from the pivot
 	// 
 	// parameters:
-	// P1.......Pivot point (origin)
+	// P1....... point (Pivotorigin)
 	// P2.......A point that dfines 
 	//			the line
 	// distance.Distance from the
@@ -695,7 +731,7 @@ void CCadPoint::PointOnLineAtDistance(
 	// 
 	// parameters:
 	//	P1.......first point of the line
-	// RotationPoint...yep, that
+	// RotationPoint...yep, that, defines where line goes to
 	// Distance...between points 
 	//-----------------------------------
 
@@ -706,7 +742,7 @@ void CCadPoint::PointOnLineAtDistance(
 	switch (LineType)
 	{
 	case LINE_IS_WHATEVER:	//Hard
-		m = pP1->Slope(RotationPoint);
+		pP1->Slope(&m, RotationPoint);
 		if(pP1->GetX() < RotationPoint.dX)
 			dX = sqrt((Distance * Distance) / (1 + m * m));
 		else
@@ -750,6 +786,18 @@ BOOL CCadPoint::IsPointBetween(CCadPoint* pP1, CCadPoint* pP2)
 		)
 		rV = TRUE;
 	return rV;
+}
+
+double CCadPoint::DistanceTo(CCadPoint* pP)
+{
+	double distance;
+	double rise;
+	double run;
+
+	rise = dY - pP->dY;
+	run = dX - pP->dX;
+	distance = sqrt(rise * rise + run * run);
+	return distance;
 }
 
 void CCadPoint::Print(const char* s)

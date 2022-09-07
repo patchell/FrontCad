@@ -135,7 +135,16 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 			switch (GetCurrentDrawState())
 			{
 			case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+				break;
 			case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				break;
 			case ObjectDrawState::PLACE_LBUTTON_DOWN:
 			case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
@@ -382,6 +391,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 	CADObjectTypes ObjP1, ObjP2;
 	CCadLine* pNewLine = 0;
 	CPoint pointSaved;
+	CADObjectTypes Corner;
 
 	switch (DrawState)
 	{
@@ -414,6 +424,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		ObjP1.pCadObject = FindChildObject(
@@ -424,9 +435,11 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
 		GETVIEW->EnableAutoScroll(FALSE);
@@ -443,12 +456,33 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 		GETVIEW->Invalidate();
+		SetCurrentDrawState(DrawState);
 		break;
 		//-----------------------------
 		// Fixed Line Length processing
+		// After many failed attempts
+		// to do this, I finally
+		// that the best way to proceed
+		// was to draw a right triangle
+		// with a known Hypotenuse
+		// so the proceedure will be to
+		// select the point where the
+		// right angle is, the second
+		// point will be the BASE of
+		// triangle.
 		//-----------------------------
 	case ObjectDrawState::START_DRAWING_LINE_FIXED_LEN:
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		//-------------------------------------------------
+		// Add an object to represent the point that
+		// defines where the right angle is
+		//-------------------------------------------------
+		Corner.pCadPoint = new CCadPoint;
+		Corner.pCadPoint->SetSubType(SubType::RIGHTANGLE_VERTEX);
+		Corner.pCadPoint->SetOrigin(GetOrigin());
+		Corner.pCadPoint->SetParent(this);
+		AddObjectAtChildTail(Corner.pCadObject);
+		//---------------------------------
 		CopyAttributesFrom(&m_CurrentAttributes);
 		GetAttributes().m_LockLength = TRUE;
 		//----- Remember Cursor position
@@ -458,8 +492,8 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		{
 			CopyAttributesTo(&m_CurrentAttributes);
 			m_AttributesDirty = TRUE;
-			DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN;
-			GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
+			DrawState = ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN;
+			GETAPP.UpdateStatusBar(_T("Line:Place Right Angle Point"));
 		}
 		else
 		{
@@ -468,9 +502,26 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		//---- Restore Cursor position
 		GETVIEW->SetCursorPosition(pointSaved);
+		SetCurrentDrawState(DrawState);
+		break;
+	case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN:
+		DrawState = ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP;
+		SetCurrentDrawState(DrawState);
+		break;
+	case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP:
+		Corner.pCadObject = FindChildObject(
+			ObjectType::POINT,
+			SubType::RIGHTANGLE_VERTEX,
+			0
+		);
+		Corner.pCadPoint->SetPoint(MousePos);
+		GETAPP.UpdateStatusBar(_T("Line:First Point"));
+		DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
 		DrawState = ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
 		ObjP1.pCadObject = FindChildObject(
@@ -480,13 +531,19 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN;
-		m_SavedSnapEnable = GETVIEW->GetGrid().EnableSnap(FALSE);
-		GETAPP.UpdateStatusBar(_T("Line:Place Second Point"));
+		GETAPP.UpdateStatusBar(_T("Line:Second Point"));
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
 		DrawState = ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
+		Corner.pCadObject = FindChildObject(
+			ObjectType::POINT,
+			SubType::RIGHTANGLE_VERTEX,
+			0
+		);
 		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
@@ -497,17 +554,29 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			2
 		);
-		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
+		//-------------------------------------------------
+		// What we do now is calculate the 
+		// position of P2 from thehypoteneus, which is the
+		// legnth of the fixed line, and the distance from
+		// the point where the right angle is, to P1
+		// from the position
+		//-------------------------------------------------
+		CalcFixedPoint(
+			MousePos,
+			Corner.pCadPoint,
+			ObjP1.pCadPoint,
+			ObjP2.pCadPoint
+		);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		pNewLine = new CCadLine;
 		pNewLine->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+		pNewLine->SetLength(GetLength());
 		GETVIEW->SetObjectTypes(pNewLine);
 		DrawState = ObjectDrawState::START_DRAWING_LINE_FIXED_LEN;
-		GETVIEW->GetGrid().EnableSnap(m_SavedSnapEnable);
-		GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
+		GETAPP.UpdateStatusBar(_T("Fixed Line:Place Set up Next Line"));
+		SetCurrentDrawState(DrawState);
 		break;
 	}
-	SetCurrentDrawState(DrawState);
 	return DrawState;
 }
 
@@ -528,7 +597,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	DOUBLEPOINT SecondPoint;
-	CADObjectTypes ObjP1, ObjP2;
+	CADObjectTypes ObjP1, ObjP2, ObjCorner;
 	UINT KindsOfObjects = 0;
 	CCadObject* pSnapedObject;
 
@@ -578,16 +647,22 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 		);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		break;
+		//-------------------------------------------------
+		// State machine for drawing a line of fixed length
+		//-------------------------------------------------
 	case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN://MouseMove
-		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-		if (GetAttributes().m_P1_SNAP_POINT)
-		{
-			KindsOfObjects = OBJKIND_POINT | OBJKIND_SELECT;
-			if (GETVIEW->SnapToObject(MousePos, KindsOfObjects, ObjP1.pCadObject, FALSE))
-			{
-				ObjP1.pCadPoint->SetPoint(MousePos);
-			}
-		}
+		ObjP1.pCadObject = FindChildObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			1
+		);
+		ObjP2.pCadObject = FindChildObject(
+			ObjectType::POINT,
+			SubType::VERTEX,
+			2
+		);
+		ObjP1.pCadPoint->SetPoint(MousePos);
+		ObjP2.pCadPoint->SetPoint(MousePos);
 		break;
 	case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN://MouseMove
 		ObjP1.pCadObject = FindChildObject(
@@ -600,11 +675,122 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 			SubType::VERTEX,
 			2
 		);
-		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, MousePos, m_Length);
+		ObjCorner.pCadObject = FindChildObject(
+			ObjectType::POINT,
+			SubType::RIGHTANGLE_VERTEX,
+			SUBSUBTYPE_ANY
+		);
+		printf("Mouse Move ------------------\n");
+		ObjP1.pCadPoint->Print("IN");
+		ObjP2.pCadPoint->Print("IN");
+
+		CalcFixedPoint(
+			MousePos, 
+			ObjCorner.pCadPoint, 
+			ObjP1.pCadPoint, 
+			ObjP2.pCadPoint
+		);
+		ObjP1.pCadPoint->Print("OUT");
+		ObjP2.pCadPoint->Print("OUT");
+		printf("Mouse Move ^^^^^^^^^^^^^^^^^^\n");
 		break;
 	}
 	GETVIEW->Invalidate();
 	return DrawState;
+}
+
+
+BOOL CCadLine::CalcFixedPoint(
+	DOUBLEPOINT MousePos,	//current mopuse position
+	CCadPoint* pPtRtAgl,	//where the right angle is
+	CCadPoint* pPtP1,		// P1 of the Line
+	CCadPoint* pPtP2		// P2 of the Line
+)
+{
+	//------------------------------------------
+	// CalcFixedPoint
+	// Calculate P2
+	// 1. Does P1 == RtAngle , then rotate around P1
+	// 2. else
+	// 3. Slope of R1->P1
+	// 4. Slope Orthoganol to R1-> P1
+	// 5. Length of R1->P2
+	// 6. Point on Line R1->P2 intersected by P1->P2
+	//
+	//------------------------------------------
+	BOOL rV = TRUE;
+	DOUBLEPOINT PtP2;
+	double b;
+	double a;
+	double m, mOrth;
+	double y, Y, yIntercept;
+	BOOL bHorizontalSlope;
+	BOOL bVerticalSlope;
+
+	if (*pPtRtAgl == *pPtP1)
+	{
+		//-----------------------
+		// Simple case
+		//-----------------------
+		printf("Simple Case\n");
+	}
+	else
+	{
+		a = pPtRtAgl->DistanceTo(pPtP1);
+		b = m_Length *m_Length - a * a;
+		printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
+		if (b < 0)	//this is an error
+		{
+			//------------------------------
+			// Invalid
+			//-------------------------------
+			rV = FALSE;
+			printf("Invalid Case\n");
+		}
+		else
+		{
+			//-------------------------------
+			// Find P2
+			//-------------------------------
+			b = sqrt(b);
+			printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
+			bHorizontalSlope = pPtP1->OrthogonalSlope(&mOrth, pPtRtAgl);
+			bVerticalSlope = pPtP1->Slope(&m, pPtRtAgl);
+			if (!bVerticalSlope && bHorizontalSlope)
+			{
+				//Horizontal Slop
+				printf("Horizontal Slope Case\n");
+				if (MousePos.dY > pPtRtAgl->GetY())
+				{
+					pPtP2->SetX(pPtRtAgl->GetX());
+					pPtP2->SetY(pPtRtAgl->GetY() + b);
+				}
+				else
+				{
+					pPtP2->SetX(pPtRtAgl->GetX());
+					pPtP2->SetY(pPtRtAgl->GetY() - b);
+				}
+
+			}
+			else if (bVerticalSlope)
+			{
+				// Vertical Slope
+				printf("Vertical Slope Case\n");
+			}
+			else
+			{
+				printf("Any Other Case\n");
+				//somewhre in between slope
+				pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, m_Length);
+				pPtP2->Slope(&m, pPtP1);
+				yIntercept =  pPtP1->YIntercept(m);
+				y = m * MousePos.dX + yIntercept;
+				if (MousePos.dY - y > 0.0)
+					pPtP2->Reflect(pPtRtAgl);
+			}
+		}
+	}
+	return rV;
 }
 
 void CCadLine::ProcessZoom(CScale& InchesPerPixel)
@@ -646,7 +832,7 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	//-------------------------------------
 	Inches = CDoubleSize(10.0,10.0) * InchesPerPixel;
 	dist = Inches.Magnitude();
-	m1 = ObjP1.pCadPoint->Slope(ObjP2.pCadPoint);
+	ObjP1.pCadPoint->Slope(&m1, ObjP2.pCadPoint);
 	//-------------------------------------
 	// Convert 10 x 10 pixels into inches
 	//-------------------------------------

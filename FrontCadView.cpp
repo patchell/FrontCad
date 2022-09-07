@@ -181,6 +181,12 @@ void CFrontCadView::OnDraw(CDC* pDC)
 		case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		case ObjectDrawState::PLACE_LBUTTON_UP:
 		case ObjectDrawState::PLACE_AUTO:
+		case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+		case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
+		case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN:
+		case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP:
+		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
 			mode.DrawMode = ObjectDrawMode::SKETCH;
 			break;
 		case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
