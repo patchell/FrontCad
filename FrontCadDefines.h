@@ -4,6 +4,15 @@
 #define GETAPP	(theApp)
 #define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
 
+//------------------------------------------
+// types of slopes that are calculated
+// by CPoint::Slope and CPoint::Ortoganol
+//------------------------------------------
+constexpr auto SLOPE_NOT_ORTHOGAGOL = 0;
+constexpr auto SLOPE_HORIZONTAL = 1;
+constexpr auto SLOPE_VERTICAL = 2;
+
+
 //---------------------------------------
 // Snap Order Class
 //---------------------------------------

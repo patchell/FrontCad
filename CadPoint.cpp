@@ -432,51 +432,85 @@ void CCadPoint::Reflect(CCadPoint* pReflect)
 	dY = pReflect->dY - deltaY;
 }
 
-BOOL CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
+UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
-	double m = 0.0;
-	BOOL bVerticalSlope = FALSE;
+	UINT SlopeType;
 
-	if (dX != pPoint->dX)
+	if (dY == pPoint->dY)
+	{
+		SlopeType = SLOPE_HORIZONTAL;
+		*pSlope = 0.0;
+	}
+	else 	if (dX == pPoint->dX)
+		SlopeType = SLOPE_VERTICAL;
+	else
+	{
+		SlopeType = SLOPE_NOT_ORTHOGAGOL;
 		*pSlope = (dY - pPoint->dY) / (dX - pPoint->dX);
-	else
-		bVerticalSlope = TRUE;
-	return bVerticalSlope;
+	}
+	return SlopeType;
 }
 
-BOOL CCadPoint::Slope(double* pSlope, DOUBLEPOINT point)
+UINT CCadPoint::Slope(double* pSlope, DOUBLEPOINT point)
 {
 	//-----------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2
 	//-----------------------------------
-	double m = 0.0;
-	BOOL bVerticalSlope = FALSE;
+	UINT SlopeType;
 
-	if (dX != point.dX)
-		*pSlope = (dY - point.dY) / (dX - point.dX);
+	if (dY == point.dY)
+	{
+		SlopeType = SLOPE_HORIZONTAL;
+		*pSlope = 0.0;
+	}
+	else 	if (dX == point.dX)
+		SlopeType = SLOPE_VERTICAL;
 	else
-		bVerticalSlope = TRUE;
-	return bVerticalSlope;
+	{
+		SlopeType = SLOPE_NOT_ORTHOGAGOL;
+		*pSlope = (dY - point.dY) / (dX - point.dX);
+	}
+	return SlopeType;
 }
 
-BOOL CCadPoint::OrthogonalSlope(double* pSlope, CCadPoint *pPoint)
+UINT CCadPoint::OrthogonalSlope(double* pSlope, CCadPoint *pPoint)
 {
-	//-----------------------------------
+	//------------------------------------------------
 	// Get the slope of the line defined
 	// by m_P1, m_P2 that is perpendicular
-	//-----------------------------------
-	BOOL bHorizontalSlope = FALSE;
+	// 
+	// *this.....first point of line
+	// parameters:
+	// pSlope....pointer to where slope is returned
+	//           if the slope is vertical, this
+	//           location is not set
+	// pPoint....other end of line
+	// 
+	// returns:
+	// Type of slope, HORZ, VERT and !(HORZ || VERT)
+	//------------------------------------------------
+	UINT SlopeType;
 
-	if (dY != pPoint->dY)
-		*pSlope = -(dX - pPoint->dX) / (dY - pPoint->dY);
+	if (dY == pPoint->dY)
+	{
+		SlopeType = SLOPE_HORIZONTAL;
+	}
+	else if (dX == pPoint->dX)
+	{
+		SlopeType = SLOPE_VERTICAL;
+		*pSlope = 0.0;
+	}
 	else
-		bHorizontalSlope = TRUE;
-	return bHorizontalSlope;
+	{
+		SlopeType = SLOPE_NOT_ORTHOGAGOL;
+		*pSlope = -(dX - pPoint->dX) / (dY - pPoint->dY);
+	}
+	return SlopeType;
 }
 
 UINT CCadPoint::LineIs(DOUBLEPOINT OtherPoint)

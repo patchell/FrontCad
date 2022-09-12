@@ -152,6 +152,11 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				break;
 			}//end of switch draw state
 			break;
@@ -715,8 +720,8 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 			SUBSUBTYPE_ANY
 		);
 		printf("Mouse Move ------------------\n");
-		ObjP1.pCadPoint->Print("IN");
-		ObjP2.pCadPoint->Print("IN");
+//		ObjP1.pCadPoint->Print("IN");
+//		ObjP2.pCadPoint->Print("IN");
 
 		CalcFixedPoint(
 			MousePos, 
@@ -724,8 +729,8 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 			ObjP1.pCadPoint, 
 			ObjP2.pCadPoint
 		);
-		ObjP1.pCadPoint->Print("OUT");
-		ObjP2.pCadPoint->Print("OUT");
+//		ObjP1.pCadPoint->Print("OUT");
+//		ObjP2.pCadPoint->Print("OUT");
 		printf("Mouse Move ^^^^^^^^^^^^^^^^^^\n");
 		break;
 	}
@@ -756,10 +761,9 @@ BOOL CCadLine::CalcFixedPoint(
 	DOUBLEPOINT PtP2;
 	double b;
 	double a;
-	double m, mOrth;
-	double y, yIntercept;
-	BOOL bHorizontalSlope;
-	BOOL bVerticalSlope;
+	double BaseSlope, SideSlope, LineSlope;
+	double y, yIntercept, x, xIntercept;
+	UINT SlopeType;
 
 	if (*pPtRtAgl == *pPtP1)
 	{
@@ -786,12 +790,13 @@ BOOL CCadLine::CalcFixedPoint(
 			// Find P2
 			//-------------------------------
 			b = sqrt(b);
-			printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
-			bHorizontalSlope = pPtP1->OrthogonalSlope(&mOrth, pPtRtAgl);
-			bVerticalSlope = pPtP1->Slope(&m, pPtRtAgl);
-			if (bHorizontalSlope)
+//			printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
+			SlopeType = pPtP1->OrthogonalSlope(&SideSlope, pPtRtAgl);
+			pPtP1->Slope(&BaseSlope, pPtRtAgl);
+			switch (SlopeType)
 			{
-				//Horizontal Slop
+			case SLOPE_HORIZONTAL:
+				printf("Horizontal\n");
 				if (MousePos.dY > pPtRtAgl->GetY())
 				{
 					pPtP2->SetX(pPtRtAgl->GetX());
@@ -802,11 +807,9 @@ BOOL CCadLine::CalcFixedPoint(
 					pPtP2->SetX(pPtRtAgl->GetX());
 					pPtP2->SetY(pPtRtAgl->GetY() - b);
 				}
-			}
-			else if (bVerticalSlope)
-			{
+				break;
+			case SLOPE_VERTICAL:
 				// Vertical Slope
-				printf("Vertical Slope Case\n");
 				if (MousePos.dX > pPtRtAgl->GetX())
 				{
 					pPtP2->SetX(pPtRtAgl->GetX() + b);
@@ -817,20 +820,20 @@ BOOL CCadLine::CalcFixedPoint(
 					pPtP2->SetX(pPtRtAgl->GetX() - b);
 					pPtP2->SetY(pPtRtAgl->GetY());
 				}
-			}
-			else
-			{
+				break;
+			case SLOPE_NOT_ORTHOGAGOL:
+				//--------------------------------------
 				//somewhre in between slope
-				yIntercept = pPtRtAgl->YIntercept(mOrth);
-				y = mOrth * MousePos.dX + yIntercept;
-				if (MousePos.dY - y > 0.0)
-				{
-					pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, b);
-				}
-				else
-				{
-					pPtP2->PointOnLineAtDistance(pPtRtAgl, mOrth, -b);
-				}
+				//--------------------------------------
+				// Find Slope of the line
+				//--------------------------------------
+				pPtP2->PointOnLineAtDistance(pPtRtAgl, SideSlope, b);
+				pPtP2->Slope(&LineSlope, pPtP1);
+				yIntercept = pPtP1->YIntercept(LineSlope);
+				x = (MousePos.dY - yIntercept) / LineSlope;
+				if (MousePos.dX - x > 0.0)
+					pPtP2->Reflect(pPtRtAgl);
+				break;
 			}
 		}
 	}

@@ -79,9 +79,9 @@ public:
 	// Pointy Things to do with lines
 	//----------------------------------
 	void Reflect(CCadPoint* pReflect);
-	BOOL Slope(double *pSlope, CCadPoint* pPoint);
-	BOOL Slope(double* pSlope, DOUBLEPOINT point);
-	BOOL OrthogonalSlope(double *Slope, CCadPoint *pPoint);
+	UINT Slope(double *pSlope, CCadPoint* pPoint);
+	UINT Slope(double* pSlope, DOUBLEPOINT point);
+	UINT OrthogonalSlope(double *Slope, CCadPoint *pPoint);
 	UINT LineIs(DOUBLEPOINT OtherPoint);
 	double YIntercept(double m);
 	double XIntercept(double m);
