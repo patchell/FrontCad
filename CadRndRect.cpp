@@ -18,12 +18,12 @@ CCadRndRect::~CCadRndRect()
 {
 }
 
-BOOL CCadRndRect::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadRndRect::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 	int i;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	for (i = 0; i < 2; ++i)
@@ -45,13 +45,6 @@ BOOL CCadRndRect::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadRect->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-
-BOOL CCadRndRect::Destroy(CCadObject* pDependentObjects)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadRndRect::Move(CDoubleSize Diff)
@@ -81,7 +74,7 @@ void CCadRndRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 	//--------------------------------------------------
 }
 
-void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw

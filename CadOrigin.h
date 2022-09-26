@@ -12,11 +12,10 @@ class CCadOrigin:public CCadObject
 public:
 	CCadOrigin();
 	virtual ~CCadOrigin();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	virtual BOOL Destroy(CCadObject* pDependentObject);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual DOUBLEPOINT GetCenterPoint();
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,

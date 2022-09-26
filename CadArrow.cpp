@@ -17,11 +17,11 @@ CCadArrow::~CCadArrow()
 {
 }
 
-BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -46,12 +46,6 @@ BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin)
 	AddObjectAtChildTail(Obj.pCadObject);
 
 	return TRUE;
-}
-
-BOOL CCadArrow::Destroy(CCadObject* pDependentObjects)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadArrow::Move(CDoubleSize Diff)
@@ -81,7 +75,7 @@ void CCadArrow::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 }
 
-void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -495,7 +489,7 @@ int CCadArrow::EditProperties()
 	return Id;
 }
 
-void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	CADObjectTypes Obj;
 

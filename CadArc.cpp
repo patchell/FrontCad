@@ -17,11 +17,11 @@ CCadArc::~CCadArc()
 {
 }
 
-BOOL CCadArc::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadArc::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -50,11 +50,6 @@ BOOL CCadArc::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadArc::Destroy(CCadObject* pDependentObjects)
-{
-	return 0;
 }
 
 void CCadArc::Move(CDoubleSize Diff)
@@ -95,7 +90,7 @@ void CCadArc::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	GetAttributes().Save(pO,Indent+1,flags);
 }
 
-void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
+void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -109,7 +104,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 	// return value:none
 	//--------------------------------------------------
 	CPen *pOldPen = 0, penLine;
-	CRect rect;
+	CBrush brushFill, * pBrushOld;
 	CADObjectTypes ObjP1, ObjP2, ObjStart, ObjEnd, ObjCenter;
 	int Lw;
 
@@ -122,6 +117,8 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 		ObjStart.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
 		ObjEnd.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		brushFill.CreateStockObject(NULL_BRUSH);
 
 		switch (mode.DrawMode)
 		{
@@ -131,39 +128,41 @@ void CCadArc::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
 			else
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOldPen = pDC->SelectObject(&penLine);
-			rect.SetRect(
-				ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-				ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
-			);
-			pDC->Arc(
-				&rect, 
-				ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale),
-				ObjEnd.pCadPoint->ToPixelPoint(ULHC,Scale)
-			);
+			ObjP1.pCadPoint->ToPixelArc(ObjP2.pCadPoint, ObjStart.pCadPoint, ObjEnd.pCadPoint, pDC, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::SKETCH:
+			pBrushOld = pDC->SelectObject(&brushFill);
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
-			pDC->Rectangle(&rect);
-			pDC->Ellipse(&rect);
+			ObjP1.pCadPoint->ToPixelRect(ObjP2.pCadPoint, pDC, ULHC, Scale);
+			ObjP1.pCadPoint->ToPixelEllipse(ObjP2.pCadPoint, pDC, ULHC, Scale);
+			pDC->SelectObject(pBrushOld);
 			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::ARCSTART:
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
-			pDC->Ellipse(&rect);
-			pDC->MoveTo(rect.CenterPoint());
-			pDC->LineTo(ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale));
+			pBrushOld = pDC->SelectObject(&brushFill);
+			ObjP1.pCadPoint->ToPixelEllipse(ObjP2.pCadPoint, pDC, ULHC, Scale);
+			ObjCenter.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			ObjStart.pCadPoint->LineTo(pDC, ULHC, Scale);
+			pDC->SelectObject(pBrushOld);
 			pDC->SelectObject(pOldPen);
 			break;
 		case ObjectDrawMode::ARCEND:
+			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
-			pDC->Arc(
-				&rect, 
-				ObjStart.pCadPoint->ToPixelPoint(ULHC,Scale),
-				ObjEnd.pCadPoint->ToPixelPoint(ULHC,Scale)
+			ObjP1.pCadPoint->ToPixelArc(
+				ObjP2.pCadPoint,
+				ObjStart.pCadPoint,
+				ObjEnd.pCadPoint,
+				pDC,
+				ULHC,
+				Scale
 			);
-			pDC->MoveTo(rect.CenterPoint());
-			pDC->LineTo(ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale));
+			ObjCenter.pCadPoint->MoveTo(pDC,ULHC, Scale);
+			ObjEnd.pCadPoint->LineTo(pDC, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
 			break;
 		}
@@ -174,7 +173,7 @@ BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
 {
 	BOOL rV = FALSE;
 	double StartAngle, EndAngle, Angle;
-	CCadRect* pRect;
+	CCadRect Rect;
 	CADObjectTypes P1, P2, ObjCenter;
 
 	//------------------------------
@@ -184,10 +183,9 @@ BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
 	P1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 	P2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	pRect = new CCadRect;
-	pRect->Create(NULL, NULL);
-	pRect->SetPoints(DOUBLEPOINT(*P1.pCadPoint), DOUBLEPOINT(*P2.pCadPoint), DOUBLEPOINT(*P1.pCadPoint));
-	if (pRect->PointInThisObject(point))
+	Rect.Create(NULL, NULL);
+	Rect.SetRect(P1.pCadPoint, P2.pCadPoint);
+	if (Rect.PointInThisObject(point))
 	{
 		//------------------------------
 		// Is the angle between the
@@ -216,12 +214,11 @@ BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
 			//----------------------------
 			double A, B;
 
-			A = pRect->GetWidth() / 2.0;
-			B = pRect->GetHeight() / 2.0;
+			A = Rect.GetWidth() / 2.0;
+			B = Rect.GetHeight() / 2.0;
 			rV = GETAPP.TestEllipsePoint(A, B, point, DOUBLEPOINT(*ObjCenter.pCadPoint), TOLERANCE_10_PERCENT);
 		}
 	}
-	delete pRect;
 	return rV;
 }
 
@@ -454,6 +451,7 @@ ObjectDrawState CCadArc::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
+		Obj1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 		Obj2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 		Obj2.pCadPoint->SetPoint(MousePos);
 		Center.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
@@ -540,47 +538,6 @@ ObjectDrawState CCadArc::MouseMove(ObjectDrawState DrawState)
 	return DrawState;
 }
 
-
-/*
-void CCadArc::DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
-{
-	//------------------------------
-	// For right now, going to use
-	// brute force and ignorance
-	//-----------------------------
-
-	int RadiusX, RadiusY;
-	double A, B, x, y;
-	CPoint Point, lastPoint;
-	CDoubleSize SlopeIsOne;
-
-	A = m_Shape.dCX;
-	A *= A;
-	B = m_Shape.dCY;
-	B *= B;
-	SlopeIsOne = SlopeIsOneAt(A, B);
-	RadiusX = GETAPP.RoundDoubleToInt(SlopeIsOne.dCX * PixelsPerInch);
-	RadiusY = GETAPP.RoundDoubleToInt(SlopeIsOne.dCY * PixelsPerInch);
-	printf("Start\n");
-	for (int i = 0; i < RadiusX; i++)
-	{
-		x = double(i) * 0.01;
-		y = CalcY(x, A, B);
-		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
-		printf("<%4d>Point(%4d,%4d)\n", i, Point.x, Point.y);
-		pDC->SetPixel(Point, RGB(2550, 64, 255));
-	}
-	printf("End\n");
-	for (int i = 0; i < RadiusY; i++)
-	{
-		y = double(i) * 0.01;
-		x = CalcY(y, B, A);
-		Point = (m_Center + CDoubleSize(x, y)).ToPixelPoint(Offset, Scale);
-		printf("<%4d>Point(%4d,%4d)\n", i, Point.x, Point.y);
-		pDC->SetPixel(Point, RGB(2550, 64, 255));
-	}
-}
-*/
 double CCadArc::CalcY(double x, double A, double B)
 {
 	//-------------------------------------

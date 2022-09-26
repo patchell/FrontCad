@@ -2,6 +2,7 @@
 
 class CCadRect:public CCadObject
 {
+	friend CCadPoint;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_RectCount;
 	inline static SRectAttributes m_LastAttributes;
@@ -12,24 +13,46 @@ class CCadRect:public CCadObject
 public:
 	CCadRect();
 	virtual ~CCadRect();
-	virtual BOOL Destroy(CCadObject* pDependentObject);
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	//--------------- Set Points In Rectangle --------------
-	void SetPoints(DOUBLEPOINT p1, DOUBLEPOINT p2, DOUBLEPOINT RotDef);
-	void SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT rotation);
-	CCadRect& SetSecondPoint(DOUBLEPOINT P2);
-	CCadRect& SetPointsFromCenter(DOUBLEPOINT P1);
-	CCadRect& SetPointsFromCenter(double Width, double Height);
-	CCadRect& SetCenterPoint(DOUBLEPOINT newCenter);
-	CRect ToCRect(DOUBLEPOINT ULHC, CScale& Scale);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	//------------------- Set Rectangle --------------------------------
+	void SetRect(DOUBLEPOINT P1, DOUBLEPOINT P2);
+	void SetRect(CCadPoint* pP1, CCadPoint* pP2);
+	void SetRect(
+		DOUBLEPOINT P1,
+		DOUBLEPOINT P2,
+		DOUBLEPOINT P3,
+		DOUBLEPOINT P4
+	);
+	void SetRect(
+		CCadPoint* pP1,
+		CCadPoint* pP2,
+		CCadPoint* pP3,
+		CCadPoint* pP4
+	);
+	void SetRect(
+		DOUBLEPOINT P1,
+		DOUBLEPOINT P2,
+		double h
+	);
+	void SetRect(
+		CCadPoint* pP1,
+		CCadPoint* pP2,
+		double h
+	);
+	void Recalc24();
+	void Recalc34(double h);
+	void Recalc234();
+	void ReCalcCenter();
+	void SetAllPoints(DOUBLEPOINT p);
 	//------------------------------------------------------------------
 	virtual void Move(CDoubleSize Diff);
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BOOL bFill);
-	void FillRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, COLORREF colorBoarder);
+	//----------- dc paint methods ------------------
+	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill);
+	void FillRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, COLORREF colorBoarder);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	//------------------------------------------------------------------
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
 	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(

@@ -18,11 +18,11 @@ CCadArcCent::~CCadArcCent()
 {
 }
 
-BOOL CCadArcCent::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadArcCent::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -52,12 +52,6 @@ BOOL CCadArcCent::Create(CCadObject* pParent, CCadObject* pOrigin)
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
 }
-
-BOOL CCadArcCent::Destroy(CCadObject* pDepndentObjects)
-{
-	return 0;
-}
-
 
 void CCadArcCent::Move(CDoubleSize Diff)
 {
@@ -100,7 +94,7 @@ void CCadArcCent::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 	delete[] TempString;
 }
 
-void CCadArcCent::Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale)
+void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -192,7 +186,7 @@ BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
 	double StartAngle, EndAngle, Angle;
 	double A, B;
 	BOOL rV = FALSE;
-	CCadRect rect;
+	CCadRect Rect;
 	CADObjectTypes P1, P2, PC;
 
 	//-------------------------------
@@ -202,9 +196,9 @@ BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
 	P1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
 	P2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
 	PC.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	rect.Create(NULL, NULL);
-	rect.SetPoints(DOUBLEPOINT(*P1.pCadPoint), DOUBLEPOINT(*P2.pCadPoint), DOUBLEPOINT(*P1.pCadPoint));
-	if (rect.PointInThisObject(point))
+	Rect.Create(NULL, NULL);
+	Rect.SetRect(P1.pCadPoint, P2.pCadPoint);
+	if (Rect.PointInThisObject(point))
 	{
 		//-------------------------------------
 		// first, check to see if the angle
@@ -230,8 +224,8 @@ BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
 			// the radius of the arc
 			//----------------------------------------
 
-			A = rect.GetWidth() / 2.0;
-			B = rect.GetHeight() / 2.0;
+			A = Rect.GetWidth() / 2.0;
+			B = Rect.GetHeight() / 2.0;
 			rV = GETAPP.TestEllipsePoint(
 				A, 
 				B, 
@@ -542,7 +536,7 @@ DOUBLEPOINT CCadArcCent::CalculateP2(CCadPoint* pPC, CCadPoint* pP1)
 }
 
 /*
-void CCadArcCent::DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadArcCent::DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//------------------------------
 	// For right now, going to use

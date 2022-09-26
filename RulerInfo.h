@@ -50,7 +50,7 @@ public:
 	CRulerInfo();
 	~CRulerInfo();
 	void SetUpperLeft(DOUBLEPOINT uL) { m_UpperLeftHandCorner = uL; }
-	DOUBLEPOINT GetUpperLeft() { return m_UpperLeftHandCorner; }
+	DOUBLEPOINT &GetUpperLeft() { return m_UpperLeftHandCorner; }
 	void SetCursorPos(DOUBLEPOINT CP) { m_CursorPosition = CP; }
 	DOUBLEPOINT GetCursorPos() { return m_CursorPosition; }
 	void SetOrigin(CCadOrigin* pOrg) { m_pOrigin = pOrg; }

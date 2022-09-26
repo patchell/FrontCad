@@ -8,7 +8,7 @@
 // types of slopes that are calculated
 // by CPoint::Slope and CPoint::Ortoganol
 //------------------------------------------
-constexpr auto SLOPE_NOT_ORTHOGAGOL = 0;
+constexpr auto SLOPE_NOT_ORTHOGONAL = 0;
 constexpr auto SLOPE_HORIZONTAL = 1;
 constexpr auto SLOPE_VERTICAL = 2;
 
@@ -362,9 +362,14 @@ enum class ObjectType{
 };
 
 //--------------------------------------------
+// Catagories for Object Types
 // -------------------------------------------
 enum class SubType{
-	ANY,
+	ANY,						//0
+	DEFALT,						//1
+	RECT_ROTATED,
+	RECT_BASE_DEFINED,
+	LINE_FIXED_LEN,
 	//--- Arc/Ellipse ---
 	RECTSHAPE,
 	STARTPOINT,
@@ -390,8 +395,8 @@ enum class SubType{
 	CENTERPOINT,
 	PIVOTPOINT,
 	MIDPOINT,
+	ROTATION_POINT,
 	VERTEX,
-	LINE_FIXED_LEN,
 	RIGHTANGLE_VERTEX
 };
 
@@ -503,6 +508,26 @@ enum class ObjectDrawState {
 	FIXED_LINE_FIRST_POINT_MOUSE_UP,
 	FIXED_LINE_SECOND_POINT_MOUSE_DOWN,
 	FIXED_LINE_SECOND_POINT_MOUSE_UP,
+	//-------- Rotated Rectangle States Mode 1 ----
+	ROT_RECT_ROTATED_START_DRAWING,
+	ROT_RECT_ROTATION_PIVOT_MOUSE_DOWN,
+	ROT_RECT_ROTATION_PIVOT_MOUSE_UP,
+	ROT_RECT_FIRST_POINT_MOUSE_DOWN,
+	ROT_RECT_FIRST_POINT_MOUSE_UP,
+	ROT_RECT_SECOND_POINT_MOUSE_DOWN,
+	ROT_RECT_SECOND_POINT_MOUSE_UP,
+	ROT_RECT_ROTATE_POINT_MOUSE_DOWN,
+	ROT_RECT_ROTATE_POINT_MOUSE_UP,
+	//-------- Rect Width/Height/Rotate --------
+	RECT_HWR_START_DRAWING,
+	RECT_HWR_PIVOT_MOUSE_DOWN,
+	RECT_HWR_PIVOT_MOUSE_UP,
+	RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN,
+	RECT_HWR_BASE_FIRST_POINT_MOUSE_UP,
+	RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN,
+	RECT_HWR_BASE_SECOND_POINT_MOUSE_UP,
+	RECT_HWR_HIEGTH_MOUSE_DOWN,
+	BASE_HWR_HIEGTH_MOUSE_UP,
 	//----------- Misc States ------------------
 	MOVE,
 	PLACE_AUTO,

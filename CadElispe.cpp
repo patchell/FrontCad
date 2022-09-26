@@ -18,11 +18,11 @@ CCadElispe::~CCadElispe()
 {
 }
 
-BOOL CCadElispe::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadElispe::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -41,13 +41,6 @@ BOOL CCadElispe::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-
-BOOL CCadElispe::Destroy(CCadObject* pDependentObjects)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadElispe::Move(CDoubleSize Diff)
@@ -77,7 +70,7 @@ void CCadElispe::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 }
 
-void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -96,47 +89,51 @@ void CCadElispe::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	CADObjectTypes ObjP1, ObjP2;
 	int Lw;
 
-	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
-	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
-	Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetLineWidth());
-	if (Lw < 1) Lw = 1;
-
-	rect.SetRect(
-		ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
-		ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale)
-	);
-	switch (mode.DrawMode)
+	if (m_RenderEnable)
 	{
-	case ObjectDrawMode::FINAL:
-		if (IsSelected())
+		printf("Draw\n");
+		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 1);
+		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::RECTSHAPE, 2);
+		Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetLineWidth());
+		if (Lw < 1) Lw = 1;
+
+		rect.SetRect(
+			ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale),
+			ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale)
+		);
+		switch (mode.DrawMode)
 		{
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
-			brushFill.CreateStockObject(NULL_BRUSH);
-		}
-		else
-		{
-			penLine.CreatePen(PS_SOLID, Lw, GetLineColor());
-			if (GetTransparent())
+		case ObjectDrawMode::FINAL:
+			if (IsSelected())
+			{
+				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLineSelected);
 				brushFill.CreateStockObject(NULL_BRUSH);
+			}
 			else
-				brushFill.CreateSolidBrush(GetFillColor());
+			{
+				penLine.CreatePen(PS_SOLID, Lw, GetLineColor());
+				if (GetTransparent())
+					brushFill.CreateStockObject(NULL_BRUSH);
+				else
+					brushFill.CreateSolidBrush(GetFillColor());
+			}
+			pOldPen = pDC->SelectObject(&penLine);
+			pOldBr = pDC->SelectObject(&brushFill);
+			pDC->Ellipse(&rect);
+			pDC->SelectObject(pOldBr);
+			pDC->SelectObject(pOldPen);
+			break;
+		case ObjectDrawMode::SKETCH:
+			penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorLineSelected);
+			brushFill.CreateStockObject(NULL_BRUSH);
+			pOldPen = pDC->SelectObject(&penLine);
+			pOldBr = pDC->SelectObject(&brushFill);
+			pDC->Ellipse(&rect);
+			pDC->Rectangle(&rect);
+			pDC->SelectObject(pOldBr);
+			pDC->SelectObject(pOldPen);
+			break;
 		}
-		pOldPen = pDC->SelectObject(&penLine);
-		pOldBr = pDC->SelectObject(&brushFill);
-		pDC->Ellipse(&rect);
-		pDC->SelectObject(pOldBr);
-		pDC->SelectObject(pOldPen);
-		break;
-	case ObjectDrawMode::SKETCH:
-		penLine.CreatePen(PS_DOT, 1, GetAttributes().m_colorLineSelected);
-		brushFill.CreateStockObject(NULL_BRUSH);
-		pOldPen = pDC->SelectObject(&penLine);
-		pOldBr = pDC->SelectObject(&brushFill);
-		pDC->Ellipse(&rect);
-		pDC->Rectangle(&rect);
-		pDC->SelectObject(pOldBr);
-		pDC->SelectObject(pOldPen);
-		break;
 	}
 }
 

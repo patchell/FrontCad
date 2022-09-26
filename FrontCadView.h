@@ -104,8 +104,8 @@ public:
 	void SetDeltaMousePos(CDoubleSize szDelta) { m_DeltaMousePos = szDelta; }
 	DOUBLEPOINT ConvertMousePosition(
 		CPoint MousePoint,	//mouse position client ref
-		DOUBLEPOINT ULHC,	//upper left corner of client in inches
-		CScale Scale,		//Inches per Pixel
+		DOUBLEPOINT& ULHC,	//upper left corner of client in inches
+		CScale& Scale,		//Inches per Pixel
 		CDoubleSize SnapGrid,
 		BOOL SnapGridIsEnabled
 	);
@@ -359,7 +359,7 @@ public:
 		CDC* pDC, 
 		DOUBLEPOINT pos,
 		CRect* pRect, 
-		DOUBLEPOINT ULHC,
+		DOUBLEPOINT& ULHC,
 		CScale &Scale, 
 		COLORREF color
 	);

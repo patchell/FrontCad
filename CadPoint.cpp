@@ -67,9 +67,9 @@ CCadPoint::~CCadPoint()
 {
 }
 
-BOOL CCadPoint::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadPoint::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	return TRUE;
 }
 
@@ -91,28 +91,6 @@ CString& CCadPoint::GetTypeString()
 	//--------------------------------------------------
 	static CString csTypeName = CString(_T("POINT"));
 	return csTypeName;
-}
-
-
-BOOL CCadPoint::Destroy(CCadObject* pDependentObject)
-{
-	CCadObject* pObj;
-	BOOL rV = TRUE;
-
-	if (GetDependentChildrenHead())
-	{
-		pObj = GetDependentChildrenHead();
-		while (pObj)
-		{
-			//------------------------------
-			// Go up the chain of dependent
-			// children and prepare them
-			//-----------------------------
-			pObj->Destroy(this);
-			pObj = DeleteChildObject(pObj);
-		}
-	}
-	return rV;
 }
 
 BOOL CCadPoint::IsPointOnTarget(DOUBLEPOINT point)
@@ -210,7 +188,7 @@ CCadObject* CCadPoint::CopyObject()
 	return pCP;
 }
 
-void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -249,23 +227,23 @@ void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	}
 }
 
-void CCadPoint::MoveTo(CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPoint::MoveTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	pDC->MoveTo(ToPixelPoint(ULHC, Scale));
 }
 
-void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	pDC->LineTo(ToPixelPoint(ULHC, Scale));
 }
 
-void CCadPoint::LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPoint::LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	pDC->MoveTo(ToPixelPoint(ULHC, Scale));
 	pDC->LineTo(There.ToPixelPoint(ULHC, Scale.GetScaleX(), Scale.GetScaleY()));
 }
 
-void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	CCadPoint pointThere;
 
@@ -277,7 +255,7 @@ void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT ULH
 BOOL CCadPoint::FloodFill(
 	CDC* pDC, 
 	COLORREF colorBoundry, 
-	DOUBLEPOINT ULHC,
+	DOUBLEPOINT& ULHC,
 	CScale& Scale
 )
 {
@@ -289,7 +267,7 @@ BOOL CCadPoint::FloodFill(
 	return rV;
 }
 
-CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT ULHC, CScale& Scale)
+CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	DOUBLEPOINT dp = (GetPoint() - ULHC);	//offset to client window
 	dp = dp * Scale;	//convert to pixels
@@ -415,7 +393,47 @@ int CCadPoint::EditProperties()
 	return 0;
 }
 
-void CCadPoint::Reflect(CCadPoint* pReflect)
+void CCadPoint::ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+	CRect Rect;
+
+	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	pDC->Rectangle(&Rect);
+}
+
+void CCadPoint::ToPixelRect(CCadPoint* pP2, CRect& Rect, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+}
+
+void CCadPoint::ToPixelArc(
+	CCadPoint* pP2, 
+	CCadPoint* pStart, 
+	CCadPoint* pEnd, 
+	CDC* pDC, 
+	DOUBLEPOINT& ULHC,
+	CScale& Scale
+)
+{
+	CRect Rect;
+
+	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	pDC->Arc(&Rect,pStart->ToPixelPoint(ULHC,Scale),pEnd->ToPixelPoint(ULHC,Scale));
+}
+
+void CCadPoint::ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+	CRect Rect;
+
+	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	pDC->Ellipse(&Rect);
+}
+
+void CCadPoint::ToPixelRndRect(CCadPoint* pP2, CCadPoint* pP3, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+}
+
+CCadPoint* CCadPoint::Reflect(CCadPoint* pReflect)
 {
 	//-------------------------------------
 	// Reflect
@@ -430,6 +448,7 @@ void CCadPoint::Reflect(CCadPoint* pReflect)
 	deltaY = dY - pReflect->dY;
 	dX = pReflect->dX - deltaX;
 	dY = pReflect->dY - deltaY;
+	return this;
 }
 
 UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
@@ -449,7 +468,7 @@ UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
 		SlopeType = SLOPE_VERTICAL;
 	else
 	{
-		SlopeType = SLOPE_NOT_ORTHOGAGOL;
+		SlopeType = SLOPE_NOT_ORTHOGONAL;
 		*pSlope = (dY - pPoint->dY) / (dX - pPoint->dX);
 	}
 	return SlopeType;
@@ -472,7 +491,7 @@ UINT CCadPoint::Slope(double* pSlope, DOUBLEPOINT point)
 		SlopeType = SLOPE_VERTICAL;
 	else
 	{
-		SlopeType = SLOPE_NOT_ORTHOGAGOL;
+		SlopeType = SLOPE_NOT_ORTHOGONAL;
 		*pSlope = (dY - point.dY) / (dX - point.dX);
 	}
 	return SlopeType;
@@ -507,7 +526,7 @@ UINT CCadPoint::OrthogonalSlope(double* pSlope, CCadPoint *pPoint)
 	}
 	else
 	{
-		SlopeType = SLOPE_NOT_ORTHOGAGOL;
+		SlopeType = SLOPE_NOT_ORTHOGONAL;
 		*pSlope = -(dX - pPoint->dX) / (dY - pPoint->dY);
 	}
 	return SlopeType;
@@ -803,11 +822,18 @@ void CCadPoint::PointOnLineAtDistance(
 	}
 }
 
-CCadPoint& CCadPoint::CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint)
+CCadPoint* CCadPoint::CenterPoint(CCadPoint* pFirstPoint, CCadPoint* pOtherPoint)
 {
-	Result.dX = (dX + OtherPoint.dX) / 2.0;
-	Result.dY = (dY + OtherPoint.dY) / 2.0;
-	return Result;
+	//----------------------------------------------------
+	// CenterPoint
+	// Find the center point between pFirstPoint and
+	// pOtherPoint and put the results in this and
+	// return this.
+	//----------------------------------------------------
+
+	dX = (pFirstPoint->dX + pOtherPoint->dX) / 2.0;
+	dY = (pFirstPoint->dX + pOtherPoint->dY) / 2.0;
+	return this;
 }
 
 BOOL CCadPoint::IsPointBetween(CCadPoint* pP1, CCadPoint* pP2)
@@ -820,6 +846,45 @@ BOOL CCadPoint::IsPointBetween(CCadPoint* pP1, CCadPoint* pP2)
 		GetY() < pP2->GetY()
 		)
 		rV = TRUE;
+	return rV;
+}
+
+int CCadPoint::WhichSideOfLineIsPoint(CCadPoint* pPtOther, DOUBLEPOINT Point)
+{
+	double b;
+	double m;
+	double b_prime;
+	UINT TypeOfSlope;
+	int rV = 0;
+
+	TypeOfSlope = Slope(&m, pPtOther);
+	switch (TypeOfSlope)
+	{
+	case SLOPE_HORIZONTAL:
+		if (Point.dY > dY)
+			rV = 1;
+		else if (Point.dY < dY)
+			rV = -1;
+		break;
+	case SLOPE_VERTICAL:
+		if (Point.dX > dX)
+			rV = 1;
+		else if (Point.dX < dX)
+			rV = -1;
+		break;
+	case SLOPE_NOT_ORTHOGONAL:
+		b = YIntercept(m);
+		b_prime = Point.YIntercept(m);
+		if (m > 0 && b_prime > b)
+			rV = -1;
+		else if (m > 0 && b_prime < b)
+			rV = 1;
+		else if (m < 0 && b_prime > b)
+			rV = 1;
+		else if (m < 0 && b_prime < b)
+			rV = -1;
+		break;
+	}
 	return rV;
 }
 

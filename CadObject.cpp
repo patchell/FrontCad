@@ -78,18 +78,86 @@ CCadObject::~CCadObject()
 	// return value:
 	//	none
 	//--------------------------------------------------
+	CCadObject* pObj;
+
+	pObj = GetChildrenHead();
+	while (pObj)
+	{
+		//----------------------------------------
+		// Delete the child object and update
+		// pObj with the next object in the list
+		// of child objects
+		//----------------------------------------
+		pObj = DeleteChildObject(pObj);
+	}
+	pObj = GetDependentChildrenHead();
+	while (pObj)
+	{
+		pObj = pObj->Destroy(pObj);
+	}
+}
+
+CCadObject* CCadObject::Destroy(CCadObject* pDependentObject)
+{
+	//--------------------------------------------------------------
+	// Destroy
+	// 
+	// This is all confusing enough that it makes my head spin.
+	// If this object has any dependent children, such as a line
+	// that has a dimension associated with it, we delete the
+	// dimension object along with the line.  Keeps things from
+	// getting cluttered up.  This is diffent from ChildObjects in
+	// that Child objectsw are part of the object, where a
+	// dpendent ofbject just does something with another object
+	// 
+	// parameters:
+	//	pDependentObject....dependent object to delete
+	// 
+	// returns:
+	// TRUE on success, FALSE on fail
+	// 
+	//--------------------------------------------------------------
+	CCadObject* pObjNext = NULL;
+	BOOL rV = TRUE;
+
+	if (pDependentObject)	//Any thing to destroy?
+	{
+		pObjNext = pDependentObject->GetNextDependentChild();
+		RemoveDepChildObject(pDependentObject);
+		delete pDependentObject;
+	}
+	return pObjNext;
 }
 
 int CCadObject::Print(int Indent)
 {
 	char* s = new char[256];
+	char* s1 = new char[256];
 	char* sI = new char[256];
-	CCadObject* pParent;
-	pParent = GetParent();
-	if (pParent) Indent = pParent->Print(Indent);
-	GETAPP.MkIndentString(sI, Indent);
-	printf("%s%s:%d Selected=%d\n",sI,GETAPP.ConvertCStringToChar(s,GetTypeString()),GetId(), IsSelected());
+	CCadObject* pObj;
+	CString csType;
+	CString csSubType;
+
+//	CCadObject* pParent;
+//	pParent = GetParent();
+//	if (pParent) Indent = pParent->Print(Indent);
+	GETAPP.MkIndentString(sI, Indent++);
+	pObj = GetChildrenHead();
+	csType = GetTypeString();
+	csSubType = GetSubTypeString(GetSubType());
+	printf("%s%s SubType:%s SubSubType:%d\n", 
+		sI, 
+		GETAPP.ConvertCStringToChar(s, csType),
+		GETAPP.ConvertCStringToChar(s1, csSubType),
+		GetSubSubType()
+	);
+	while (pObj)
+	{
+		pObj->Print(++Indent);
+		pObj = pObj->GetNext();
+	}
 	delete[] sI;
+	delete[] s1;
 	delete[] s;
 	Indent += 2;
 	return Indent;
@@ -117,7 +185,7 @@ void CCadObject::Move(CDoubleSize Diff)
 	}
 }
 
-void CCadObject::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadObject::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -235,6 +303,14 @@ void CCadObject::CopyObject(CCadObject* pObjCopy)
 	}
 }
 
+CCadObject* CCadObject::GetVertex(UINT VertexNumber)
+{
+	CCadObject* pObj;
+
+	pObj = FindChildObject(ObjectType::POINT, SubType::VERTEX, VertexNumber);
+	return pObj;
+}
+
 //-------------------------------------------------
 // Child Object List
 //-------------------------------------------------
@@ -300,6 +376,16 @@ void CCadObject::RemoveChildObject(CCadObject* pObj)
 	pObj->SetPrev(0);
 	pObj->SetParent(0);
 	--m_nTotalChildObjects;
+}
+
+CCadObject* CCadObject::DeleteChildObject(CCadObject* pObj)
+{
+	CCadObject* pObjNext;
+
+	pObjNext = pObj->GetNext();	//Get the next child Object
+	RemoveChildObject(pObj);	//Remove pObj from list of children
+	delete pObj;				// Say6 Bye Bye
+	return pObjNext;			// Return the next object
 }
 
 CCadObject* CCadObject::FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType)

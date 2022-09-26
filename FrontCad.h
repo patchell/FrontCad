@@ -158,7 +158,7 @@ public:
 		CPoint* dest, 
 		DOUBLEPOINT*src,
 		int n,
-		DOUBLEPOINT ULHC,
+		DOUBLEPOINT& ULHC,
 		CScale& Scale
 	);
 	BOOL IsOnSegment(

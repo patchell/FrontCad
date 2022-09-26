@@ -5,7 +5,7 @@
 // if you love a klugue and you're happy, clap your hands
 DOUBLEPOINT DOUBLEPOINT::Raw(
 	CPoint p,	//point in client view (pixels)
-	DOUBLEPOINT ULHC,	//Upper Left Hand Corner offset
+	DOUBLEPOINT& ULHC,	//Upper Left Hand Corner offset
 	SCALE Scale	//Inches per pixel
 )
 {
@@ -39,7 +39,7 @@ DOUBLEPOINT DOUBLEPOINT::ULHCfromPixelPoint(CPoint point, double cX, double cY)
 	return ULHC;
 }
 
-CPoint DOUBLEPOINT::ToPixelPoint(DOUBLEPOINT ULHC,  double cX, double cY)
+CPoint DOUBLEPOINT::ToPixelPoint(DOUBLEPOINT& ULHC,  double cX, double cY)
 {
 	CPoint Result;
 

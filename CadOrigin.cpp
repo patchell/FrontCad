@@ -18,11 +18,11 @@ CCadOrigin::~CCadOrigin()
 }
 
 
-BOOL CCadOrigin::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadOrigin::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin,  type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -31,12 +31,6 @@ BOOL CCadOrigin::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadOrigin::Destroy(CCadObject* pDependentObject)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadOrigin::Move(CDoubleSize Diff)
@@ -73,7 +67,7 @@ void CCadOrigin::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	// return value:none
 	//--------------------------------------------------
 }
-void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw

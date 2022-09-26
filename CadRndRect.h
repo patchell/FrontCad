@@ -2,6 +2,7 @@
 
 class CCadRndRect:public CCadObject
 {
+	friend CCadPoint;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_RoundedRectCount;
 	inline static SRoundedRectAttributes m_LastAttributes;
@@ -12,11 +13,10 @@ class CCadRndRect:public CCadObject
 public:
 	CCadRndRect();
 	virtual ~CCadRndRect();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	virtual BOOL Destroy(CCadObject* pDependentObjects);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,

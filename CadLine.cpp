@@ -30,12 +30,12 @@ CCadLine::~CCadLine()
 {
 }
 
-BOOL CCadLine::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadLine::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CCadPoint* pPoint;
 	CCadRect* pRect;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	pPoint = new CCadPoint;
@@ -99,7 +99,7 @@ void CCadLine::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 }
 
 
-void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -738,7 +738,6 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 	return DrawState;
 }
 
-
 BOOL CCadLine::CalcFixedPoint(
 	DOUBLEPOINT MousePos,	//current mopuse position
 	CCadPoint* pPtRtAgl,	//where the right angle is
@@ -758,11 +757,10 @@ BOOL CCadLine::CalcFixedPoint(
 	//
 	//------------------------------------------
 	BOOL rV = TRUE;
-	DOUBLEPOINT PtP2;
 	double b;
 	double a;
-	double BaseSlope, SideSlope, LineSlope;
-	double y, yIntercept, x, xIntercept;
+	double SideSlope, LineSlope;
+	double yIntercept, x;
 	UINT SlopeType;
 
 	if (*pPtRtAgl == *pPtP1)
@@ -792,7 +790,6 @@ BOOL CCadLine::CalcFixedPoint(
 			b = sqrt(b);
 //			printf("Fixed Line a=%7.4lf  b=%7.4lf\n", a, b);
 			SlopeType = pPtP1->OrthogonalSlope(&SideSlope, pPtRtAgl);
-			pPtP1->Slope(&BaseSlope, pPtRtAgl);
 			switch (SlopeType)
 			{
 			case SLOPE_HORIZONTAL:
@@ -821,7 +818,7 @@ BOOL CCadLine::CalcFixedPoint(
 					pPtP2->SetY(pPtRtAgl->GetY());
 				}
 				break;
-			case SLOPE_NOT_ORTHOGAGOL:
+			case SLOPE_NOT_ORTHOGONAL:
 				//--------------------------------------
 				//somewhre in between slope
 				//--------------------------------------
@@ -880,22 +877,16 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	Inches = CDoubleSize(10.0,10.0) * InchesPerPixel;
 	dist = Inches.Magnitude();
 	ObjP1.pCadPoint->Slope(&m1, ObjP2.pCadPoint);
-	//-------------------------------------
-	// Convert 10 x 10 pixels into inches
-	//-------------------------------------
-	p1.PointOnLineAtDistance(DOUBLEPOINT(*ObjP1.pCadPoint), m1, dist);
-	//-------------------------------------
-	// Calculate size of rectangle
-	//-------------------------------------
-	szRect = Inches * 2.0 + (*ObjP2.pCadPoint - *ObjP1.pCadPoint);
-	//-------------------------------------
-	// Calculate rotation point
-	//-------------------------------------
-	p2.PointOnLineAtDistance(DOUBLEPOINT(p1), m1, szRect.Magnitude());
+
+	p1.PointOnLineAtDistance(ObjP1.pCadPoint, m1, dist);
+	p2.PointOnLineAtDistance(ObjP2.pCadPoint, m1, dist);
 	//------------------------------------
 	// Update enclosing rectangle
 	//------------------------------------
-	ObjRect.pCadRect->SetPoints(szRect,DOUBLEPOINT(p1),DOUBLEPOINT(p2));
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(1))->SetPoint(&p1);
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(2))->SetPoint(p1.Reflect(ObjP1.pCadPoint));
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(3))->SetPoint(&p2);
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(4))->SetPoint(p2.Reflect(ObjP2.pCadPoint));
 }
 
 int CCadLine::EditProperties(void)

@@ -484,8 +484,8 @@ DOUBLEPOINT CFrontCadApp::CalcCenter(DOUBLEPOINT p1, DOUBLEPOINT p2)
 {
 	DOUBLEPOINT Result;
 
-	Result.dX = p1.dX + (p1.dX + p2.dX) / 2.0;
-	Result.dY = p1.dY +(p1.dY + p2.dY) / 2.0;
+	Result.dX = (p1.dX + p2.dX) / 2.0;
+	Result.dY = (p1.dY + p2.dY) / 2.0;
 	return Result;
 }
 
@@ -820,7 +820,7 @@ CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
 	CPoint* dest,
 	DOUBLEPOINT* src,
 	int n,
-	DOUBLEPOINT ULHC,
+	DOUBLEPOINT& ULHC,
 	CScale& Scale
 )
 {

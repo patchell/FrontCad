@@ -16,7 +16,7 @@ public:
 	virtual void OnCreate(void);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual BOOL PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -73,7 +73,7 @@ public:
 		m_LineType = 0;
 	};
 	void Create(CCadPoint P1, CCadPoint P2, UINT LineType);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	//---------------------------------------------
 	void SetSlope(double m) { m_Slope = m; }
 	double GetSlope() { return m_Slope; }

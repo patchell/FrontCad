@@ -18,11 +18,11 @@ CCadHoleRound::~CCadHoleRound()
 {
 }
 
-BOOL CCadHoleRound::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadHoleRound::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -31,12 +31,6 @@ BOOL CCadHoleRound::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadPoint->SetSubSubType(0);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadHoleRound::Destroy(CCadObject* pDependentObject)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadHoleRound::Move(CDoubleSize Diff)
@@ -66,7 +60,7 @@ void CCadHoleRound::Save(FILE * pO, DocFileParseToken Token, int Indent, int fla
 	//--------------------------------------------------
 }
 
-void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw

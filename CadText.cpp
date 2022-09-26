@@ -16,11 +16,11 @@ CCadText::~CCadText()
 {
 }
 
-BOOL CCadText::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadText::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	CCadObject::Create(pParent, pOrigin);
@@ -39,12 +39,6 @@ BOOL CCadText::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadRect->SetSubType(SubType::TEXT_RECT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadText::Destroy(CCadObject* pDependentObject)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadText::Move(CDoubleSize Diff)
@@ -74,7 +68,7 @@ void CCadText::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 }
 
-void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -512,7 +506,7 @@ void CCadText::Rotate()
 	pOldFont = pDC->SelectObject(&Font);
 	szTextRect = pDC->GetTextExtent(m_csText);
 	dszTextRect = CDoubleSize(szTextRect);
-	RECT.pCadRect->SetPoints(dszTextRect,DOUBLEPOINT(*LOC.pCadPoint),DOUBLEPOINT(*ROT.pCadPoint));
+//	RECT.pCadRect->SetPoints(dszTextRect,DOUBLEPOINT(*LOC.pCadPoint),DOUBLEPOINT(*ROT.pCadPoint));
 }
 
 

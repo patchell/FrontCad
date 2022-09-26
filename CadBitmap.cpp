@@ -19,24 +19,24 @@ CCadBitmap::~CCadBitmap()
 	if (m_pBM) delete m_pBM;
 }
 
-BOOL CCadBitmap::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadBitmap::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
-	Obj.pCadRect = new CCadRect;
-	Obj.pCadRect->Create(pParent, pOrigin);
-	Obj.pCadRect->SetSubType(SubType::RECTSHAPE);
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::VERTEX);
+	Obj.pCadPoint->SetSubSubType(1);
+	AddObjectAtChildTail(Obj.pCadObject);
+
+	Obj.pCadPoint = new CCadPoint;
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::VERTEX);
+	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadBitmap::Destroy(CCadObject* pDependentObject)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadBitmap::Move(CDoubleSize Diff)
@@ -67,7 +67,7 @@ void CCadBitmap::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
 }
 
 
-void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -80,7 +80,7 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CADObjectTypes Obj;
+	CADObjectTypes ObjP1, ObjP2;
 	CPen penLine, * ppenOld;
 	CBrush brushFill, * pbrushOld;
 	CRect rect;
@@ -89,8 +89,9 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
-		rect = Obj.pCadRect->ToCRect(ULHC, Scale);
+		ObjP1.pCadObject = FindChildObject(ObjectType::RECT, SubType::VERTEX, 1);
+		ObjP2.pCadObject = FindChildObject(ObjectType::RECT, SubType::VERTEX, 2);
+		ObjP1.pCadPoint->ToPixelRect(ObjP2.pCadPoint, rect, ULHC, Scale);
 
 		switch (mode.DrawMode)
 		{
@@ -308,6 +309,7 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes ObjP1, ObjP2;
 
 	switch (DrawState)
 	{
@@ -340,6 +342,10 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
+		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		ObjP2.pCadPoint->SetPoint(MousePos);
+		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
 		break;
@@ -347,6 +353,8 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
+		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		ObjP2.pCadPoint->SetPoint(MousePos);
 		GETVIEW->EnableAutoScroll(FALSE);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
@@ -378,8 +386,8 @@ ObjectDrawState CCadBitmap::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
-		Obj.pCadRect->SetSecondPoint(MousePos);
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		Obj.pCadPoint->SetPoint(MousePos);
 		break;
 	}
 	GETVIEW->Invalidate();

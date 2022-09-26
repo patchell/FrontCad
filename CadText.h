@@ -19,11 +19,10 @@ class CCadText:public CCadObject
 public:
 	CCadText();
 	virtual ~CCadText();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	virtual BOOL Destroy(CCadObject* pDependentObject);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,

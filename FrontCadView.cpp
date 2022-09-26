@@ -148,7 +148,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
 	CCadObject* pDrawingObjectList;
-	CCadPoint ULHC;		//upper left hand corner offset
+	DOUBLEPOINT ULHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
 	static int count;
@@ -1561,6 +1561,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		if (GetObjectTypes().pCadObject)
 		{
 			GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::END_DRAWING);
+			GetObjectTypes().pCadObject->Print(0);
 			delete GetObjectTypes().pCadObject;
 			SetObjectTypes(0);
 		}
@@ -2032,7 +2033,7 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CFrontCadView::DoVScroll(double Yinches, BOOL Absolute, BOOL Update)
 {
-	CFrontCadDoc* pDoc = GetDocument();;
+	CFrontCadDoc* pDoc = GetDocument();
 	DOUBLEPOINT ULHC; //upper left hand corner
 
 	if (Update)
@@ -2250,7 +2251,7 @@ void CFrontCadView::DrawCursor(
 	CDC* pDC, 
 	DOUBLEPOINT pos,// Cursor Position
 	CRect* pRect,	// Client Rectangle
-	DOUBLEPOINT ULHC,
+	DOUBLEPOINT& ULHC,
 	CScale &Scale, 
 	COLORREF color
 )
@@ -2872,8 +2873,8 @@ CCadObject* CFrontCadView::SnapToObject(
 
 DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 	CPoint MousePoint,	//mouse position client ref
-	DOUBLEPOINT ULHC,	//upper left corner of client in inches
-	CScale Scale,		//Inches per Pixel
+	DOUBLEPOINT& ULHC,	//upper left corner of client in inches
+	CScale& Scale,		//Inches per Pixel
 	CDoubleSize SnapGrid,
 	BOOL SnapGridIsEnabled
 )

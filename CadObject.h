@@ -42,35 +42,40 @@ class CCadObject
 		{ ObjectType::ROUNDEDRECT,OBJKIND_ROUNDEDRECT},
 		{ ObjectType::TEXT,OBJKIND_TEXT}
 	};
-	static inline CString SubTypeStrings[23] = {
-	_T("ANY"),
+	static inline CString SubTypeStrings[28] = {
+	_T("ANY"),				//0
+	_T("DEFAULT"),			//1
+	_T("RECT_ROTATED"),		//2
+	_T("RECT_BASE_DEFINED"),//3
+	_T("LINE_FIXED_LEN"),	//4
 	//--- Arc/Ellipse ---
-	_T("RECTSHAPE"),
-	_T("STARTPOINT"),
-	_T("ENDPOINT"),
+	_T("RECTSHAPE"),		//5
+	_T("STARTPOINT"),		//6
+	_T("ENDPOINT"),			//7
 	//--- Arrow ---
-	_T("ARROW_TIP"),
-	_T("ARROW_END"),
-	_T("ARROW_TOP"),
-	_T("ARROW_BOT"),
-	_T("ARROW_ROTATION"),
+	_T("ARROW_TIP"),		//8
+	_T("ARROW_END"),		//9
+	_T("ARROW_TOP"),		//10
+	_T("ARROW_BOT"),		//11
+	_T("ARROW_ROTATION"),	//12
 	//--- Rectangle ---
-	_T("RECT_TOP_CENTER"),
-	_T("RECT_BOT_CENTER"),
-	_T("RECT_LEFT_CENTER"),
-	_T("RECT_RGIHT_CENTER"),
-	_T("CORNER_RADIUS"),
+	_T("RECT_TOP_CENTER"),	//13
+	_T("RECT_BOT_CENTER"),	//14
+	_T("RECT_LEFT_CENTER"),	//15
+	_T("RECT_RGIHT_CENTER"),//16
+	_T("CORNER_RADIUS"),	//17
 	//--- Text ---
-	_T("TEXT_LOCATION"),
-	_T("TEXT_ROTATION"),
-	_T("TEXT_RECT"),
+	_T("TEXT_LOCATION"),	//18
+	_T("TEXT_ROTATION"),	//19
+	_T("TEXT_RECT"),		//20
 	//--- Misc ---
-	_T("ORIGIN_LOCATION"),
-	_T("CENTERPOINT"),
-	_T("PIVOTPOINT"),
-	_T("MIDPOINT"),
-	_T("VERTEX"),
-	_T("LINE_FIXED_LEN")
+	_T("ORIGIN_LOCATION"),	//21
+	_T("CENTERPOINT"),		//22
+	_T("PIVOTPOINT"),		//23
+	_T("MIDPOINT"),			//24
+	_T("ROTATION_POINT"),	//25
+	_T("VERTEX"),			//26
+	_T("RIGHTANGLE_VERTEX")	//27
 	};
 	//--------------------------------------
 	// Object Properties
@@ -130,12 +135,13 @@ public:
 	//-------------------------------------
 	CCadObject();
 	virtual ~CCadObject();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin) {
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT) {
 		m_pParentObject = pParent;
 		m_pOrigin = pOrigin;
+		m_SubType = type;
 		return TRUE;
 	}
-	virtual BOOL Destroy(CCadObject* pDependentObject) { return TRUE; }
+	virtual CCadObject* Destroy(CCadObject* pDependentObject);
 	int Print(int Indent);
 	virtual void SetParent(CCadObject* pP) { m_pParentObject = pP; }
 	virtual CCadObject* GetParent() const { return m_pParentObject; }
@@ -157,6 +163,7 @@ public:
 	//------------------------------------
 	// Drawing Manipulation Methods
 	//------------------------------------
+	virtual void Flip(CCadPoint* Pivot, int Direction) {}
 	virtual void Move(CDoubleSize Diff);
 	//------------------------------------
 	// load and save files
@@ -172,7 +179,7 @@ public:
 	//-----------------------------------------
 	// Draw The Drawing
 	//-----------------------------------------
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	//------------------------------------------
 	// Get things about the object
 	//------------------------------------------
@@ -203,7 +210,9 @@ public:
 	void SetName(CString& csName) { m_csName = csName; }
 	CString& GetDescription() { return m_csDescription; }
 	virtual CString& GetTypeString(void);
-	CString& GetSubTypeString(SubType SubTypeEnum) { return SubTypeStrings[UINT(SubTypeEnum)]; }
+	CString& GetSubTypeString(SubType SubTypeEnum) {
+		return SubTypeStrings[UINT(SubTypeEnum)]; 
+	}
 	char* GetCharSubTypeString(char *pDest, SubType SubTypeEnum) {
 		CString csST = GetSubTypeString(SubTypeEnum);
 		return GETAPP.ConvertCStringToChar(pDest, csST);
@@ -214,12 +223,12 @@ public:
 	virtual CDoubleSize GetSize() { 
 		return CDoubleSize(0.0, 0.0);
 	};
+	virtual CCadObject* GetVertex(UINT VertexNumber);
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState) { return DrawState; }
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState) { return DrawState; }
-	virtual void Flip(CCadPoint* Pivot, int Direction){}
 	virtual void ProcessZoom(CScale& InchesPerPixel) {}
 	//--------------------------------------------------------
 	// Methods for managing object properites
@@ -250,14 +259,7 @@ public:
 	void AddObjectAtChildHead(CCadObject* pObj);
 	void AddObjectAtChildTail(CCadObject* pObj);
 	void RemoveChildObject(CCadObject* pObj);
-	CCadObject* DeleteChildObject(CCadObject* pObj) {
-		CCadObject* pObjNext;
-
-		pObjNext = pObj->GetNext();
-		Destroy(pObj);
-		delete pObj;
-		return pObjNext;
-	}
+	CCadObject* DeleteChildObject(CCadObject* pObj);
 	CCadObject* FindChildObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
 	//-------------------------------------------------------------
 	//				List of Dependent Children ------------
@@ -288,12 +290,14 @@ public:
 	void SetNextDependentParent(CCadObject* pN) { m_pNextDependentParent = pN; }
 	CCadObject* GetPrevDependentParent() { return m_pPrevDependentParent; }
 	void SetPrevDependentParent(CCadObject* pP) { m_pPrevDependentParent = pP; }
-	//-- Manage List --
+	//-- Manage Dependent Parents List --
 	void AddDepParentObjectAtHead(CCadObject* pObj);
 	void AddDepParentObjectAtTail(CCadObject* pObj);
 	void RemoveDepParentObject(CCadObject* pObj);
 	CCadObject* FindDepParentObject(ObjectType Type, SubType SubType, UINT SubSubType = 0);
+	//----------------------------------------------------------
 	//---------------- Origin List Links -----------------------
+	//----------------------------------------------------------
 	void SetNextOrigin(CCadObject* pObj) { m_pNextOrigin = pObj; }
 	CCadObject* GetNextOrigin() { return m_pNextOrigin; }
 	void SetPrevOrigin(CCadObject* pObj) { m_pPrevOrigin = pObj; }
@@ -305,6 +309,8 @@ public:
 	void SetNextClipBoard(CCadObject* pObj) { m_pNextClipBoard = pObj; }
 	CCadObject* GetPrevClipBoard() { return m_pPrevClipBoard; }
 	void SetPrevClipBoard(CCadObject* pObj) { m_pPrevClipBoard = pObj; }
+	//---------------------------------------------------
+	//---------------------------------------------------
 	UINT TypeToKind(ObjectType ObjType) {
 		return XREF[UINT(ObjType)].Kind;
 	}

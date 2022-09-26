@@ -33,11 +33,11 @@ CCadPolygon::~CCadPolygon()
 {
 }
 
-BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -45,12 +45,6 @@ BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin)
 	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
-}
-
-BOOL CCadPolygon::Destroy(CCadObject* pDendentObjects)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadPolygon::Move(CDoubleSize Diff)
@@ -102,7 +96,7 @@ void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 	delete[] String;
 }
 
-BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	CCadPoint* pPoint, *pFirstPoint;
 	BOOL bFirstPoint = TRUE;
@@ -186,7 +180,7 @@ exit:
 	return pResultPoint;
 }
 
-void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	CCadPoint* pCenter;
 
@@ -197,7 +191,7 @@ void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Sca
 	}
 }
 
-void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw

@@ -14,11 +14,10 @@ class CCadArc :public CCadObject
 public:
 	CCadArc();
 	virtual ~CCadArc();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	virtual BOOL Destroy(CCadObject* pDependentObjects);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, CCadPoint ULHC, CScale Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -42,7 +41,7 @@ public:
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	double CalcY(double x, double A, double B);
 	BadDelta DeltaIsBad(CPoint P1, CPoint P2);
 	CDoubleSize SlopeIsOneAt(double Asquared, double Bsquared);

@@ -78,12 +78,12 @@ void CStaticPreview::OnPaint()
 	
 	CRect rectClient;
 	CBrush br(RGB(255,255,255));
-
+	CPen pen, * oldPen;
+	CCadObject* pO;
 
 	GetClientRect(&rectClient);
 	dc.FillRect(&rectClient,&br);
-	CCadObject *pO = m_pObj;
-	CPen pen,*oldPen;
+	pO = m_pObj;
 	pen.CreatePen(PS_SOLID, 1, RGB(0, 128, 240));
 	oldPen = dc.SelectObject(&pen);
 	if (m_Y)	//Y axis enabled
@@ -98,7 +98,7 @@ void CStaticPreview::OnPaint()
 	}
 	dc.SelectObject(oldPen);
 	MODE mode;
-	CCadPoint ulhc;
+	DOUBLEPOINT ulhc;
 	while(pO)
 	{
 		pO->Draw(&dc, mode, ulhc, m_Scale);

@@ -18,11 +18,11 @@ CCadHoleRnd1Flat::~CCadHoleRnd1Flat()
 {
 }
 
-BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
@@ -42,13 +42,6 @@ BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, CCadObject* pOrigin)
 	AddObjectAtChildTail(Obj.pCadObject);
 	SolveIntersection();
 	return TRUE;
-}
-
-
-BOOL CCadHoleRnd1Flat::Destroy(CCadObject* pDependentObject)
-{
-	BOOL rV = TRUE;
-	return rV;
 }
 
 void CCadHoleRnd1Flat::Move(CDoubleSize Diff)
@@ -78,7 +71,7 @@ void CCadHoleRnd1Flat::Save(FILE * pO, DocFileParseToken Token, int Indent, int 
 	//--------------------------------------------------
 }
 
-void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw

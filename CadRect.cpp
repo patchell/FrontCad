@@ -15,39 +15,9 @@ CCadRect::CCadRect():CCadObject()
 
 CCadRect::~CCadRect()
 {
-	CCadObject* pObj, *pNextObj;
-
-	pObj = GetChildrenHead();
-	while (pObj)
-	{
-		pNextObj = pObj->GetNext();
-		pObj->DeleteChildObject(pObj);
-		pObj = pNextObj;
-	}
 }
 
-BOOL CCadRect::Destroy(CCadObject* pDependentObject)
-{
-	CCadObject* pObj;
-	BOOL rV = TRUE;
-
-	if (GetDependentChildrenHead())
-	{
-		pObj = GetDependentChildrenHead();
-		while (pObj)
-		{
-			//------------------------------
-			// Go up the chain of dependent
-			// children and prepare them
-			//-----------------------------
-			pObj->Destroy(this);
-			pObj = DeleteChildObject(pObj);
-		}
-	}
-	return rV;
-}
-
-BOOL CCadRect::Create(CCadObject* pParent, CCadObject* pOrigin)
+BOOL CCadRect::Create(CCadObject* pParent, CCadObject* pOrigin, SubType Type)
 {
 	//---------------------------------------
 	// Create
@@ -56,195 +26,254 @@ BOOL CCadRect::Create(CCadObject* pParent, CCadObject* pOrigin)
 	int i;
 	CCadPoint* pPoint;
 
-	CCadObject::Create(pParent, pOrigin);
+	CCadObject::Create(pParent, pOrigin, Type);
 	if (pParent == NULL)
 		pParent = this;
 	for (i = 0; i < 4; ++i)
 	{
 		pPoint = new CCadPoint;
-		pPoint->Create(pParent, pOrigin);
-		pPoint->SetSubType(SubType::VERTEX);
+		pPoint->Create(pParent, pOrigin, SubType::VERTEX);
 		pPoint->SetSubSubType(i + 1);
 		AddObjectAtChildTail(pPoint);
 	}
 	pPoint = new CCadPoint;
-	pPoint->Create(pParent, pOrigin);
-	pPoint->SetSubType(SubType::CENTERPOINT);
-	pPoint->SetSubSubType(0);
+	pPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(pPoint);
-	pPoint = new CCadPoint;
-	pPoint->Create(pParent, pOrigin);
-	pPoint->SetSubType(SubType::PIVOTPOINT);
-	AddObjectAtChildTail(pPoint);
+	switch (Type)
+	{
+	case SubType::RECT_ROTATED:
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, pOrigin, SubType::PIVOTPOINT);
+		AddObjectAtChildTail(pPoint);
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, pOrigin, SubType::ROTATION_POINT);
+		AddObjectAtChildTail(pPoint);
+		break;
+	case SubType::RECT_BASE_DEFINED:
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, pOrigin, SubType::PIVOTPOINT);
+		AddObjectAtChildTail(pPoint);
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, pOrigin, SubType::ROTATION_POINT);
+		AddObjectAtChildTail(pPoint);
+		break;
+	case SubType::DEFALT:
+		break;
+	}
 	return TRUE;
 }
 
-void CCadRect::SetPoints(DOUBLEPOINT P1, DOUBLEPOINT P2, DOUBLEPOINT RotDef)
+//----------------------------------------------------
+// Set Rectangle Coordinates
+//----------------------------------------------------
+
+void CCadRect::SetRect(DOUBLEPOINT P1, DOUBLEPOINT P2)
 {
-	//----------------------------------------------
-	// Set the points on a boring rectangle defined
-	// by points P1 and P2
-	// 
-	// parameters:
-	//	P1.......Upper Left hand corner
-	//	P2.......Lower Right hand corner
-	//----------------------------------------------
-	CDoubleSize Diff;
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
 
-	Diff = P2 - P1;
-	SetPoints(Diff, P1, RotDef);
-}
-
-void CCadRect::SetPoints(CDoubleSize sz, DOUBLEPOINT p1, DOUBLEPOINT pointRot)
-{
-	//----------------------------------------
-	// Calculate the points on the rectangle
-	// tgat us rotated around p1 defined
-	// at an angle defined by pointRot
-	//
-	// parameters:
-	// sz........size of the rectangle
-	// p1........origin of the rectangle
-	// pointRot..rotation definition point
-	//---------------------------------------
-	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjCenter;
-	double m, W,H, Rise, Run;
-
-	//--------------------------------------
-	// Get the objects to set
-	//--------------------------------------
 	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
 	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
-	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	Run = pointRot.dX - p1.dX;	//run
-	Rise = p1.dY - pointRot.dY;	//rise
-	W = sz.dCX;
-	H = sz.dCY;
 
-	if (pointRot == p1)
-	{
-		//--------------------------------
-		// No Rotation
-		//--------------------------------
-		ObjP1.pCadPoint->SetPoint(p1);
-		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
-		ObjP3.pCadPoint->SetPoint(p1 + sz);
-		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
-	}
-	else if (Rise == 0.0)
-	{
-		//--------------------------------
-		// Horizontal Rectangle
-		//--------------------------------
-		ObjP1.pCadPoint->SetPoint(p1);
-		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
-		ObjP3.pCadPoint->SetPoint(p1 + sz);
-		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
-	}
-	else if (Run == 0.0)
-	{
-		//-------------------------------
-		// Vertical Rectangle
-		//-------------------------------
-		ObjP1.pCadPoint->SetPoint(p1);
-		ObjP2.pCadPoint->SetPoint(p1 + CDoubleSize(W, 0.0));
-		ObjP3.pCadPoint->SetPoint(p1 + sz);
-		ObjP4.pCadPoint->SetPoint(p1 + CDoubleSize(0.0, H));
-	}
-	else
-	{
-		//---------------------------------
-		// Non orthogonal Rotation
-		//---------------------------------
-		m = Rise / Run;	//rise/run
-		ObjP1.pCadPoint->SetPoint(p1);
-		ObjP4.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, m, W);
-		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, -1.0 / m, H);
-		ObjP3.pCadPoint->PointOnLineAtDistance(ObjP4.pCadPoint, -1.0 / m, H);
-	}
-	ObjCenter.pCadPoint->SetPoint(GETAPP.CalcCenter(ObjP1.pCadPoint, ObjP3.pCadPoint));
+	*ObjP1.pCadPoint = P1;
+	*ObjP3.pCadPoint = P2;
+	ObjP2.pCadPoint->SetX(P1.dX);
+	ObjP2.pCadPoint->SetY(P2.dY - P1.dY);
+	ObjP4.pCadPoint->SetX(P2.dX - P1.dX);
+	ObjP4.pCadPoint->SetY(P1.dY);
 }
 
-CCadRect& CCadRect::SetSecondPoint(DOUBLEPOINT P2)
+void CCadRect::SetRect(CCadPoint* pP1, CCadPoint* pP2)
 {
-	CDoubleSize Diff;
-	CADObjectTypes ObjP1;
-	DOUBLEPOINT P1;
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
 
 	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-	P1 = DOUBLEPOINT(*ObjP1.pCadPoint);
-	SetPoints(P1, P2,P1);
-	return *this;
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
+
+	*ObjP1.pCadPoint = *pP1;
+	*ObjP3.pCadPoint = *pP2;
+	ObjP2.pCadPoint->SetX(pP1->dX);
+	ObjP2.pCadPoint->SetY(pP2->dY - pP1->dY);
+	ObjP4.pCadPoint->SetX(pP2->dX - pP1->dX);
+	ObjP4.pCadPoint->SetY(pP1->dY);
 }
 
-CCadRect& CCadRect::SetPointsFromCenter(DOUBLEPOINT P1)
+void CCadRect::SetRect(
+	DOUBLEPOINT P1, 
+	DOUBLEPOINT P2, 
+	DOUBLEPOINT P3, 
+	DOUBLEPOINT P4
+)
 {
+
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
+
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
+
+	*ObjP1.pCadPoint = P1;
+	*ObjP2.pCadPoint = P2;
+	*ObjP3.pCadPoint = P3;
+	*ObjP4.pCadPoint = P4;
+}
+
+void CCadRect::SetRect(CCadPoint* pP1, CCadPoint* pP2, CCadPoint* pP3, CCadPoint* pP4)
+{
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
+
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
+
+	*ObjP1.pCadPoint = *pP1;
+	*ObjP2.pCadPoint = *pP2;
+	*ObjP3.pCadPoint = *pP3;
+	*ObjP4.pCadPoint = *pP4;
+}
+
+void CCadRect::SetRect(DOUBLEPOINT P1, DOUBLEPOINT P2, double h)
+{
+	double m;
+	UINT SlopeType;
+
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
+
+	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+	ObjP3.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
+	ObjP4.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
+
+	*ObjP1.pCadPoint = P1;
+	*ObjP4.pCadPoint = P2;
+	SlopeType = ObjP4.pCadPoint->OrthogonalSlope(&m, ObjP1.pCadPoint);
+	switch (SlopeType)
+	{
+	case SLOPE_HORIZONTAL:
+		break;
+	case SLOPE_VERTICAL:
+		break;
+	case SLOPE_NOT_ORTHOGONAL:
+		
+		ObjP3.pCadPoint->PointOnLineAtDistance(ObjP4.pCadPoint, m, h);
+		ObjP2.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, m, h);
+		break;
+	}
+}
+
+
+void CCadRect::SetRect(CCadPoint* pP1, CCadPoint* pP2, double h)
+{
+}
+
+void CCadRect::Recalc24()
+{
+	//----------------------------------
+	// Recalc24
+	// Recalculate vertex 2 and 4 from
+	// vertex 1 and 3
+	//----------------------------------
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
+
+	ObjP1.pCadObject = GetVertex(1);
+	ObjP2.pCadObject = GetVertex(2);
+	ObjP3.pCadObject = GetVertex(3);
+	ObjP4.pCadObject = GetVertex(4);
+	ObjP2.pCadPoint->SetPoint(ObjP1.pCadPoint->GetX(),ObjP3.pCadPoint->GetY());
+	ObjP4.pCadPoint->SetPoint(ObjP3.pCadPoint->GetX(),ObjP1.pCadPoint->GetY());
+	ReCalcCenter();
+}
+
+void CCadRect::Recalc34(double h)
+{
+	//--------------------------------------
+	// Recalc34
+	// 
+	// Recalculate Points P3, P4 based on the
+	// line defined by P1 and P2
+	//--------------------------------------
+	double m;
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
+	UINT SlopeType;
+
+	ObjP1.pCadObject = GetVertex(1);
+	ObjP2.pCadObject = GetVertex(2);
+	ObjP3.pCadObject = GetVertex(3);
+	ObjP4.pCadObject = GetVertex(4);
+
+	SlopeType = ObjP2.pCadPoint->OrthogonalSlope(&m, ObjP1.pCadPoint);
+	switch (SlopeType)
+	{
+	case SLOPE_HORIZONTAL:
+		ObjP3.pCadPoint->SetPoint(ObjP2.pCadPoint->GetX(), ObjP2.pCadPoint->GetY() + h);
+		ObjP4.pCadPoint->SetPoint(ObjP2.pCadPoint->GetX(), ObjP2.pCadPoint->GetY() + h);
+		break;
+	case SLOPE_VERTICAL:
+		ObjP3.pCadPoint->SetPoint(ObjP2.pCadPoint->GetX() + h, ObjP2.pCadPoint->GetY());
+		ObjP4.pCadPoint->SetPoint(ObjP2.pCadPoint->GetX() + h, ObjP2.pCadPoint->GetY());
+		break;
+	case SLOPE_NOT_ORTHOGONAL:
+		ObjP3.pCadPoint->PointOnLineAtDistance(ObjP2.pCadPoint, m, h);
+		ObjP4.pCadPoint->PointOnLineAtDistance(ObjP1.pCadPoint, m, h);
+		break;
+	}
+	ReCalcCenter();
+}
+
+void CCadRect::Recalc234()
+{
+	//----------------------------------------------
+	// Recalc234
+	// Calculates P2, P3, P4 based on P1 and the 
+	// Center of the rectangle
+	//----------------------------------------------
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjCenter;
 	CDoubleSize Diff;
+
+	ObjP1.pCadObject = GetVertex(1);
+	ObjP2.pCadObject = GetVertex(2);
+	ObjP3.pCadObject = GetVertex(3);
+	ObjP4.pCadObject = GetVertex(4);
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+	Diff = *ObjP1.pCadPoint - *ObjCenter.pCadPoint;
+	ObjP2.pCadPoint->SetPoint(ObjCenter.pCadPoint->GetX() - Diff.dCX, ObjCenter.pCadPoint->GetY() + Diff.dCY);
+	ObjP3.pCadPoint->SetPoint(ObjCenter.pCadPoint->GetX() + Diff.dCX, ObjCenter.pCadPoint->GetY() + Diff.dCY);
+	ObjP4.pCadPoint->SetPoint(ObjCenter.pCadPoint->GetX() + Diff.dCX, ObjCenter.pCadPoint->GetY() - Diff.dCY);
+	ObjCenter.pCadPoint->CenterPoint(ObjP1.pCadPoint, ObjP3.pCadPoint);
+}
+
+void CCadRect::ReCalcCenter()
+{
 	CADObjectTypes ObjCenter;
-	DOUBLEPOINT Center;
+	CADObjectTypes ObjP1, ObjP3;
 
 	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	Center = DOUBLEPOINT(*ObjCenter.pCadPoint);
-	Diff = (Center - P1) * 2.0;
-
-	SetPoints(Diff,P1,P1);
-	return *this;
+	ObjP1.pCadObject = GetVertex(1);
+	ObjP3.pCadObject = GetVertex(3);
+	ObjCenter.pCadPoint->CenterPoint(ObjP1.pCadPoint, ObjP3.pCadPoint);
 }
 
-CCadRect& CCadRect::SetPointsFromCenter(double halfWidth, double halfHeight)
+void CCadRect::SetAllPoints(DOUBLEPOINT p)
 {
-	CDoubleSize Diff;
-	CCadPoint* pPoint;
-	DOUBLEPOINT Center;
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
 
-	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	Center = DOUBLEPOINT(*(CCadPoint*)pPoint);
-	Diff = CDoubleSize(halfWidth, halfHeight);
+	ObjP1.pCadObject = GetVertex(1);
+	ObjP2.pCadObject = GetVertex(2);
+	ObjP3.pCadObject = GetVertex(3);
+	ObjP4.pCadObject = GetVertex(4);
 
-	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-	pPoint->SetPoint(Center - Diff);
-	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
-	pPoint->SetPoint(Center + CDoubleSize(Diff.dCX, -Diff.dCY));
-	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
-	pPoint->SetPoint(Center + Diff);
-	pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, 4);
-	pPoint->SetPoint(Center + CDoubleSize(-Diff.dCX, Diff.dCY));
-	return *this;
+	ObjP1.pCadPoint->SetPoint(p);
+	ObjP2.pCadPoint->SetPoint(p);
+	ObjP3.pCadPoint->SetPoint(p);
+	ObjP4.pCadPoint->SetPoint(p);
+	ReCalcCenter();
 }
 
-CCadRect& CCadRect::SetCenterPoint(DOUBLEPOINT newCenter)
-{
-	CDoubleSize Diff;
-	CCadPoint* pCenter, *pPoint;
-	int i;
-
-	pCenter = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	Diff = newCenter - DOUBLEPOINT(*pCenter);
-	pCenter->SetPoint(newCenter);
-	for (i = 0; i < 4; ++i)
-	{
-		pPoint = (CCadPoint*)FindChildObject(ObjectType::POINT, SubType::VERTEX, i + 1);
-		pPoint->SetPoint(DOUBLEPOINT(*pPoint) + Diff);
-	}
-	return *this;
-}
-
-CRect CCadRect::ToCRect(DOUBLEPOINT ULHC, CScale& Scale)
-{
-	CRect rect;
-	CADObjectTypes ObjP1, ObjP2;
-	CPoint P1, P2;
-
-	ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-	ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 3);
-	P1 = ObjP1.pCadPoint->ToPixelPoint(ULHC, Scale);
-	P2 = ObjP2.pCadPoint->ToPixelPoint(ULHC, Scale);
-	rect.SetRect(P1, P2);
-	rect.NormalizeRect();
-	return rect;
-}
 
 void CCadRect::Move(CDoubleSize Diff)
 {
@@ -298,7 +327,7 @@ void CCadRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	delete []psIndent;
 }
 
-void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale, BOOL bFill)
+void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill)
 {
 	int i;
 	CCadPoint* pPoint;
@@ -350,7 +379,7 @@ exit:
 void CCadRect::FillRect(
 	CDC* pDC, 
 	MODE mode, 
-	DOUBLEPOINT  ULHC, 
+	DOUBLEPOINT&  ULHC, 
 	CScale& Scale, 
 	COLORREF colorBoarder
 )
@@ -364,7 +393,7 @@ void CCadRect::FillRect(
 	));
 	if (pPoint)
 	{
-		pPoint->Print("Rect Center Point");
+//		pPoint->Print("Rect Center Point");
 		pPoint->FloodFill(
 			pDC,
 			colorBoarder,
@@ -374,7 +403,7 @@ void CCadRect::FillRect(
 	}
 }
 
-void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -718,8 +747,8 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes Obj;
-
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjCenter;
+	CADObjectTypes ObjRect;
 	CPoint MouseScreenCoordinate;
 
 	switch (DrawState)
@@ -758,56 +787,78 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-		Obj.pCadPoint->SetPoint(MousePos);
+		SetAllPoints(MousePos);
 		MousePos.Print("Rect Point 1");
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		SetSecondPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		SetSecondPoint(MousePos);
-		if (GETVIEW->IsR_KeyDown())
-		{
-			//-----------------------------------
-			// Rotate Rectangle
-			//-----------------------------------
-
-			DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN;
-			GETAPP.UpdateStatusBar(_T("Rectangle:Select Pivot Point"));
-		}
-		else
-		{
-			//----------------------------------------------
-			// Just a regular orthoganol Rectangle
-			//---------------------------------------------
-			MousePos.Print("Rect Point 2");
-				GETVIEW->GetDocument()->AddObjectAtTail(this);
-			Obj.pCadRect = new CCadRect;
-			Obj.pCadRect->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
-			GETVIEW->EnableAutoScroll(FALSE);
-			GETVIEW->SetObjectTypes(Obj.pCadObject);
-			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
-			GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
-		}
+		ObjP3.pCadObject = GetVertex(3);
+		ObjP3.pCadPoint->SetPoint(MousePos);
+		Recalc24();
+		//----------------------------------------------
+		// Just a regular orthoganol Rectangle
+		//---------------------------------------------
+		MousePos.Print("Rect Point 2");
+			GETVIEW->GetDocument()->AddObjectAtTail(this);
+		ObjRect.pCadRect = new CCadRect;
+		ObjRect.pCadRect->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+		GETVIEW->EnableAutoScroll(FALSE);
+		GETVIEW->SetObjectTypes(ObjRect.pCadObject);
+		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
 		GETVIEW->Invalidate();
 		break;
-	case ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN:
-		DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_UP;
+		//---------------------------------------------
+		//-------- Rotated Rectangle States Mode 1 ----
+		// 
+		// State machine for drawing a rotated
+		// rectasngle
+		//---------------------------------------------
+	case ObjectDrawState::ROT_RECT_ROTATED_START_DRAWING:
 		break;
-	case ObjectDrawState::SELECT_PIVOT_LBUTTON_UP:
-		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Rectangle:Set Angle Definition Point"));
+	case ObjectDrawState::ROT_RECT_ROTATION_PIVOT_MOUSE_DOWN:
 		break;
-	case ObjectDrawState::ROTATE_LBUTTON_DOWN:
-		DrawState = ObjectDrawState::ROTATE_LBUTTON_UP;
+	case ObjectDrawState::ROT_RECT_ROTATION_PIVOT_MOUSE_UP:
 		break;
-	case ObjectDrawState::ROTATE_LBUTTON_UP:
-		DrawState = ObjectDrawState::SELECT_PIVOT_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
+	case ObjectDrawState::ROT_RECT_FIRST_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::ROT_RECT_FIRST_POINT_MOUSE_UP:
+		break;
+	case ObjectDrawState::ROT_RECT_SECOND_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::ROT_RECT_SECOND_POINT_MOUSE_UP:
+		break;
+	case ObjectDrawState::ROT_RECT_ROTATE_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::ROT_RECT_ROTATE_POINT_MOUSE_UP:
+		break;
+	//------------------------------------------
+	//-------- Rect Width/Height/Rotate --------
+	// 
+	// State machine for drawing a rotated
+	// rectangle defined by a base and hiegth
+	//------------------------------------------
+	case ObjectDrawState::RECT_HWR_START_DRAWING:
+		break;
+	case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::BASE_HWR_HIEGTH_MOUSE_UP:
 		break;
 	}
 	return DrawState;
@@ -828,11 +879,14 @@ ObjectDrawState CCadRect::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes ObjP1, ObjP2, ObjCenter;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		SetSecondPoint(MousePos);
+		ObjP2.pCadObject = GetVertex(3);;
+		ObjP2.pCadPoint->SetPoint(MousePos);
+		Recalc24();
 		break;
 	}
 	GETVIEW->Invalidate();

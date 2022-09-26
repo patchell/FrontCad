@@ -2,6 +2,7 @@
 
 class CCadPolygon : public CCadObject
 {
+	friend CCadPoint;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_PolygonCount;
 	inline static SPolyAttributes m_LastAttributes;
@@ -14,14 +15,13 @@ class CCadPolygon : public CCadObject
 public:
 	CCadPolygon();
 	virtual ~CCadPolygon();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
-	virtual BOOL Destroy(CCadObject *pDendentObjects);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	CCadPoint* GetCenter();
-	void FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
+	void FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	BOOL GetPoints(DOUBLEPOINT* pPoints);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(

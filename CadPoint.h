@@ -3,6 +3,7 @@
 
 class CCadPoint : public CCadObject
 {
+	friend CCadRect;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_PointCount = 0;
 	inline static SPointAttributes m_LastAttributes;
@@ -17,10 +18,9 @@ public:
 	CCadPoint(DOUBLEPOINT dp);
 	CCadPoint(DOUBLEPOINT dp, SubType Sub, UINT SubSub);
 	~CCadPoint();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin);
+	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual CString& GetObjDescription();
 	virtual CString& GetTypeString();
-	virtual BOOL Destroy(CCadObject* pDependentObject);
 	void SetX(double x) { dX = x; }
 	double GetX() { return dX; }
 	double GetY() { return dY; }
@@ -54,13 +54,13 @@ public:
 	);
 	virtual CCadObject* CopyObject();
 	//----------- Paint to Screen Ops ----------------------
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale);
-	void MoveTo(CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale);
-	void LineTo(CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale);
-	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale);
-	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT ULHC, CScale& Scale);
-	BOOL FloodFill(CDC* pDC, COLORREF colorBoundry, DOUBLEPOINT ULHC, CScale& Scale);
-	CPoint ToPixelPoint(DOUBLEPOINT ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	void MoveTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void LineTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	BOOL FloodFill(CDC* pDC, COLORREF colorBoundry, DOUBLEPOINT& ULHC, CScale& Scale);
+	CPoint ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale);
 	//---------- Load/ Save --------------------
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
@@ -75,10 +75,31 @@ public:
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual int EditProperties();
+	//-----------------------------------
+	// Pointy Things to do with Shapes
+	//-----------------------------------
+	void ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelRect(CCadPoint* pP2, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelArc(
+		CCadPoint* pP2, 
+		CCadPoint* pStart, 
+		CCadPoint* pEnd, 
+		CDC* pDC, 
+		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
+	void ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelRndRect(
+		CCadPoint* pP2, 
+		CCadPoint* pP3, 
+		CDC* pDC, 
+		DOUBLEPOINT& ULHC,
+		CScale& Scale
+	);
 	//----------------------------------
 	// Pointy Things to do with lines
 	//----------------------------------
-	void Reflect(CCadPoint* pReflect);
+	CCadPoint* Reflect(CCadPoint* pReflect);
 	UINT Slope(double *pSlope, CCadPoint* pPoint);
 	UINT Slope(double* pSlope, DOUBLEPOINT point);
 	UINT OrthogonalSlope(double *Slope, CCadPoint *pPoint);
@@ -112,8 +133,9 @@ public:
 		DOUBLEPOINT RotationPoint,
 		double Distance
 	);
-	CCadPoint& CenterPoint(CCadPoint& Result, CCadPoint& OtherPoint);
+	CCadPoint* CenterPoint(CCadPoint* pFirstPoint, CCadPoint* pOtherPoint);
 	BOOL IsPointBetween(CCadPoint* pP1, CCadPoint* pP2);
+	int WhichSideOfLineIsPoint(CCadPoint* pPtOther, DOUBLEPOINT Point);
 	double DistanceTo(CCadPoint* pP);
 	//-------------------------------------------------
 	void Print(const char* s);
@@ -198,7 +220,7 @@ public:
 	BOOL operator==(CCadPoint const &p) {
 		return (dX == p.dX && dY == p.dY);
 	}
-	//------------------------------------
+	//------------- Static Methods -----------------------
 	static BOOL NeedsAttributes() {
 		return (m_AttributesGood == FALSE);
 	}

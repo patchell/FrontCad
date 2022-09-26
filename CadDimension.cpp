@@ -52,7 +52,7 @@ void CCadDimension::Save(FILE * pO, DocFileParseToken Token, int Indent, int fla
 	//--------------------------------------------------
 }
 
-void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -339,7 +339,7 @@ void CDimLine::Create(CCadPoint P1, CCadPoint P2, UINT LineType)
 // CDimLine, Derived from CCadLine
 //----------------------------------------------------------------
 
-void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT ULHC, CScale& Scale)
+void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw

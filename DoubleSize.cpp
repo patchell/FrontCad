@@ -37,7 +37,7 @@ double CDoubleSize::Angle(BOOL DegreesMode)
     return Angle;
 }
 
-CSize CDoubleSize::ToPixelSize(CScale Scale)
+CSize CDoubleSize::ToPixelSize(CScale& Scale)
 {
     //------------------------------
     // ToPixelSize

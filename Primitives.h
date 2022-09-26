@@ -75,12 +75,18 @@ struct DOUBLEPOINT {
 	{
 		return DOUBLEPOINT(-dX, -dY);
 	}
-	CPoint ToPixelPoint(DOUBLEPOINT ULHC, double cX, double cY);
+	CPoint ToPixelPoint(DOUBLEPOINT& ULHC, double cX, double cY);
 	DOUBLEPOINT ULHCfromPixelPoint(CPoint point, double cX, double cY);
 	void Print(const char* s) {
 		printf("%s:POINT(%7.3lf,%7.3lf\n", s, dX, dY);
 	}
-	DOUBLEPOINT Raw(CPoint p, DOUBLEPOINT ULHC, SCALE Scale);
+	DOUBLEPOINT Raw(CPoint p, DOUBLEPOINT& ULHC, SCALE Scale);
+	double YIntercept(double m) {
+		double b;
+
+		b = dY - m * dX;
+		return b;
+	}
 };	//end of class DOUBLEPOINT
 
 //---------------------------------------
