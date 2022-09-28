@@ -66,6 +66,7 @@
 #define IDC_STATIC_LINE_COLOR           1024
 #define IDC_DLGLINE_STATIC_FILL_COLOR   1025
 #define IDC_EDIT_LINE_LENGTH            1025
+#define IDC_EDIT_SQUARE_HOLE_HIEGTH     1025
 #define IDC_STATIC_FILL_COLOR           1026
 #define IDC_STATIC_LINE_COLOR_SELECTED  1026
 #define IDC_STATIC_LINECOLOR            1028
@@ -114,6 +115,7 @@
 #define IDC_BUTTON_MOVE_UP              1047
 #define IDC_EDIT_WIDTH                  1048
 #define IDC_BUTTON4                     1048
+#define IDC_EDIT1                       1048
 #define IDC_RNDHOLE1FLAT_WIDTH          1049
 #define IDC_EDIT_NEWNAME                1049
 #define IDC_EDIT_ROUNDHOLE_RADIUS       1049
@@ -199,7 +201,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        330
 #define _APS_NEXT_COMMAND_VALUE         32819
-#define _APS_NEXT_CONTROL_VALUE         1048
+#define _APS_NEXT_CONTROL_VALUE         1049
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

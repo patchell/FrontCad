@@ -26,9 +26,7 @@ BOOL CCadHoleRound::Create(CCadObject* pParent, CCadObject* pOrigin, SubType typ
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
-	Obj.pCadPoint->SetSubSubType(0);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	return TRUE;
 }
@@ -74,6 +72,7 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	// return value:none
 	//--------------------------------------------------
 	CPen* pOldPen, penLine;
+	CBrush* pOldBrush, brushFill;
 	CRect rect;
 	CADObjectTypes ObjCenter;
 	double Radius;
@@ -96,17 +95,20 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		Lw = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetAttributes().m_LineWidth);
 		if (Lw < 1) Lw = 1;
 		CreateThePen(mode, &penLine, Lw);
+		brushFill.CreateStockObject(NULL_BRUSH);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SKETCH:
 			pOldPen = pDC->SelectObject(&penLine);
+			pOldBrush = pDC->SelectObject(&brushFill);
 			pDC->Ellipse(&rect);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS, dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, -dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS,- dS), pDC, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
+			pDC->SelectObject(pOldBrush);
 			break;
 		}
 	}
@@ -303,16 +305,18 @@ ObjectDrawState CCadHoleRound::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Center = MousePos;
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
+		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		//-------------- Make New Object ----------------------
 		Obj.pCadHoleRound = new CCadHoleRound;
 		Obj.pCadHoleRound->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->SetObjectTypes(Obj.pCadHoleRound);
+		((CCadPoint *)Obj.pCadHoleRound->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY))->SetPoint(MousePos);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Round Hole:Place Center Point"));
 		GETVIEW->Invalidate();
@@ -338,11 +342,14 @@ ObjectDrawState CCadHoleRound::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		m_Center = MousePos;
+	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
+		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->Invalidate();
 		break;
 	}
