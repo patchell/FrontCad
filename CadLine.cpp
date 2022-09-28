@@ -39,13 +39,11 @@ BOOL CCadLine::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 	if (pParent == NULL)
 		pParent = this;
 	pPoint = new CCadPoint;
-	pPoint->Create(pParent, pOrigin);
-	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->Create(pParent, pOrigin, SubType::VERTEX);
 	pPoint->SetSubSubType(1);
 	AddObjectAtChildTail(pPoint);
 	pPoint = new CCadPoint;
-	pPoint->Create(pParent, pOrigin);
-	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->Create(pParent, pOrigin, SubType::VERTEX);
 	pPoint->SetSubSubType(2);
 	AddObjectAtChildTail(pPoint);
 	pRect = new CCadRect;
@@ -135,27 +133,26 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 			switch (GetCurrentDrawState())
 			{
 			case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, SUBSUBTYPE_ANY);
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				break;
 			case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
-				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-				break;
-			case ObjectDrawState::PLACE_LBUTTON_DOWN:
-			case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, SUBSUBTYPE_ANY);
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
-
-				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, 0);
+				break;
+			case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::RIGHTANGLE_VERTEX, SUBSUBTYPE_ANY);
 				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
+			case ObjectDrawState::PLACE_LBUTTON_DOWN:
 				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
+				pObj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+				pObj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, ULHC, Scale);
 				break;
 			}//end of switch draw state
@@ -483,9 +480,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		// defines where the right angle is
 		//-------------------------------------------------
 		Corner.pCadPoint = new CCadPoint;
-		Corner.pCadPoint->SetSubType(SubType::RIGHTANGLE_VERTEX);
-		Corner.pCadPoint->SetOrigin(GetOrigin());
-		Corner.pCadPoint->SetParent(this);
+		Corner.pCadPoint->Create(this,GetOrigin(), SubType::RIGHTANGLE_VERTEX);
 		AddObjectAtChildTail(Corner.pCadObject);
 		//---------------------------------
 		CopyAttributesFrom(&m_CurrentAttributes);
@@ -517,7 +512,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		Corner.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::RIGHTANGLE_VERTEX,
-			0
+			SUBSUBTYPE_ANY
 		);
 		Corner.pCadPoint->SetPoint(MousePos);
 		GETAPP.UpdateStatusBar(_T("Line:First Point"));
@@ -547,7 +542,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		Corner.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::RIGHTANGLE_VERTEX,
-			0
+			SUBSUBTYPE_ANY
 		);
 		ObjP1.pCadObject = FindChildObject(
 			ObjectType::POINT,
@@ -576,9 +571,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		pNewLine = new CCadLine;
 		pNewLine->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		Corner.pCadPoint = new CCadPoint;
-		Corner.pCadPoint->SetSubType(SubType::RIGHTANGLE_VERTEX);
-		Corner.pCadPoint->SetOrigin(GetOrigin());
-		Corner.pCadPoint->SetParent(this);
+		Corner.pCadPoint->Create(this, GetOrigin(), SubType::RIGHTANGLE_VERTEX);
 		pNewLine->AddObjectAtChildTail(Corner.pCadObject);
 		pNewLine->SetLength(GetLength());
 		GETVIEW->SetObjectTypes(pNewLine);
@@ -829,7 +822,7 @@ BOOL CCadLine::CalcFixedPoint(
 				yIntercept = pPtP1->YIntercept(LineSlope);
 				x = (MousePos.dY - yIntercept) / LineSlope;
 				if (MousePos.dX - x > 0.0)
-					pPtP2->Reflect(pPtRtAgl);
+					pPtP2->Reflect(pPtRtAgl, POINT_REFLECT_BOTH);
 				break;
 			}
 		}
@@ -884,9 +877,9 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	// Update enclosing rectangle
 	//------------------------------------
 	((CCadPoint*)ObjRect.pCadRect->GetVertex(1))->SetPoint(&p1);
-	((CCadPoint*)ObjRect.pCadRect->GetVertex(2))->SetPoint(p1.Reflect(ObjP1.pCadPoint));
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(2))->SetPoint(p1.Reflect(ObjP1.pCadPoint, POINT_REFLECT_BOTH));
 	((CCadPoint*)ObjRect.pCadRect->GetVertex(3))->SetPoint(&p2);
-	((CCadPoint*)ObjRect.pCadRect->GetVertex(4))->SetPoint(p2.Reflect(ObjP2.pCadPoint));
+	((CCadPoint*)ObjRect.pCadRect->GetVertex(4))->SetPoint(p2.Reflect(ObjP2.pCadPoint, POINT_REFLECT_BOTH));
 }
 
 int CCadLine::EditProperties(void)

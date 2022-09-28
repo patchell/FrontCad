@@ -25,24 +25,19 @@ BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ARROW_TIP);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_TIP);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ARROW_TOP);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_TOP);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ARROW_END);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_END);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ARROW_BOT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_BOT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ARROW_ROTATION);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_ROTATION);
 	AddObjectAtChildTail(Obj.pCadObject);
 
 	return TRUE;
@@ -414,10 +409,10 @@ ObjectDrawState CCadArrow::MouseMove(ObjectDrawState DrawState)
 void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 {
 	CADObjectTypes TIP, TOP, END, BOT, ROT;
-	DOUBLEPOINT R,T,TP, BP;
-	double m,x,y, Er;
-	double x1, y1;
-	double x2, y2;
+	double m;
+	double Dist;
+	UINT SlopeType;
+	CCadPoint pointExtent;
 
 
 	TIP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
@@ -428,55 +423,89 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 	// This point defines the angle that the arrow is 
 	ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
 	ROT.pCadPoint->SetPoint(MousePos);
-	Er = GetAttributes().m_aArrowShape[ARROW_BACK].dX;
-	R = DOUBLEPOINT(*ROT.pCadPoint);
-	T = DOUBLEPOINT(*TIP.pCadPoint);
 	//------------------------------------
 	// rotate the End point
 	//------------------------------------
-	if (0 == (R.dX - T.dX))
+	SlopeType = TIP.pCadPoint->Slope(&m, ROT.pCadPoint);
+	switch (SlopeType)
 	{
-		//------------------------------------
-		// This is a vertical line
-		//-----------------------------------
-		END.pCadPoint->SetPoint(T + GetAttributes().m_aArrowShape[ARROW_BACK]);
-	}
-	else
-	{
-		m = (R.dY - T.dY) / (R.dX - T.dX);
-		x = sqrt(Er * Er / (1 + m * m));
-		y = m * x;
-		END.pCadPoint->SetPoint(T + DOUBLEPOINT(x, y));
+	case SLOPE_HORIZONTAL:
+		if (MousePos.dX > TIP.pCadPoint->GetX())
+		{
+			TOP.pCadPoint->SetPoint(*TIP.pCadPoint + GetAttributes().m_aArrowShape[ARROW_TOP]);
+			END.pCadPoint->SetPoint(*TIP.pCadPoint + GetAttributes().m_aArrowShape[ARROW_BACK]);
+			BOT.pCadPoint->SetPoint(*TIP.pCadPoint + GetAttributes().m_aArrowShape[ARROW_BOT]);
+		}
+		else
+		{
+			TOP.pCadPoint->SetPoint(*TIP.pCadPoint - GetAttributes().m_aArrowShape[ARROW_TOP]);
+			END.pCadPoint->SetPoint(*TIP.pCadPoint - GetAttributes().m_aArrowShape[ARROW_BACK]);
+			BOT.pCadPoint->SetPoint(*TIP.pCadPoint - GetAttributes().m_aArrowShape[ARROW_BOT]);
+		}
+		break;
+	case SLOPE_VERTICAL:
+		TIP.pCadPoint->Print("Tip");
+		if (MousePos.dY < TIP.pCadPoint->GetY())
+		{
+			TOP.pCadPoint->SetPoint(*TIP.pCadPoint - DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_TOP].dY,
+				GetAttributes().m_aArrowShape[ARROW_TOP].dX	)
+			);
+			BOT.pCadPoint->SetPoint(*TIP.pCadPoint - DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_BOT].dY,
+				GetAttributes().m_aArrowShape[ARROW_BOT].dX	)
+			);
+			END.pCadPoint->SetPoint(*TIP.pCadPoint - DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_BACK].dY,
+				GetAttributes().m_aArrowShape[ARROW_BACK].dX)
+			);
+		}
+		else
+		{
+			TOP.pCadPoint->SetPoint(*TIP.pCadPoint + DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_TOP].dY,
+				GetAttributes().m_aArrowShape[ARROW_TOP].dX
+				)
+			);
+			BOT.pCadPoint->SetPoint(*TIP.pCadPoint + DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_BOT].dY,
+				GetAttributes().m_aArrowShape[ARROW_BOT].dX
+			)
+			);
+			END.pCadPoint->SetPoint(*TIP.pCadPoint + DOUBLEPOINT(
+				GetAttributes().m_aArrowShape[ARROW_BACK].dY,
+				GetAttributes().m_aArrowShape[ARROW_BACK].dX
+				)
+			);
+		}
+		break;
+	case SLOPE_NOT_ORTHOGONAL:
 		//------------------------------------------
 		// Rotate the top and bottom points
 		// These two points will be on a line that
 		// goes through a point that is on the axis
 		// of the arrow.  Confused?  So am I
 		//------------------------------------------
-		Er = GetAttributes().m_aArrowShape[ARROW_TOP].dX;
-		if (m == 0)
+		Dist = GetAttributes().m_aArrowShape[ARROW_BACK].dX - GetAttributes().m_aArrowShape[ARROW_TIP].dX;
+		END.pCadPoint->PointOnLineAtDistance(TIP.pCadPoint, m, Dist);
+		Dist = GetAttributes().m_aArrowShape[ARROW_TOP].dX - GetAttributes().m_aArrowShape[ARROW_TIP].dX;
+		pointExtent.PointOnLineAtDistance(TIP.pCadPoint, m, Dist);
+		Dist = GetAttributes().m_aArrowShape[ARROW_TIP].dY - GetAttributes().m_aArrowShape[ARROW_TOP].dY;
+		m = -1.0 / m;
+		printf("Distance=%7.3lf  Sloop=%7.3lf\n", Dist, m);
+		TOP.pCadPoint->PointOnLineAtDistance(&pointExtent, m, Dist);
+		BOT.pCadPoint->PointOnLineAtDistance(&pointExtent, m, -Dist);
+		if (MousePos.dX < TIP.pCadPoint->GetX())
 		{
-			TP = GetAttributes().m_aArrowShape[ARROW_TOP];
-			TOP.pCadPoint->SetPoint(TP);
-			BP = GetAttributes().m_aArrowShape[ARROW_BOT];
-			BOT.pCadPoint->SetPoint(BP);
-		
+			END.pCadPoint->Reflect(TIP.pCadPoint, POINT_REFLECT_BOTH);
+			TOP.pCadPoint->Reflect(TIP.pCadPoint, POINT_REFLECT_BOTH);
+			BOT.pCadPoint->Reflect(TIP.pCadPoint, POINT_REFLECT_BOTH);
 		}
-		else
-		{
-			x = sqrt(Er * Er / (1 + m * m));
-			y = m * x;
-			m = -1.0 / m;
-			Er = GetAttributes().m_aArrowShape[ARROW_TOP].dY;
-			x1 = sqrt(Er * Er / (1 + m * m));
-			y1 = m * x1;
-			x2 = -x1;
-			y2 = -y1;
-			TOP.pCadPoint->SetPoint(T + DOUBLEPOINT(x + x1, y + y1));
-			BOT.pCadPoint->SetPoint(T + DOUBLEPOINT(x + x2, y + y2));
-		}
-
+		break;
 	}
+	TIP.pCadPoint->Print("TIP");
+	BOT.pCadPoint->Print("BOT");
+	TOP.pCadPoint->Print("TOP");
 }
 
 int CCadArrow::EditProperties()

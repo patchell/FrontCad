@@ -25,7 +25,9 @@ public:
 	double GetX() { return dX; }
 	double GetY() { return dY; }
 	void SetY(double y) { dY = y; }
-	DOUBLEPOINT GetPoint() { return DOUBLEPOINT(dX, dY); }
+	DOUBLEPOINT GetPoint() const { 
+		return {dX,dY};
+	}
 	void SetPoint(double X, double Y) {
 		dX = X;
 		dY = Y;
@@ -99,7 +101,7 @@ public:
 	//----------------------------------
 	// Pointy Things to do with lines
 	//----------------------------------
-	CCadPoint* Reflect(CCadPoint* pReflect);
+	CCadPoint* Reflect(CCadPoint* pReflect, UINT mode);
 	UINT Slope(double *pSlope, CCadPoint* pPoint);
 	UINT Slope(double* pSlope, DOUBLEPOINT point);
 	UINT OrthogonalSlope(double *Slope, CCadPoint *pPoint);
@@ -163,11 +165,25 @@ public:
 		result.dY = dY + a.dY;
 		return result;
 	}
+	CCadPoint operator+(DOUBLEPOINT const& a) {
+		CCadPoint result;
+
+		result.dX = dX + a.dX;
+		result.dY = dY + a.dY;
+		return result;
+	}
 	CCadPoint operator+(CDoubleSize const &a) {
 		CCadPoint result;
 
 		result.dX = dX + a.dCX;
 		result.dY = dY + a.dCY;
+		return result;
+	}
+	CCadPoint operator-(DOUBLEPOINT const& a) {
+		CCadPoint result;
+
+		result.dX = dX - a.dX;
+		result.dY = dY - a.dY;
 		return result;
 	}
 	CDoubleSize operator-(CCadPoint const &p) {

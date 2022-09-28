@@ -433,7 +433,7 @@ void CCadPoint::ToPixelRndRect(CCadPoint* pP2, CCadPoint* pP3, CDC* pDC, DOUBLEP
 {
 }
 
-CCadPoint* CCadPoint::Reflect(CCadPoint* pReflect)
+CCadPoint* CCadPoint::Reflect(CCadPoint* pReflect, UINT mode)
 {
 	//-------------------------------------
 	// Reflect
@@ -444,10 +444,29 @@ CCadPoint* CCadPoint::Reflect(CCadPoint* pReflect)
 	
 	double deltaX, deltaY;
 
-	deltaX = dX - pReflect->dX;
-	deltaY = dY - pReflect->dY;
-	dX = pReflect->dX - deltaX;
-	dY = pReflect->dY - deltaY;
+	switch (mode)
+	{
+	case POINT_REFLECT_BOTH:
+		deltaX = dX - pReflect->dX;
+		deltaY = dY - pReflect->dY;
+		dX = pReflect->dX - deltaX;
+		dY = pReflect->dY - deltaY;
+		break;
+	case POINT_REFLECT_X:
+		//-------------------------------
+		// Reflect Along the X axis
+		//-------------------------------
+		deltaY = dY - pReflect->dY;
+		dY = pReflect->dY - deltaY;
+		break;
+	case POINT_REFLECT_Y:
+		//-------------------------------
+		// Reflect Along the Y axis
+		//-------------------------------
+		deltaX = dX - pReflect->dX;
+		dX = pReflect->dX - deltaX;
+		break;
+	}
 	return this;
 }
 

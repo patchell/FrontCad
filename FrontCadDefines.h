@@ -3,7 +3,12 @@
 
 #define GETAPP	(theApp)
 #define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
-
+//------------------------------------------
+// Point Reflect Modes
+//------------------------------------------
+constexpr auto POINT_REFLECT_X = 1;
+constexpr auto POINT_REFLECT_Y = 2;
+constexpr auto POINT_REFLECT_BOTH = 0;
 //------------------------------------------
 // types of slopes that are calculated
 // by CPoint::Slope and CPoint::Ortoganol
