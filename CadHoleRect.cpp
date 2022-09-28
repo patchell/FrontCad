@@ -22,12 +22,13 @@ BOOL CCadHoleRect::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type
 {
 	CADObjectTypes Obj;
 
+	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
 	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
-	return 0;
+	return TRUE;
 }
 
 void CCadHoleRect::Move(CDoubleSize Diff)

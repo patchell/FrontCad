@@ -444,7 +444,6 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 		}
 		break;
 	case SLOPE_VERTICAL:
-		TIP.pCadPoint->Print("Tip");
 		if (MousePos.dY < TIP.pCadPoint->GetY())
 		{
 			TOP.pCadPoint->SetPoint(*TIP.pCadPoint - DOUBLEPOINT(
@@ -492,7 +491,6 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 		pointExtent.PointOnLineAtDistance(TIP.pCadPoint, m, Dist);
 		Dist = GetAttributes().m_aArrowShape[ARROW_TIP].dY - GetAttributes().m_aArrowShape[ARROW_TOP].dY;
 		m = -1.0 / m;
-		printf("Distance=%7.3lf  Sloop=%7.3lf\n", Dist, m);
 		TOP.pCadPoint->PointOnLineAtDistance(&pointExtent, m, Dist);
 		BOT.pCadPoint->PointOnLineAtDistance(&pointExtent, m, -Dist);
 		if (MousePos.dX < TIP.pCadPoint->GetX())
@@ -503,9 +501,6 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 		}
 		break;
 	}
-	TIP.pCadPoint->Print("TIP");
-	BOT.pCadPoint->Print("BOT");
-	TOP.pCadPoint->Print("TOP");
 }
 
 int CCadArrow::EditProperties()

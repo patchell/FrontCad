@@ -77,7 +77,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_LINE_POLYGON, &CFrontCadView::OnUpdateDrawPolygohn)
 	ON_UPDATE_COMMAND_UI(ID_LINE_RECTANGLE, &CFrontCadView::OnUpdateDrawRectangle)
 	ON_COMMAND(ID_LINE_RECTANGLE, &CFrontCadView::OnDrawRectangle)
-	ON_COMMAND(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnDrawRectangularhole)
+	ON_COMMAND(ID_HOLE_SQUAREHOLE, &CFrontCadView::OnDrawRectangularhole)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnUpdateDrawRectangularhole)
 	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedrectangle)
 	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedrectangle)
@@ -1107,7 +1107,7 @@ void CFrontCadView::OnDrawRectangularhole()
 	SetDrawMode(DrawingMode::HOLE_RECT);
 	pRH = new CCadHoleRect;
 	pRH->Create(NULL, GetDocument()->GetCurrentOrigin());
-	SetObjectTypes(new CCadHoleRect);
+	SetObjectTypes(pRH);
 	GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Location of Center"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }

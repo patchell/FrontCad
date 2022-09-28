@@ -247,7 +247,7 @@ void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& UL
 {
 	CCadPoint pointThere;
 
-	pointThere.SetPoint(DOUBLEPOINT(pointThere) + There);
+	pointThere.SetPoint(DOUBLEPOINT(dX,dY )+ There);
 	MoveTo(pDC, ULHC, Scale);
 	pointThere.LineTo(pDC, ULHC, Scale);
 }
