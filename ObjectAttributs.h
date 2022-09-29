@@ -584,7 +584,7 @@ struct SRndHole1FlatAttributes {
 		m_colorSelected = RGB(255, 0, 0);
 		m_LineWidth = 0.01;
 		m_HoleRadius = 0.2500;
-		m_FlatDistanceFromCenter = 0.1000;
+		m_FlatDistanceFromCenter = 0.150;
 	}
 	void CopyFrom(SRndHole1FlatAttributes* pAttributes) {
 		m_colorLine = pAttributes->m_colorLine;

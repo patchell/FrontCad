@@ -252,6 +252,12 @@ void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& UL
 	pointThere.LineTo(pDC, ULHC, Scale);
 }
 
+void CCadPoint::LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+	MoveTo(pDC, ULHC, Scale);
+	pThere->LineTo(pDC, ULHC, Scale);
+}
+
 BOOL CCadPoint::FloodFill(
 	CDC* pDC, 
 	COLORREF colorBoundry, 

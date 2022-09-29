@@ -61,5 +61,7 @@ public:
 	static SRndHole1FlatAttributes* GetLastAttributes()  {
 		return &m_LastAttributes;
 	}
+	//----------------------------------------------
+	virtual void Print(const char* pTitle);
 };
 

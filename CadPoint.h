@@ -61,6 +61,7 @@ public:
 	void LineTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
 	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
 	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
 	BOOL FloodFill(CDC* pDC, COLORREF colorBoundry, DOUBLEPOINT& ULHC, CScale& Scale);
 	CPoint ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale);
 	//---------- Load/ Save --------------------

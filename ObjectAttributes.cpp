@@ -984,9 +984,11 @@ void SRndHole1FlatAttributes::LoadSettings(SRndHole1FlatAttributes* pAttrib)
 	pAttrib->m_colorSelected = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("SELECTEDCOLOR"), RGB(255, 0, 0));
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("LINEWIDTH"), _T("0.04"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csString);
-	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("RADIUS"), _T("0.125"));
+	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("RADIUS"), _T("0.250"));
 	pAttrib->m_HoleRadius = GETAPP.StringToDouble(csString);
-	pAttrib->m_FlatDistanceFromCenter = GETAPP.GetProfileIntW(_T("ROUNDHOLE_1_FLAT"), _T("CENT_TO_FLAT"), 1000);
+
+	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_1_FLAT"), _T("CENT_TO_FLAT"), _T("0.150"));
+	pAttrib->m_FlatDistanceFromCenter = GETAPP.StringToDouble(csString);
 }
 
 void SRndHole1FlatAttributes::SaveSettings(SRndHole1FlatAttributes* pAttrib)
@@ -1044,7 +1046,7 @@ void SRndHole2FlatAttributes::LoadSettings(SRndHole2FlatAttributes* pAttrib)
 	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_2_FLAT"), _T("DIANETER"), _T("0.125"));
 	pAttrib->m_HoleRadius = GETAPP.StringToDouble(csString);
 
-	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_2_FLAT"), _T("CENT_TO_FLAT"), _T("0.100"));
+	csString = GETAPP.GetProfileStringW(_T("ROUNDHOLE_2_FLAT"), _T("CENT_TO_FLAT"), _T("0.080"));
 	pAttrib->m_FlatDistanceFromCenter = GETAPP.StringToDouble(csString);
 } 
 

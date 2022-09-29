@@ -26,19 +26,13 @@ BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, CCadObject* pOrigin, SubType 
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
-	Obj.pCadPoint->SetSubSubType(0);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);;
-	Obj.pCadPoint->SetSubSubType(0);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::STARTPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
-	Obj.pCadPoint->SetSubSubType(0);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ENDPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
 	SolveIntersection();
 	return TRUE;
@@ -85,6 +79,7 @@ void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 	// return value:none
 	//--------------------------------------------------
 	CPen *pOldPen, penLine;
+	CBrush brushFill, * pOldBrush;
 	CRect rect;
 	CADObjectTypes ObjCenter, ObjStart, ObjEnd;
 	CPoint start, end;
@@ -96,13 +91,19 @@ void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 	if (IsRenderEnabled())
 	{
 		Radius = GetAttributes().m_HoleRadius;
-		dS = Radius / 3.0;
-		nRadius = GETAPP.RoundDoubleToInt(Radius * Scale.GetScaleX());
+		dS = Radius / 3.0;	// for cross hairs
+		//Radius double to int
+		nRadius = GETAPP.RoundDoubleToInt(
+			Radius * Scale.GetScaleX()
+		);
+		//Get object that define the hole
 		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		ObjStart.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
 		ObjEnd.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+		//convert to view coordinates
 		start = ObjStart.pCadPoint->ToPixelPoint(ULHC, Scale);
 		end = ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale);
+		//make a view rectangle
 		rect.SetRect(
 			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(nRadius, nRadius),
 			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) + CSize(nRadius, nRadius)
@@ -111,22 +112,25 @@ void CCadHoleRnd1Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 		if (Lw < 1) Lw = 1;
 
 		CreateThePen(mode, &penLine, Lw);
+		brushFill.CreateStockObject(NULL_BRUSH);
 		switch (mode.DrawMode)
 		{
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SKETCH:
-			pDC->SelectStockObject(NULL_BRUSH);
+			pOldBrush = pDC->SelectObject(&brushFill);
 			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Arc(
 				&rect, 
 				ObjStart.pCadPoint->ToPixelPoint(ULHC, Scale), 
 				ObjEnd.pCadPoint->ToPixelPoint(ULHC, Scale)
 			);
+			ObjStart.pCadPoint->LineFromHereToThere(ObjEnd.pCadPoint, pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, dS), pDC, ULHC, Scale);;
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS, dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, -dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS, -dS), pDC, ULHC, Scale);
 			pDC->SelectObject(pOldPen);
+			pDC->SelectObject(pOldBrush);
 			break;
 		}
 	}
@@ -319,6 +323,7 @@ ObjectDrawState CCadHoleRnd1Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 		CopyAttributesFrom(&m_CurrentAttributes);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		SolveIntersection();
 		GETAPP.UpdateStatusBar(_T("Round Hole with One Flat:Place Center Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
@@ -341,11 +346,17 @@ ObjectDrawState CCadHoleRnd1Flat::ProcessDrawMode(ObjectDrawState DrawState)
 		}
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadPoint->SetPoint(MousePos);
+		SolveIntersection();
+		GETVIEW->Invalidate();
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
+		SolveIntersection();
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		Obj.pCadHoleRnd1Flat = new CCadHoleRnd1Flat;
 		Obj.pCadHoleRnd1Flat->Create(GetParent(),GetOrigin());
@@ -380,6 +391,10 @@ ObjectDrawState CCadHoleRnd1Flat::MouseMove(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
+		SolveIntersection();
+		GETVIEW->Invalidate();
+		break;
+	default:
 		GETVIEW->Invalidate();
 		break;
 	}
@@ -410,4 +425,27 @@ void CCadHoleRnd1Flat::CreateThePen(MODE mode, CPen* pen, int Lw)
 		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
 		break;
 	}
+}
+
+void CCadHoleRnd1Flat::Print(const char* pTitle)
+{
+	CADObjectTypes ObjStart, ObjCenter, ObjEnd;
+	char* s = new char[256];
+
+	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
+	ObjStart.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, SUBSUBTYPE_ANY);
+	ObjEnd.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, SUBSUBTYPE_ANY);
+
+	printf("%s%s  LW=%5.3lf  Flat=%6.3lf  Rad=%7.3lf\n", 
+		pTitle, 
+		GETAPP.ConvertCStringToChar(s, GetName()),
+		GetAttributes().m_LineWidth,
+		GetAttributes().m_FlatDistanceFromCenter,
+		GetAttributes().m_HoleRadius
+	);
+	ObjCenter.pCadPoint->Print("  Center:");
+	ObjStart.pCadPoint-> Print("   Start:");
+	ObjEnd.pCadPoint->Print("     End:");
+	delete[] s;
+
 }
