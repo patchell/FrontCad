@@ -82,6 +82,7 @@ public:
 	// Pointy Things to do with Shapes
 	//-----------------------------------
 	void ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale);
 	void ToPixelRect(CCadPoint* pP2, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale);
 	void ToPixelArc(
 		CCadPoint* pP2, 
@@ -89,6 +90,15 @@ public:
 		CCadPoint* pEnd, 
 		CDC* pDC, 
 		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
+	void ToPixelArc(
+		double Radius_A,
+		double Radius_B,
+		CCadPoint* pStart,
+		CCadPoint* pEnd,
+		CDC* pDC,
+		DOUBLEPOINT& ULHC,
 		CScale& Scale
 	);
 	void ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);

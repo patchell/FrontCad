@@ -65,7 +65,7 @@ public:
 	}
 	double Slope() { return dCY / dCX;}
 	double Angle(BOOL DegreesMode = DOUBLESIZE_DEGREES);
-	CSize ToPixelSize(CScale& Scale);
+	CSize ToPixelSize(CScale& Scale) const;
 	operator DOUBLEPOINT() const  {
 		DOUBLEPOINT result;
 		result.dX = dCX;

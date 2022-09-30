@@ -395,6 +395,7 @@ ObjectDrawState CCadHoleRnd1Flat::MouseMove(ObjectDrawState DrawState)
 		GETVIEW->Invalidate();
 		break;
 	default:
+		SolveIntersection();
 		GETVIEW->Invalidate();
 		break;
 	}

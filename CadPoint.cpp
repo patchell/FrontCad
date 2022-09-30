@@ -407,6 +407,29 @@ void CCadPoint::ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale&
 	pDC->Rectangle(&Rect);
 }
 
+void CCadPoint::ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale)
+{
+	//------------------------------------
+	// "this" is the center point of the
+	// rectangle.  Calculate the CRect
+	// in view corrordinates.
+	// 
+	// Parameters:
+	// w_half.......half of the width
+	// h_half.......half of the hiegth
+	// rect.........reference to where to put CRect
+	// ULHC.........coordinate of the uper left corner of view
+	// Scale........Pixels per Inch
+	//------------------------------------
+	CPoint p1, p2;
+	CSize szRect;
+
+	szRect = CDoubleSize(w_half, h_half).ToPixelSize(Scale);
+	p1 = ToPixelPoint(ULHC, Scale) - szRect;
+	p2 = ToPixelPoint(ULHC, Scale) + szRect;
+	rect.SetRect(p1, p2);
+}
+
 void CCadPoint::ToPixelRect(CCadPoint* pP2, CRect& Rect, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
@@ -425,6 +448,30 @@ void CCadPoint::ToPixelArc(
 
 	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
 	pDC->Arc(&Rect,pStart->ToPixelPoint(ULHC,Scale),pEnd->ToPixelPoint(ULHC,Scale));
+}
+
+void CCadPoint::ToPixelArc(
+	double Radius_A,	// radius in X direction
+	double Radius_B,	// radius in Y direction
+	CCadPoint* pStart,	// arc start point
+	CCadPoint* pEnd,	//arc end point
+	CDC* pDC,			//device context
+	DOUBLEPOINT& ULHC,	//upper left hand corner coordinate
+	CScale& Scale		//pixels per inch
+)
+{
+	//-----------------------------------------
+	// ToPixelArc
+	// "this" is the center point of the arc
+	//-----------------------------------------
+	CRect Rect;
+	
+	ToPixelRect(Radius_A, Radius_B, Rect, ULHC, Scale);
+	pDC->Arc(
+		&Rect,
+		pStart->ToPixelPoint(ULHC, Scale),
+		pEnd->ToPixelPoint(ULHC, Scale)
+	);
 }
 
 void CCadPoint::ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)

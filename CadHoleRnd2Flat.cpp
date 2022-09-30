@@ -24,32 +24,30 @@ BOOL CCadHoleRnd2Flat::Create(CCadObject* pParent, CCadObject* pOrigin, SubType 
 	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
+	//------------------ Center Point --------------------
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
-	Obj.pCadPoint->SetSubSubType(0);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
+	//---------------------- Start Point 1 -----------------------
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
+	//------------------- End Point 1 ---------------------------
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtChildTail(Obj.pCadObject);
+	//--------------- Start Point 2 -----------------------------
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::STARTPOINT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::STARTPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
+	//-------------------- End Point 2 -----------------------------
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ENDPOINT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ENDPOINT);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtChildTail(Obj.pCadObject);
-	SolveIntersection();
 	return TRUE;
 }
 
@@ -94,14 +92,10 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 	// return value:none
 	//--------------------------------------------------
 	CPen* pOldPen, penLine;
-	CRect rect;
 	CADObjectTypes ObjCenter;
 	CADObjectTypes ObjStart1, ObjEnd1;
 	CADObjectTypes ObjStart2, ObjEnd2;
-	CPoint start1, end1;
-	CPoint start2, end2;
 	double Radius;
-	int nRadius;
 	int Lw;
 	double dS;
 
@@ -110,20 +104,13 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 	{
 		Radius = GetAttributes().m_HoleRadius;
 		dS = Radius / 3.0;
-		nRadius = GETAPP.RoundDoubleToInt(Radius * Scale.GetScaleX());
+		//----- Get Points that define this object --------------------------
 		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		ObjStart1.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 1);
 		ObjEnd1.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 1);
 		ObjStart2.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 2);
 		ObjEnd2.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 2);
-		start1 = ObjStart1.pCadPoint->ToPixelPoint(ULHC, Scale);
-		end1 = ObjEnd1.pCadPoint->ToPixelPoint(ULHC, Scale);
-		start2 = ObjStart2.pCadPoint->ToPixelPoint(ULHC, Scale);
-		end2 = ObjEnd2.pCadPoint->ToPixelPoint(ULHC, Scale);
-		rect.SetRect(
-			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(nRadius, nRadius),
-			ObjCenter.pCadPoint->ToPixelPoint(ULHC, Scale) + CSize(nRadius, nRadius)
-		);
+		//----------------------------------------------------------
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
 		if (Lw < 1) Lw = 1;
 
@@ -133,13 +120,36 @@ void CCadHoleRnd2Flat::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scal
 		case ObjectDrawMode::FINAL:
 		case ObjectDrawMode::SKETCH:
 			pOldPen = pDC->SelectObject(&penLine);
-			pDC->Arc(rect, start1, end1);
-			pDC->Arc(rect, start2, end2);
-			pDC->MoveTo(start1);
-			pDC->LineTo(start2);
-			pDC->MoveTo(end1);
-			pDC->LineTo(end2);
-
+			ObjCenter.pCadPoint->ToPixelArc(
+				Radius,
+				Radius,
+				ObjStart1.pCadPoint,
+				ObjEnd1.pCadPoint,
+				pDC,
+				ULHC,
+				Scale
+			);
+			ObjCenter.pCadPoint->ToPixelArc(
+				Radius,
+				Radius,
+				ObjEnd2.pCadPoint,
+				ObjStart2.pCadPoint,
+				pDC,
+				ULHC,
+				Scale
+			);
+			ObjEnd1.pCadPoint->LineFromHereToThere(
+				ObjEnd2.pCadPoint,
+				pDC,
+				ULHC,
+				Scale
+			);
+			ObjStart1.pCadPoint->LineFromHereToThere(
+				ObjStart2.pCadPoint,
+				pDC,
+				ULHC,
+				Scale
+			);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-dS, dS), pDC, ULHC, Scale);
 			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(dS, -dS), pDC, ULHC, Scale);
@@ -165,36 +175,37 @@ void CCadHoleRnd2Flat::SolveIntersection()
 	CADObjectTypes ObjEnd2;
 	double Radius;
 	double FlatDist;
+	double Yoff;
 
 	Radius = GetAttributes().m_HoleRadius;
 	FlatDist = GetAttributes().m_FlatDistanceFromCenter;
-
+	Yoff = sqrt(Radius * Radius - FlatDist * FlatDist);
 	ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
-	ObjStart1.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
-	ObjEnd1.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
-	ObjStart2.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
-	ObjEnd2.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	ObjStart1.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 1);
+	ObjEnd1.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 1);
+	ObjStart2.pCadObject = FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 2);
+	ObjEnd2.pCadObject = FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 2);
 	//--------------------------------
 	// Start First Flat
 	//--------------------------------
 	ObjStart1.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() + FlatDist);
-	ObjStart1.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() - sqrt(Radius * Radius - FlatDist * FlatDist));
+	ObjStart1.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() - Yoff);
 	//--------------------------------
 	//	First End Point
 	//--------------------------------
-	ObjEnd1.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() + FlatDist);
-	ObjEnd1.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + sqrt(Radius * Radius - FlatDist * FlatDist));
+	ObjEnd1.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() - FlatDist);
+	ObjEnd1.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() - Yoff);
 
 	//--------------------------------
 	// Start Second Flat
 	//--------------------------------
-	ObjStart2.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() - FlatDist);
-	ObjStart2.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + sqrt(Radius * Radius - FlatDist * FlatDist));
+	ObjStart2.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() + FlatDist);
+	ObjStart2.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + Yoff);
 	//--------------------------------
 	//	Second End Point
 	//--------------------------------
 	ObjEnd2.pCadPoint->SetX(ObjCenter.pCadPoint->GetX() - FlatDist);
-	ObjEnd2.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() - sqrt(Radius * Radius - FlatDist * FlatDist));
+	ObjEnd2.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + Yoff);
 }
 
 int CCadHoleRnd2Flat::PointInObjectAndSelect(
@@ -394,6 +405,7 @@ ObjectDrawState CCadHoleRnd2Flat::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
+		SolveIntersection();
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		Obj.pCadHoleRnd2Flat = new CCadHoleRnd2Flat;
@@ -432,6 +444,7 @@ ObjectDrawState CCadHoleRnd2Flat::MouseMove(ObjectDrawState DrawState)
 		GETVIEW->Invalidate();
 		break;
 	}
+	SolveIntersection();
 	return DrawState;
 }
 
