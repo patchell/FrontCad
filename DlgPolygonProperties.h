@@ -16,13 +16,14 @@ class CDlgPolygonProperties : public CDialog
 	CEditDecimal m_Edit_LineWidth;
 	CStaticBitmap m_Static_FillColor;
 	CStaticBitmap m_Static_LineColor;
+	CStaticBitmap m_Static_Color_Selected;
 	DECLARE_DYNAMIC(CDlgPolygonProperties)
 
 public:
 	CDlgPolygonProperties(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgPolygonProperties();
 
-// Dialog Data
+	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_POLY_EDPROPERTIES };
 #endif
@@ -37,6 +38,5 @@ public:
 	void SetPolygon(CCadPolygon* pCP) { m_pPolygon = pCP; }
 	afx_msg void OnClickedStaticFillColor();
 	afx_msg void OnClickedStaticLineColor();
-protected:
-	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnClickedStaticPolypropColorSelected();
 };

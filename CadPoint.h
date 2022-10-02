@@ -62,7 +62,13 @@ public:
 	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
 	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
 	void LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	BOOL FloodFill(CDC* pDC, COLORREF colorBoundry, DOUBLEPOINT& ULHC, CScale& Scale);
+	BOOL FloodFill(
+		COLORREF colorBorder,
+		COLORREF colorFill,
+		CDC* pDC, 
+		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
 	CPoint ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale);
 	//---------- Load/ Save --------------------
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);

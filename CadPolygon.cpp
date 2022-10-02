@@ -41,9 +41,9 @@ BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::CENTERPOINT);
+	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
 	AddObjectAtChildTail(Obj.pCadObject);
+	AddPoint(DOUBLEPOINT(0.0, 0.0));
 	return TRUE;
 }
 
@@ -133,61 +133,56 @@ BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Sc
 	return rV;
 }
 
+CCadPoint* CCadPolygon::CalculateCenterPoint()
+{
+	CADObjectTypes Obj;
+	DOUBLEPOINT* pPolyPoints;
+	DOUBLEPOINT Center;
+
+	pPolyPoints = new DOUBLEPOINT[GetNumVerticies()];
+	GetPoints(&pPolyPoints);
+	Center = GETAPP.GetPolygonCenter(pPolyPoints, m_NumVertices - 1);
+	Center.Print("Poly Center");
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
+	Obj.pCadPoint->SetPoint(Center);
+	delete[] pPolyPoints; 
+	return Obj.pCadPoint;
+}
+
 CCadPoint *CCadPolygon::GetCenter()
 {
 	double x = 0.0, y = 0.0;
 	UINT i, n;
-	CCadPoint* pPoint = 0,*pResultPoint = 0;
+	CADObjectTypes Obj;
 
-	pPoint = (CCadPoint*)FindChildObject(
+	Obj.pCadObject = FindChildObject(
 		ObjectType::POINT,
 		SubType::CENTERPOINT,
-		0
+		SUBSUBTYPE_ANY
 	);
-	if (pPoint)
-		pResultPoint = pPoint;
-	else
-	{
-		n = GetNumVerticies();
-		for (i = 0; i < n; ++i)
-		{
-			pPoint = (CCadPoint*)FindChildObject(
-				ObjectType::POINT,
-				SubType::VERTEX,
-				i + 1
-			);
-			if (pPoint)
-			{
-				x += pPoint->GetX();
-				y += pPoint->GetY();
-			}
-			else
-			{
-				pResultPoint = 0;
-				goto exit;
-			}
-		}	//end of for loop
-		x /= double(n);
-		y /= double(n);
-		pResultPoint = new CCadPoint();
-		pResultPoint->Create(GetParent(), GetOrigin());
-		pResultPoint->SetPoint(x, y);
-		pResultPoint->SetSubType(SubType::CENTERPOINT);
-		pResultPoint->SetSubSubType(0);
-		AddObjectAtChildTail(pResultPoint);	//Save that sucker for later
-	}
-exit:
-	return pResultPoint;
+	if (Obj.pCadPoint->GetX() == 0.0 && Obj.pCadPoint->GetY() == 0.0)
+		CalculateCenterPoint();
+	return Obj.pCadPoint;;
 }
 
-void CCadPolygon::FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPolygon::FillPolygon(
+	COLORREF colorBoarder,
+	COLORREF colorFill,
+	CDC* pDC,
+	MODE mode, 
+	DOUBLEPOINT& ULHC, 
+	CScale& Scale
+)
 {
 	CCadPoint* pCenter;
 
-	pCenter = GetCenter();
-	if (pCenter)
+	if (GetNumVerticies() > 3)
 	{
-		pCenter->FloodFill(pDC, GetAttributes().m_colorLine, ULHC, Scale);
+		pCenter = GetCenter();
+		if (pCenter)
+		{
+			pCenter->FloodFill(colorBoarder, colorFill, pDC, ULHC, Scale);
+		}
 	}
 }
 
@@ -207,14 +202,16 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	CPen* pOldPen, penLine;
 	CBrush* pOldBrush, brushFill;
 	int Lw;	//line width in pixels
+	COLORREF colorLine;
+	COLORREF colorFill;
 
 	if (IsRenderEnabled())
 	{
 		if ((Lw = GETAPP.RoundDoubleToInt(Scale.dSX * m_Attrib.m_LineWidth)) < 1)
 			Lw = 1;
 
-		CreateThePen(mode, &penLine, Lw);
-		CreateTheBrush(mode, &brushFill);
+		colorLine = CreateThePen(mode, &penLine, Lw);
+		colorFill = CreateTheBrush(mode, &brushFill);
 		pOldPen = pDC->SelectObject(&penLine);
 		pOldBrush = pDC->SelectObject(&brushFill);
 		switch (mode.DrawMode)
@@ -224,7 +221,7 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 			if (DrawPolygon(pDC, mode, ULHC, Scale))
 			{
 				if(!GetAttributes().m_TransparentFill)
-					FillPolygon(pDC, mode, ULHC, Scale);
+					FillPolygon(colorLine, colorFill, pDC, mode, ULHC, Scale);
 			}
 			break;
 		}
@@ -233,22 +230,22 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	}
 }
 
-BOOL CCadPolygon::GetPoints(DOUBLEPOINT* pPolyPoints)
+BOOL CCadPolygon::GetPoints(DOUBLEPOINT** ppPolyPoints)
 {
 	BOOL rV = FALSE;
 	int n = GetNumVerticies();
 	int i;
-	CCadPoint* pPoint;
+	CADObjectTypes Obj;
 
 	for (i = 0; i < n; ++i)
 	{
-		pPoint = (CCadPoint*)FindChildObject(
+		Obj.pCadObject = FindChildObject(
 			ObjectType::POINT,
 			SubType::VERTEX,
 			i + 1
 		);
-		if (pPoint)
-			pPolyPoints[i] = DOUBLEPOINT(*pPoint);
+		if (Obj.pCadObject)
+			(* ppPolyPoints)[i] = DOUBLEPOINT(*Obj.pCadPoint);
 		else
 			goto exit;
 	}
@@ -264,10 +261,11 @@ BOOL CCadPolygon::PointInThisObject(DOUBLEPOINT point)
 	pPolyPoints = new DOUBLEPOINT[n];
 	BOOL rV = FALSE;
 
-	if (GetPoints(pPolyPoints))
+	if (GetPoints(&pPolyPoints))
 	{
 		rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, n);
 	}
+	delete[] pPolyPoints;
 	return rV;
 }
 
@@ -454,6 +452,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
 
 	switch (DrawState)
 	{
@@ -488,6 +487,8 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		m_FirstPoint = MousePos;
+		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
+		Obj.pCadPoint->SetPoint(MousePos);
 		AddPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
@@ -496,7 +497,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		if ((m_FirstPoint == MousePos) && (GetNumVerticies() >= 3))	//is figure closed?
+		if ((m_FirstPoint == MousePos) && (GetNumVerticies() > 3))	//is figure closed?
 		{
 			CCadPolygon* pPoly;
 			//------
@@ -516,6 +517,10 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//-----------------------------------
 			// Keep Looping and adding points
 			//----------------------------------
+			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
+			Obj.pCadPoint->SetPoint(MousePos);
+			if (GetNumVerticies() > 3)
+				CalculateCenterPoint();
 			AddPoint(MousePos);
 			GETAPP.UpdateStatusBar(_T("Polygon:Place Next Point :End by Placing on First Point"));
 			DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
@@ -542,9 +547,21 @@ ObjectDrawState CCadPolygon::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
 	switch (DrawState)
 	{
+	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+		Obj.pCadPoint->SetPoint(MousePos);
+		if (GetNumVerticies() > 3)
+			CalculateCenterPoint();
+		GETVIEW->Invalidate();
+		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
+		Obj.pCadPoint->SetPoint(MousePos);
+		if (GetNumVerticies() > 3)
+			CalculateCenterPoint();
 		GETVIEW->Invalidate();
 		break;
 	}
@@ -565,8 +582,7 @@ CCadPoint* CCadPolygon::AddPoint(DOUBLEPOINT newPoint)
 	CCadPoint* pPoint;
 
 	pPoint = new CCadPoint;
-	pPoint->Create(this, GetOrigin());
-	pPoint->SetSubType(SubType::VERTEX);
+	pPoint->Create(this, GetOrigin(), SubType::VERTEX);
 	pPoint->SetSubSubType(++m_NumVertices);
 	pPoint->SetPoint(newPoint);
 	AddObjectAtChildTail(pPoint);
@@ -589,7 +605,7 @@ BOOL CCadPolygon::PointEnclosed(CCadPoint point)
 	BOOL rV;
 
 	pPolyPoints = new DOUBLEPOINT[GetNumVerticies()];
-	GetPoints(pPolyPoints);
+	GetPoints(&pPolyPoints);
 	rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, GetNumVerticies());
 	delete[] pPolyPoints;
 	return rV;
@@ -661,18 +677,27 @@ COLORREF CCadPolygon::CreateThePen(MODE mode, CPen* pen, int Lw)
 	return rColor;
 }
 
-void CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
+COLORREF CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
+	COLORREF rV;
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:
 		if (IsSelected())
-			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		{
+			rV = GetAttributes().m_colorFill;
+			brushFill->CreateSolidBrush(rV);
+		}
 		else
-			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
+		{
+			rV = GetAttributes().m_colorFill;
+			brushFill->CreateSolidBrush(rV);
+		}
 		break;
 	case ObjectDrawMode::SKETCH:
-		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		rV = GetAttributes().m_colorFill;
+		brushFill->CreateSolidBrush(rV);
 		break;
 	}
+	return rV;
 }

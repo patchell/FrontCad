@@ -259,8 +259,9 @@ void CCadPoint::LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& UL
 }
 
 BOOL CCadPoint::FloodFill(
+	COLORREF colorBorder,
+	COLORREF colorFill,
 	CDC* pDC, 
-	COLORREF colorBoundry, 
 	DOUBLEPOINT& ULHC,
 	CScale& Scale
 )
@@ -269,7 +270,7 @@ BOOL CCadPoint::FloodFill(
 	CPoint p;
 
 	p = ToPixelPoint(ULHC, Scale);
-	rV = pDC->FloodFill(p.x, p.y, colorBoundry);
+	rV = pDC->FloodFill(p.x, p.y, colorBorder);
 	return rV;
 }
 
@@ -904,7 +905,7 @@ CCadPoint* CCadPoint::CenterPoint(CCadPoint* pFirstPoint, CCadPoint* pOtherPoint
 	//----------------------------------------------------
 
 	dX = (pFirstPoint->dX + pOtherPoint->dX) / 2.0;
-	dY = (pFirstPoint->dX + pOtherPoint->dY) / 2.0;
+	dY = (pFirstPoint->dY + pOtherPoint->dY) / 2.0;
 	return this;
 }
 

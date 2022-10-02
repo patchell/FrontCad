@@ -15,6 +15,7 @@ class CDlgRectProperties : public CDialog
 	CEditDecimal m_Edit_LineWidth;
 	CStaticBitmap m_Static_FillColor;
 	CStaticBitmap m_Static_LineColor;
+	CStaticBitmap m_Static_ColorSelected;
 	CButton m_Check_NoFill;
 	DECLARE_DYNAMIC(CDlgRectProperties)
 public:
@@ -30,5 +31,4 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	DECLARE_MESSAGE_MAP()
-	afx_msg LRESULT OnDlgControlDirty(WPARAM wParam, LPARAM lParam);
 };

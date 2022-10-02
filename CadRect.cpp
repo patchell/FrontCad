@@ -377,26 +377,28 @@ exit:
 }
 
 void CCadRect::FillRect(
-	CDC* pDC, 
+	COLORREF colorBoarder,
+	COLORREF colorFill,
+	CDC* pDC,
 	MODE mode, 
 	DOUBLEPOINT&  ULHC, 
-	CScale& Scale, 
-	COLORREF colorBoarder
+	CScale& Scale
 )
 {
-	CCadPoint* pPoint;
+	CADObjectTypes Obj;
 
-	pPoint = (CCadPoint*)(FindChildObject(
+	Obj.pCadObject = FindChildObject(
 		ObjectType::POINT,
 		SubType::CENTERPOINT,
 		SUBSUBTYPE_ANY
-	));
-	if (pPoint)
+	);
+	if (Obj.pCadObject)
 	{
-//		pPoint->Print("Rect Center Point");
-		pPoint->FloodFill(
-			pDC,
+//		Obj.pCadPoint->Print("Rect Center Point");
+		Obj.pCadPoint->FloodFill(
 			colorBoarder,
+			colorFill,
+			pDC,
 			ULHC,
 			Scale
 		);
@@ -425,12 +427,13 @@ void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		CSize rectLWcomp;
 		MODE pointMode = mode;;
 		COLORREF colorBoarder;
+		COLORREF colorFill;
 
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.dSX);
 		if (Lw < 1)
 			Lw = 1;
 		colorBoarder = CreateThePen(mode, &penLine, Lw);
-		CreateTheBrush(mode, &brushFill);
+		colorFill = CreateTheBrush(mode, &brushFill);
 		ppenOld = pDC->SelectObject(&penLine);
 		pbrushOld = pDC->SelectObject(&brushFill);
 		switch (mode.DrawMode)
@@ -444,7 +447,7 @@ void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 				GetAttributes().m_TransparentFill == FALSE
 			);
 			if (!GetAttributes().m_TransparentFill)
-				FillRect(pDC, mode, ULHC, Scale, colorBoarder);
+				FillRect(colorBoarder, colorFill, pDC, mode, ULHC, Scale);
 			break;
 		case ObjectDrawMode::SKETCH:
 			DrawRect(
@@ -799,6 +802,9 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		ObjP3.pCadObject = GetVertex(3);
 		ObjP3.pCadPoint->SetPoint(MousePos);
 		Recalc24();
+		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
+		ObjCenter.pCadPoint->Print("Rect Center Point");
+
 		//----------------------------------------------
 		// Just a regular orthoganol Rectangle
 		//---------------------------------------------
@@ -930,19 +936,31 @@ COLORREF CCadRect::CreateThePen(MODE mode, CPen* pen, int Lw)
 	return rColor;
 }
 
-void CCadRect::CreateTheBrush(MODE mode, CBrush* brushFill)
+COLORREF CCadRect::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
+	COLORREF rV;
+
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:
 		if (IsSelected())
-			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
+		{
+			rV = GetAttributes().m_colorFill;
+			brushFill->CreateSolidBrush(rV);
+		}
 		else
-			brushFill->CreateSolidBrush(GetAttributes().m_colorFill);
+		{
+			rV = GetAttributes().m_colorFill;
+			brushFill->CreateSolidBrush(rV);
+		}
 		break;
 	case ObjectDrawMode::SKETCH:
-		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
-		break;
+	{
+		rV = GetAttributes().m_colorFill;
+		brushFill->CreateSolidBrush(rV);
 	}
+	break;
+	}
+	return rV;
 }
 

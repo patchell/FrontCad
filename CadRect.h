@@ -50,7 +50,14 @@ public:
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	//----------- dc paint methods ------------------
 	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill);
-	void FillRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, COLORREF colorBoarder);
+	void FillRect(
+		COLORREF colorBoarder,
+		COLORREF colorFill,
+		CDC* pDC, 
+		MODE mode, 
+		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	//------------------------------------------------------------------
 	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
@@ -79,7 +86,7 @@ public:
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	virtual int EditProperties();
 	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
-	void CreateTheBrush(MODE mode, CBrush* brushFill);
+	COLORREF CreateTheBrush(MODE mode, CBrush* brushFill);
 	//------------------------------------------
 	// Attribute Methods
 	//-----------------------------------------

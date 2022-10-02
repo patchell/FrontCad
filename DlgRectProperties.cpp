@@ -25,6 +25,7 @@ void CDlgRectProperties::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_FILL_COLOR, m_Static_FillColor);
 	DDX_Control(pDX, IDC_STATIC_LINE_COLOR, m_Static_LineColor);
 	DDX_Control(pDX, IIDC_CHECK_RECT_NOFILL, m_Check_NoFill);
+	DDX_Control(pDX, IDC_STATIC_RECT_COLOR_SELECTED, m_Static_ColorSelected);
 }
 
 
@@ -44,6 +45,7 @@ BOOL CDlgRectProperties::OnInitDialog()
 	m_Edit_LineWidth.SetDoubleValue(m_pRect->GetAttributes().m_LineWidth);
 	m_Static_LineColor.SetColor(m_pRect->GetAttributes().m_colorLine);
 	m_Static_FillColor.SetColor(m_pRect->GetAttributes().m_colorFill);
+	m_Static_ColorSelected.SetColor(m_pRect->GetAttributes().m_colorSelected);
 	m_Check_NoFill.SetCheck(m_pRect->GetAttributes().m_TransparentFill);
 	if(m_pRect->GetAttributes().m_TransparentFill)
 		m_Static_FillColor.ShowWindow(0);
@@ -61,6 +63,7 @@ void CDlgRectProperties::OnOK()
 		case IDOK:
 			m_pRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
 			m_pRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
+			m_pRect->GetAttributes().m_colorSelected = m_Static_ColorSelected.GetColor();
 			m_pRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
 			m_pRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
 			CDialog::OnOK();

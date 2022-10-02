@@ -18,11 +18,7 @@ public:
 	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
 	virtual void Move(CDoubleSize Diff);
 	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
-	CCadPoint* GetCenter();
-	void FillPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
-	BOOL GetPoints(DOUBLEPOINT* pPoints);
+	BOOL GetPoints(DOUBLEPOINT** pPoints);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -45,13 +41,28 @@ public:
 	CCadPoint *AddPoint(DOUBLEPOINT Point);
 	BOOL PointEnclosed(CCadPoint p);
 	//---------------------------------------------
+	// Paint Methods
+	//---------------------------------------------
+	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	CCadPoint* CalculateCenterPoint();
+	void FillPolygon(
+		COLORREF colorBoarder,
+		COLORREF colorFill,
+		CDC* pDC, 
+		MODE mode, 
+		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	COLORREF CreateTheBrush(MODE mode, CBrush* brushFill);
+	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
+	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
+	CCadPoint* GetCenter();
 	virtual int EditProperties();
-	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
-	void CreateTheBrush(MODE mode, CBrush* brushFill);
 	void CopyAttributesFrom(SPolyAttributes* pPA);
 	void CopyAttributesTo(SPolyAttributes* pA);
 	//------------------------------------------

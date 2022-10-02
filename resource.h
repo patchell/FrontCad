@@ -115,14 +115,15 @@
 #define IDC_BUTTON_MOVE_UP              1047
 #define IDC_EDIT_WIDTH                  1048
 #define IDC_BUTTON4                     1048
-#define IDC_EDIT1                       1048
 #define IDC_RNDHOLE1FLAT_WIDTH          1049
 #define IDC_EDIT_NEWNAME                1049
 #define IDC_EDIT_ROUNDHOLE_RADIUS       1049
 #define IDC_CHECK6                      1049
+#define IDC_STATIC_POLYPROP_COLOR_SELECTED 1049
 #define IDC_RNDHOLE1FLAT_RADIUS         1050
 #define IDC_EDIT_ROUNDHOLE_WIDTH        1050
 #define IDC_BUTTON5                     1050
+#define IDC_STATIC_RECT_COLOR_SELECTED  1050
 #define IDC_RNDHOLE1FLAT_FLAT           1051
 #define IIDC_CHECK_RECT_NOFILL          1057
 #define IDC_CHECK_ELLIPSE_NOFILL        1058
@@ -201,7 +202,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        330
 #define _APS_NEXT_COMMAND_VALUE         32819
-#define _APS_NEXT_CONTROL_VALUE         1049
+#define _APS_NEXT_CONTROL_VALUE         1051
 #define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif
