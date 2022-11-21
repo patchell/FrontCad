@@ -62,6 +62,7 @@ void CMyToolBarView::OnSetFocus(CWnd* pOldWnd)
 
 
 // CMyToolBar message handlers
+// Hey, why not
 
 void CMyToolBarView::OnPaint()
 {
