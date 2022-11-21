@@ -39,6 +39,7 @@ class CCadObject
 		{ ObjectType::POINT,OBJKIND_POINT},
 		{ ObjectType::POLYGON,OBJKIND_POLYGON},
 		{ ObjectType::RECT,OBJKIND_RECT},
+		{ ObjectType::RECT_ROTATED, OBJKIND_RECT_ROTATED},
 		{ ObjectType::ROUNDEDRECT,OBJKIND_ROUNDEDRECT},
 		{ ObjectType::TEXT,OBJKIND_TEXT}
 	};

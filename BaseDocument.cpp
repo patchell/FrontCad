@@ -106,6 +106,7 @@ void CBaseDocument::ProcessZoom(CScale& InchesPerPixel)
 {
 	CCadObject* pObj;
 
+	printf("Zoom Factor = %d\n", GETVIEW->GetGrid().GetZoomFactor());
 	pObj = GetHead();
 	while (pObj)
 	{

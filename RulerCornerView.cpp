@@ -19,6 +19,7 @@ BEGIN_MESSAGE_MAP(CRulerCornerView, CView)
 	//{{AFX_MSG_MAP(CRulerCornerView)
 	ON_WM_SETFOCUS()
 	//}}AFX_MSG_MAP
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -68,4 +69,13 @@ void CRulerCornerView::OnSetFocus(CWnd* pOldWnd)
 	CView::OnSetFocus(pOldWnd);
 
 	((CSplitterWnd*)GetParent())->SetActivePane(1, 1);
+}
+
+
+void CRulerCornerView::OnSize(UINT nType, int cx, int cy)
+{
+	CView::OnSize(nType, cx, cy);
+
+	printf("Ruler Corner: Type=%d cx=%d cy=%d\n", nType, cx, cy);
+	// TODO: Add your message handler code here
 }

@@ -256,8 +256,10 @@ public:
 	afx_msg void OnUpdateDrawRectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRectangularhole();
 	afx_msg void OnUpdateDrawRectangularhole(CCmdUI* pCmdUI);
+	afx_msg void OnUpdateRectFromCenter(CCmdUI* pCmdUI);
+	afx_msg void OnDrawRectangleFromCenter();
 	afx_msg void OnDrawRotatedrectangle();
-	afx_msg void OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI);
+	afx_msg	void OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRoundedrectangle();
 	afx_msg void OnUpdateDrawRoundedrectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRoundhole();
@@ -400,5 +402,6 @@ public:
 	CCadObject* SnapToObject(DOUBLEPOINT MousePos, UINT KindsToSnapTo, CCadObject* pExcludeObject, BOOL bChoose);
 	afx_msg void OnSnapSnaporder();
 	afx_msg void OnUpdateSnapSnaporder(CCmdUI* pCmdUI);
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 };
 

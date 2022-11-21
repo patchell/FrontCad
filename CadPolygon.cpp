@@ -152,7 +152,6 @@ CCadPoint* CCadPolygon::CalculateCenterPoint()
 CCadPoint *CCadPolygon::GetCenter()
 {
 	double x = 0.0, y = 0.0;
-	UINT i, n;
 	CADObjectTypes Obj;
 
 	Obj.pCadObject = FindChildObject(
@@ -679,7 +678,8 @@ COLORREF CCadPolygon::CreateThePen(MODE mode, CPen* pen, int Lw)
 
 COLORREF CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
-	COLORREF rV;
+	COLORREF rV = RGB(0, 0, 0);
+	;
 	switch (mode.DrawMode)
 	{
 	case ObjectDrawMode::FINAL:

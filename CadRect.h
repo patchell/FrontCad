@@ -49,6 +49,12 @@ public:
 	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
 	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
 	//----------- dc paint methods ------------------
+	virtual void Draw(
+		CDC* pDC, 
+		MODE mode, 
+		DOUBLEPOINT& ULHC, 
+		CScale& Scale
+	);
 	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill);
 	void FillRect(
 		COLORREF colorBoarder,
@@ -58,7 +64,6 @@ public:
 		DOUBLEPOINT& ULHC, 
 		CScale& Scale
 	);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
 	//------------------------------------------------------------------
 	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);

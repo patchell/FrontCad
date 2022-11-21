@@ -81,6 +81,8 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnUpdateDrawRectangularhole)
 	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedrectangle)
 	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedrectangle)
+	ON_COMMAND(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnDrawRectangleFromCenter)
+	ON_UPDATE_COMMAND_UI(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnUpdateRectFromCenter)
 	ON_COMMAND(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnDrawRoundedrectangle)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnUpdateDrawRoundedrectangle)
 	ON_COMMAND(ID_HOLE_ROUNDHOLE, &CFrontCadView::OnDrawRoundhole)
@@ -134,6 +136,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_WM_MENUSELECT()
 	ON_COMMAND(ID_SNAP_SNAPORDER, &CFrontCadView::OnSnapSnaporder)
 	ON_UPDATE_COMMAND_UI(ID_SNAP_SNAPORDER, &CFrontCadView::OnUpdateSnapSnaporder)
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 
@@ -1121,8 +1124,42 @@ void CFrontCadView::OnUpdateDrawRectangularhole(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawRotatedrectangle()
 {
+	CCadRect* pR;
+
+	if (GetObjectTypes().pCadObject)
+	{
+		delete GetObjectTypes().pCadObject;
+		GetObjectTypes().pCadObject = 0;
+	}
+	SetDrawMode(DrawingMode::RECT);
+	pR = new CCadRect;
+	pR->Create(NULL, GetDocument()->GetCurrentOrigin(), SubType::RECT_ROTATED);;
+	SetObjectTypes(pR);
+	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
 
+void CFrontCadView::OnDrawRectangleFromCenter()
+{
+	CCadRect* pR;
+
+	if (GetObjectTypes().pCadObject)
+	{
+		delete GetObjectTypes().pCadObject;
+		GetObjectTypes().pCadObject = 0;
+	}
+	SetDrawMode(DrawingMode::RECT);
+	pR = new CCadRect;
+	pR->Create(NULL, GetDocument()->GetCurrentOrigin(), SubType::RECT_FROM_CENTER);
+	SetObjectTypes(pR);
+	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
+}
+
+void CFrontCadView::OnUpdateRectFromCenter(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(1);
+}
 
 void CFrontCadView::OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI)
 {
@@ -1561,7 +1598,6 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		if (GetObjectTypes().pCadObject)
 		{
 			GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::END_DRAWING);
-			GetObjectTypes().pCadObject->Print(0);
 			delete GetObjectTypes().pCadObject;
 			SetObjectTypes(0);
 		}
@@ -1598,7 +1634,6 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	}
 		break;
 	case ID_CM_DELETE:	//delete selected object(s)
-//		printf("Delete Object\n");
 		{
 			CCadObject* pO = pDoc->GetSelListHead();
 			while (pO)
@@ -1612,10 +1647,8 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		}
 		break;
 	case ID_CM_RESTOREASPECTRATIO:
-//		printf("Restore Aspect Ratio\n");
 		break;
 	case ID_CM_DESELECT:
-//		printf("DeSelect\n");
 		{
 			CCadObject* pO = pDoc->GetSelListHead();
 			pDoc->RemoveSelectedObject(pO);
@@ -1624,7 +1657,6 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		}
 		break;
 	case ID_CM_DESELECT_ALL:
-//		printf("Deselect All\n");
 		{
 			CCadObject* pO = pDoc->GetSelListHead();
 			while (pO)
@@ -1710,7 +1742,6 @@ void CFrontCadView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	case VK_CONTROL:
 		if (!m_ControlKeyDown)
 		{
-			printf("Control Down\n");
 			m_ControlKeyDown = 1;
 			switch (m_DrawMode)
 			{
@@ -1891,7 +1922,6 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		Invalidate();
 		break;
 	case VK_CONTROL:
-		printf("CONTROL UP\n");
 		m_ControlKeyDown = 0;
 		switch (m_DrawMode)
 		{
@@ -1958,26 +1988,50 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	//		This method is called in response to
 	// a WM_SIZE message
 	//----------------------------------------------
+	printf("On Size\n");
 	switch (nType)
 	{
 	case SIZE_MAXIMIZED:
-		break;
-	case SIZE_MINIMIZED:
-		break;
-	case SIZE_RESTORED:
-//		printf("Set Window Size To (%d,%d)\n", cx, cy);
+		printf("   Maximize\n");
 		UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 		GetRulerInfo().SetClientSize(CSize(cx, cy));
 		if (GetRulerInfo().AreFulersReady())
 			PostMessageToRulers(RW_ZOOM);
+//		SendMessageToRulers(RW_SHOW, TRUE);
+		Invalidate();
+		break;
+	case SIZE_MINIMIZED:
+		printf("   Minimize\n");
+		break;
+	case SIZE_RESTORED:
+		printf("   Restored %d  cX=%d  cY=%d\n", nType, cx, cy);
+		UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
+		GetRulerInfo().SetClientSize(CSize(cx, cy));
+		if (GetRulerInfo().AreFulersReady())
+		{
+			PostMessageToRulers(RW_ZOOM);
+			SendMessageToRulers(RW_SHOW, TRUE);
+		}
 		Invalidate();
 		break;
 	case SIZE_MAXHIDE:
+		printf("   MaxHide\n");
 		break;
 	case SIZE_MAXSHOW:
+		printf("   MaxShow\n");
+		break;
+	default:
+		printf("   ** Something Elxe %d\n", nType);
 		break;
 	}
 	CChildViewBase::OnSize(nType, cx, cy);
+}
+
+void CFrontCadView::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	CChildViewBase::OnSizing(fwSide, pRect);
+	printf("Sizing\n");
+	// TODO: Add your message handler code here
 }
 
 void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -2112,7 +2166,6 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		Update = FALSE;
 		break;
 	}
-//	printf("nPos = %d  Xinches = %8.3lf  Update=%d\n", nPos, Xinches,Update);
 	DoHScroll(Xinches, Update);
 	CChildViewBase::OnHScroll(nSBCode, nPos, pScrollBar);
 }
@@ -2359,7 +2412,6 @@ void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 		// Clean up ULHC ie Snap
 		//--------------------------------
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
-		pointNewULHC.Print("Zoom In New ULHC");
 		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
@@ -2399,7 +2451,6 @@ void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 		NextScale = GetGrid().GetInchesPerPixel();
 		pointNewULHC = point.ULHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
-		pointNewULHC.Print("Zoom Out New ULHC");
 		GetRulerInfo().SetUpperLeft(pointNewULHC);
 		//--------------------------------
 		// Update the Scroll Position
@@ -2441,8 +2492,6 @@ void CFrontCadView::EnableAutoScroll(BOOL flag)
 void CFrontCadView::OnMouseLeave()
 {
 	SetMouseLeftWindow(TRUE);
-//	printf("Mouse Left the Building MB = %d\n", m_MiddleMouseButtonDown);
-//	CChildViewBase::OnMouseLeave();
 }
 
 MouseIsHere CFrontCadView::WhereIsMouse()
@@ -2600,7 +2649,6 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 		pDoc->SetCurrentOrigin(pCORG);
 		GetRulerInfo().SetOrigin(pCORG);
 		PostMessageToRulers(RW_ZOOM);
-//		printf("Origin Changed\n");
 		break;
 	}
 	return 0;
@@ -2697,7 +2745,6 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 void CFrontCadView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// TODO: Add your message handler code here and/or call default
-	printf("Sys Key Down\n");
 	CChildViewBase::OnSysKeyDown(nChar, nRepCnt, nFlags);
 }
 
@@ -2705,7 +2752,6 @@ void CFrontCadView::OnSysKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 void CFrontCadView::OnSysKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// TODO: Add your message handler code here and/or call default
-	printf("Sys Key Up\n");
 	CChildViewBase::OnSysKeyUp(nChar, nRepCnt, nFlags);
 }
 
@@ -2741,14 +2787,12 @@ void CFrontCadView::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 		}
 		nLastItemIndex = Index;
 		m_ppObjList[Index]->SetSelected(TRUE);
-//		printf(">>> Set Selected %d  ID:%d Sel=%d\n", Index, m_ppObjList[Index]->GetId(), m_ppObjList[Index] ->IsSelected());
 		pParent = m_ppObjList[Index]->GetParent();
 		while (pParent)
 		{
 			pParent->SetSelected(TRUE);
 			pParent = pParent->GetParent();
 		}
-//		m_ppObjList[Index]->Print(2);
 	}
 	else if ((nItemID == 0) && (nLastItemIndex >= 0) &&  m_ppObjList)
 	{
@@ -2906,12 +2950,10 @@ DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 	DOUBLEPOINT MousePos;
 
 	MousePos.Raw(MousePoint, ULHC, SCALE(Scale));
-//	MousePos.Print("RAW:");
 	MousePos.Snap(DOUBLESIZE(SnapGrid), SnapGridIsEnabled);
 	m_DeltaMousePos = MousePos - m_LastMousePos;
 	m_LastMousePos = m_CurMousePos;
 	m_CurMousePos = MousePos;
 	return m_CurMousePos;
 }
-
 

@@ -29,25 +29,30 @@ BEGIN_MESSAGE_MAP(CRulerSplitterWnd, CSplitterWnd)
 	ON_MESSAGE(UINT(WindowsMsg::WM_RULER_MESSAGE),&CRulerSplitterWnd::OnRulerMessage)
 END_MESSAGE_MAP()
 
-BOOL CRulerSplitterWnd::CreateRulers(CWnd* pParent, CCreateContext* pContext, DWORD dwStyle, UINT nID)
+BOOL CRulerSplitterWnd::CreateRulers(
+	CWnd* pParent, 
+	CCreateContext* pContext, 
+	DWORD dwStyle, 
+	UINT nID
+)
 {
 	BOOL rV = FALSE;
 
-	printf("Create Ruler Spliter panes\n");
+	printf("**** Create Ruler Spliter panes ****\n");
 
 	if (CreateStatic(pParent, 2, 2, dwStyle, nID))
 	{
 		//corner
-		if (CreateView(RULERCORNER, RUNTIME_CLASS(CRulerCornerView), CSize(0, 0), pContext))
+		if (CreateView(PANE_RULERCORNER, RUNTIME_CLASS(CRulerCornerView), CSize(0, 0), pContext))
 		{
 			// Horizontal Ruler
-			if (CreateView(HRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
+			if (CreateView(PANE_HRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
 			{
 				// Vertical Ruler
-				if (CreateView(VRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
+				if (CreateView(PANE_VRULER, RUNTIME_CLASS(CRulerView), CSize(0, 0), pContext))
 				{
 					//remaining (main) view
-					if (CreateView(MAINPANE, pContext->m_pNewViewClass, CSize(0, 0), pContext))
+					if (CreateView(PANE_MAINPANE, pContext->m_pNewViewClass, CSize(0, 0), pContext))
 					{
 						SetColumnInfo(0, 0, 0);
 						SetRowInfo(0, 0, 0);
@@ -55,7 +60,7 @@ BOOL CRulerSplitterWnd::CreateRulers(CWnd* pParent, CCreateContext* pContext, DW
 						HORIZONTALRULER->SetRulerType(RT_HORIZONTAL);
 						VERTICALRULER->SetRulerType(RT_VERTICAL);
 
-						SetActivePane(MAINPANE);
+						SetActivePane(PANE_MAINPANE);
 						rV = TRUE;
 					}
 				}
@@ -67,16 +72,22 @@ BOOL CRulerSplitterWnd::CreateRulers(CWnd* pParent, CCreateContext* pContext, DW
 
 void CRulerSplitterWnd::ShowRulers(BOOL bShow, BOOL bSave)
 {
-	int nSize = (bShow) ? RULER_SIZE : 0;
+	int nRulerSize = (bShow) ? RULER_SIZE : 0;
 	int nSizeBorder = (bShow) ? 3 : 1;
 	CRect rect;
 	int szScrollBar = GetSystemMetrics(SM_CYHSCROLL);
-
+	//-------------------------------
+	// Get the dimensions of the
+	// child frame window.
+	//-------------------------------
 	GetParent()->GetClientRect(&rect);
-	SetRowInfo(0, rect.Height() -  nSize - szScrollBar - TOOLBAR_HIEGHT,0);
-	SetRowInfo(1, nSize, 0);
-	SetColumnInfo(0, nSize, 0);
-	SetColumnInfo(1, rect.Width() - nSize, 0);
+	//------------------------------
+	// Set the hights of the rows
+	//------------------------------
+	SetRowInfo(Row(PANE_MAINPANE), rect.Height() - nRulerSize - szScrollBar - TOOLBAR_HIEGHT, 0);
+	SetRowInfo(Row(PANE_HRULER), nRulerSize, 0);
+	SetColumnInfo(Col(PANE_VRULER), nRulerSize, 0);
+	SetColumnInfo(Col(PANE_MAINPANE), rect.Width() - nRulerSize, 0);
 	m_cxSplitterGap = nSizeBorder;
 	m_cySplitterGap = nSizeBorder;
 	m_bRulersVisible = (bSave) ? bShow : m_bRulersVisible;
@@ -117,9 +128,11 @@ LRESULT CRulerSplitterWnd::OnRulerMessage(WPARAM msg, LPARAM aux)
 	switch (msg)
 	{
 	case RW_VSCROLL:
+		printf("**** Draw Vertical Rulers *****\n");
 		VERTICALRULER->Draw();
 		break;
 	case RW_HSCROLL:
+		printf("**** Draw Horizontal Rulers *****\n");
 		HORIZONTALRULER->Draw();
 		break;
 	case RW_POSITION:
@@ -127,6 +140,7 @@ LRESULT CRulerSplitterWnd::OnRulerMessage(WPARAM msg, LPARAM aux)
 		VERTICALRULER->SetCursor();
 		break;
 	case RW_ZOOM:
+		printf("**** Draw Rulers *****\n");
 		HORIZONTALRULER->Draw();
 		VERTICALRULER->Draw();
 		break;
@@ -134,7 +148,7 @@ LRESULT CRulerSplitterWnd::OnRulerMessage(WPARAM msg, LPARAM aux)
 		break;
 	case RW_INIT:
 		m_pRulerInfo = (CRulerInfo*)aux;
-
+		printf("**** Init Rulers *****\n");
 		HORIZONTALRULER->SetRulersInfo((CRulerInfo*)aux);
 		VERTICALRULER->SetRulersInfo((CRulerInfo*)aux);
 		CORNER->SetRulersInfo((CRulerInfo*)aux);

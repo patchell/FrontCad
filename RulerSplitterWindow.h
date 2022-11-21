@@ -20,6 +20,8 @@ public:
 	afx_msg LRESULT OnRulerMessage(WPARAM msg, LPARAM auz);
 	void ShowRulers(BOOL bShow = TRUE, BOOL bSave = TRUE);
 	void SetRulersInfo(CRulerInfo*pRulerInfo);
+	UINT Row(UINT row, UINT col) { return row; }
+	UINT Col(UINT row, UINT col) { return col; }
 protected:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
@@ -27,11 +29,12 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-#define HRULER				1,1
-#define VRULER				0,0
-#define RULERCORNER			1,0
-#define MAINPANE			0,1
-#define HORIZONTALRULER		((CRulerView*)GetPane(HRULER))
-#define VERTICALRULER		((CRulerView*)GetPane(VRULER))
-#define CORNER				((CRulerCornerView*)GetPane(RULERCORNER))
-#define MAINVIEW			((CFrontCadView*)GetPane(MAINPANE))
+#define PANE_VRULER				0,0
+#define PANE_MAINPANE			0,1
+#define PANE_RULERCORNER		1,0
+#define PANE_HRULER				1,1
+
+#define HORIZONTALRULER		((CRulerView*)GetPane(PANE_HRULER))
+#define VERTICALRULER		((CRulerView*)GetPane(PANE_VRULER))
+#define CORNER				((CRulerCornerView*)GetPane(PANE_RULERCORNER))
+#define MAINVIEW			((CFrontCadView*)GetPane(PANE_MAINPANE))

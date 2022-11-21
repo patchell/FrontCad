@@ -20,6 +20,8 @@ BEGIN_MESSAGE_MAP(CRulerView, CWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_ERASEBKGND()
 	ON_WM_PAINT()
+	ON_WM_SIZE()
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 BOOL CRulerView::IsBackGroundValid(CSize szClient)
@@ -185,18 +187,13 @@ void CRulerView::DrawTicker(
 		);
 		break;
 	case RT_VERTICAL:
-//		printf("************* Vertical Ruler ***************\n");
 		PixPerInch = RulerPixPerIn.GetScaleY();
 		nSize = GetRulersInfo()->GetClientSize().cy;
 		Inches = double(nSize) / PixPerInch;
 		SnapSpace = GetRulersInfo()->GetGrid()->GetSnapGrid().dCY;
 		MajorSpace = GetRulersInfo()->GetGrid()->GetMajorGrid().dCY;
 		nTotalTicks = GETAPP.RoundDoubleToInt(Inches / SnapSpace); //Inches/(Inches/Tick)		break;
-//		printf("DocSize Y = %6.3lf\n", GetRulersInfo()->GetDocSize().dCY);
-		GetRulersInfo()->GetUpperLeft().Print("Draw Vert Ruler");
-		GetRulersInfo()->GetOrigin()->GetCenterPoint().Print("Origin");
 		FirstTick = GetRulersInfo()->GetUpperLeft().dY;
-//		printf("First Tick = %6.3lf  SnapSpace = %6.3lf\n", FirstTick, SnapSpace);
 		AxisType = Axis::Y;
 		SnapSpacing = GETAPP.RoundDoubleToInt(
 			SnapSpace * GetRulersInfo()->GetGrid()->GetPixelsPerInch().GetScaleY());
@@ -325,7 +322,6 @@ void CRulerView::DrawTicker(
 				case GRID_MAJOR:
 					if (LabelCount-- == 0)
 					{
-//						printf("tick=%6.3lf   First=%6.3lf\n", tick, FirstTick);
 						pDC->SelectObject(&majPen);
 						x = GetRulersInfo()->GetMajorTickLength();
 						pDC->LineTo(x, y);
@@ -358,8 +354,6 @@ void CRulerView::DrawTicker(
 				break;
 			}	// end of "switch (tickType)"
 		}	// end of for loop
-//		if(GetRulerType() == RT_VERTICAL)
-//			printf("-----------------\n");
 
 		// restore DC objects
 		pDC->SetMapMode(oldMapMode);
@@ -486,4 +480,28 @@ void CRulerView::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 	GetRulersInfo()->SetRulersReady(TRUE);
+}
+
+
+void CRulerView::OnSize(UINT nType, int cx, int cy)
+{
+	CWnd::OnSize(nType, cx, cy);
+
+	printf("RulerView::OnSize\n");
+	printf("  %s type=%d cx=%d cy=%d\n", 
+		(m_rulerType == RT_HORIZONTAL) ? "Horizontal" : "Vertical",
+		nType,
+		cx,
+		cy
+	);
+	// TODO: Add your message handler code here
+}
+
+
+void CRulerView::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	CWnd::OnSizing(fwSide, pRect);
+	printf("RulerView::OnSizing %s\n", (m_rulerType==RT_HORIZONTAL)?"Horizontal":"Vertical");
+	printf(" fwSide=%d\n", fwSide);
+	// TODO: Add your message handler code here
 }

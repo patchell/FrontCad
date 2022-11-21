@@ -70,7 +70,7 @@ void CMyToolBarView::OnPaint()
 
 BOOL CMyToolBarView::OnEraseBkgnd(CDC* pDC)
 {
-	return TRUE;
+	return CWnd::OnEraseBkgnd(pDC);
 }
 
 void CMyToolBarView::InitToolbar(CWnd* pWnd, CRulerInfo* pRulerInfo)

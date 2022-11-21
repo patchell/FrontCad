@@ -327,85 +327,12 @@ void CCadRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	delete []psIndent;
 }
 
-void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill)
-{
-	int i;
-	CCadPoint* pPoint;
-
-	for (i = 0; i < 4; ++i)
-	{
-		if (i == 0)
-		{
-			pPoint = (CCadPoint*)FindChildObject(
-				ObjectType::POINT,
-				SubType::VERTEX,
-				i + 1);
-			if (pPoint)
-				pPoint->MoveTo(pDC, ULHC, Scale);
-			else
-				goto exit;	//error
-		}
-		else
-		{
-			pPoint = (CCadPoint*)FindChildObject(
-				ObjectType::POINT,
-				SubType::VERTEX,
-				i + 1
-			);
-			if (pPoint)
-			{
-				pPoint->LineTo(pDC, ULHC, Scale);
-				pPoint->Draw(pDC, mode, ULHC, Scale);
-			}
-			else
-				goto exit;	//error
-		}
-	}	//end of for loop
-	pPoint = (CCadPoint*)FindChildObject(
-		ObjectType::POINT,
-		SubType::VERTEX,
-		1
-	);
-	if (pPoint)
-	{
-		pPoint->LineTo(pDC, ULHC, Scale);
-		pPoint->Draw(pDC, mode, ULHC, Scale);
-	}
-
-exit:
-	return;
-}
-
-void CCadRect::FillRect(
-	COLORREF colorBoarder,
-	COLORREF colorFill,
-	CDC* pDC,
+void CCadRect::Draw(
+	CDC* pDC, 
 	MODE mode, 
-	DOUBLEPOINT&  ULHC, 
+	DOUBLEPOINT& ULHC, 
 	CScale& Scale
 )
-{
-	CADObjectTypes Obj;
-
-	Obj.pCadObject = FindChildObject(
-		ObjectType::POINT,
-		SubType::CENTERPOINT,
-		SUBSUBTYPE_ANY
-	);
-	if (Obj.pCadObject)
-	{
-//		Obj.pCadPoint->Print("Rect Center Point");
-		Obj.pCadPoint->FloodFill(
-			colorBoarder,
-			colorFill,
-			pDC,
-			ULHC,
-			Scale
-		);
-	}
-}
-
-void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -450,18 +377,152 @@ void CCadRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 				FillRect(colorBoarder, colorFill, pDC, mode, ULHC, Scale);
 			break;
 		case ObjectDrawMode::SKETCH:
-			DrawRect(
-				pDC,
-				mode,
-				ULHC,
-				Scale,
-				GetAttributes().m_TransparentFill == FALSE
-			);
+			//------------------------------------
+			// This is going to be complicated
+			// just because the rectangle is kind
+			// of complicated all on its own
+			//------------------------------------
+			switch (GetCurrentDrawState())
+			{
+				//-------------------------------------
+				// Just a regular ortoganol Rectangle
+				//-------------------------------------
+			case ObjectDrawState::PLACE_LBUTTON_DOWN:
+				DrawRect(
+					pDC,
+					mode,
+					ULHC,
+					Scale,
+					GetAttributes().m_TransparentFill == FALSE
+				);
+				break;
+				//-----------------------------------------------
+				// Rotated Rectangle Processing
+				//-----------------------------------------------
+			case ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_DOWN:
+				break;
+				//------------------------------------------
+				//-------- Rect Width/Height/Rotate --------
+				// 
+				// State machine for drawing a rotated
+				// rectangle defined by a base and hiegth
+				//------------------------------------------
+			case ObjectDrawState::RECT_HWR_START_DRAWING:
+				break;
+			case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN:
+				break;
+				//-----------------------------------------------------
+				// Draw a Rectangle from the center point
+				//-----------------------------------------------------
+			case ObjectDrawState::RECT_CENT_START_DRAWING:
+				break;
+			case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_CENT_CENTER_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_CENT_SECPMD_POINT_MOUSE_DOWN:
+				break;
+			case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_DOWN:
+				break;
+			}
 			break;
 		}	//end of switch draw mode
 		pDC->SelectObject(pbrushOld);
 		pDC->SelectObject(ppenOld);
 	}	//end of if render
+}
+
+
+void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill)
+{
+	int i;
+	CADObjectTypes Obj;
+
+	for (i = 0; i < 4; ++i)
+	{
+		if (i == 0)
+		{
+			Obj.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				i + 1);
+			if (Obj.pCadObject)
+				Obj.pCadPoint->MoveTo(pDC, ULHC, Scale);
+			else
+				goto exit;	//error
+		}
+		else
+		{
+			Obj.pCadObject = FindChildObject(
+				ObjectType::POINT,
+				SubType::VERTEX,
+				i + 1
+			);
+			if (Obj.pCadObject)
+			{
+				Obj.pCadPoint->LineTo(pDC, ULHC, Scale);
+				if (mode.DrawMode != ObjectDrawMode::FINAL)
+					Obj.pCadPoint->Draw(pDC, mode, ULHC, Scale);
+			}
+			else
+				goto exit;	//error
+		}
+	}	//end of for loop
+	Obj.pCadObject = FindChildObject(
+		ObjectType::POINT,
+		SubType::VERTEX,
+		1
+	);
+	if (Obj.pCadObject)
+	{
+		Obj.pCadPoint->LineTo(pDC, ULHC, Scale);
+		if (mode.DrawMode != ObjectDrawMode::FINAL)
+			Obj.pCadPoint->Draw(pDC, mode, ULHC, Scale);
+	}
+
+exit:
+	return;
+}
+
+void CCadRect::FillRect(
+	COLORREF colorBoarder,
+	COLORREF colorFill,
+	CDC* pDC,
+	MODE mode,
+	DOUBLEPOINT& ULHC,
+	CScale& Scale
+)
+{
+	CADObjectTypes Obj;
+
+	Obj.pCadObject = FindChildObject(
+		ObjectType::POINT,
+		SubType::CENTERPOINT,
+		SUBSUBTYPE_ANY
+	);
+	if (Obj.pCadObject)
+	{
+		//		Obj.pCadPoint->Print("Rect Center Point");
+		Obj.pCadPoint->FloodFill(
+			colorBoarder,
+			colorFill,
+			pDC,
+			ULHC,
+			Scale
+		);
+	}
 }
 
 CCadPoint* CCadRect::GetRectPoints(CCadPoint** ppPointDest, int n)
@@ -751,6 +812,7 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjCenter;
+	CADObjectTypes ObjPivot, ObjRotation;
 	CADObjectTypes ObjRect;
 	CPoint MouseScreenCoordinate;
 
@@ -759,7 +821,10 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::START_DRAWING:
 		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
 		CopyAttributesFrom(&m_CurrentAttributes);
-		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		if (GetSubType() == SubType::DEFALT)
+			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
+		else if (GetSubType() == SubType::RECT_ROTATED)
+			DrawState = ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Place First Point"));
 		break;
 	case ObjectDrawState::END_DRAWING:
@@ -791,7 +856,6 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		SetAllPoints(MousePos);
-		MousePos.Print("Rect Point 1");
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangle:Set Second Point"));
 		break;
@@ -803,13 +867,11 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		ObjP3.pCadPoint->SetPoint(MousePos);
 		Recalc24();
 		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
-		ObjCenter.pCadPoint->Print("Rect Center Point");
 
 		//----------------------------------------------
 		// Just a regular orthoganol Rectangle
 		//---------------------------------------------
-		MousePos.Print("Rect Point 2");
-			GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GETVIEW->GetDocument()->AddObjectAtTail(this);
 		ObjRect.pCadRect = new CCadRect;
 		ObjRect.pCadRect->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
 		GETVIEW->EnableAutoScroll(FALSE);
@@ -824,23 +886,33 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		// State machine for drawing a rotated
 		// rectasngle
 		//---------------------------------------------
-	case ObjectDrawState::ROT_RECT_ROTATED_START_DRAWING:
+	case ObjectDrawState::RECT_ROT_ROTATED_START_DRAWING:
 		break;
-	case ObjectDrawState::ROT_RECT_ROTATION_PIVOT_MOUSE_DOWN:
+	case ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_UP;
 		break;
-	case ObjectDrawState::ROT_RECT_ROTATION_PIVOT_MOUSE_UP:
+	case ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_UP:
+		ObjPivot.pCadObject = FindChildObject(ObjectType::POINT, SubType::PIVOTPOINT, SUBSUBTYPE_ANY);
+		ObjPivot.pCadPoint->SetPoint(MousePos);
+		DrawState = ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_DOWN;
 		break;
-	case ObjectDrawState::ROT_RECT_FIRST_POINT_MOUSE_DOWN:
+	case ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_UP;
 		break;
-	case ObjectDrawState::ROT_RECT_FIRST_POINT_MOUSE_UP:
+	case ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_DOWN;
 		break;
-	case ObjectDrawState::ROT_RECT_SECOND_POINT_MOUSE_DOWN:
+	case ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_UP;
 		break;
-	case ObjectDrawState::ROT_RECT_SECOND_POINT_MOUSE_UP:
+	case ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_DOWN;
 		break;
-	case ObjectDrawState::ROT_RECT_ROTATE_POINT_MOUSE_DOWN:
+	case ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_UP;
 		break;
-	case ObjectDrawState::ROT_RECT_ROTATE_POINT_MOUSE_UP:
+	case ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_DOWN;
 		break;
 	//------------------------------------------
 	//-------- Rect Width/Height/Rotate --------
@@ -864,7 +936,28 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN:
 		break;
-	case ObjectDrawState::BASE_HWR_HIEGTH_MOUSE_UP:
+	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_UP:
+		break;
+	//---------------------------------------------
+	// Draw a Rectangle form the center
+	//---------------------------------------------
+	case ObjectDrawState::RECT_CENT_START_DRAWING:
+		break;
+	case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_CENT_CENTER_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_CENTER_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_CENT_SECPMD_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_SECOND_POINT_MOUSE_UP:
+		break;
+	case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_UP:
 		break;
 	}
 	return DrawState;
@@ -885,14 +978,58 @@ ObjectDrawState CCadRect::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes ObjP1, ObjP2, ObjCenter;
+	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4, ObjPiv, ObjRot, ObjCenter;
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		ObjP2.pCadObject = GetVertex(3);;
+		ObjP2.pCadObject = GetVertex(3);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		Recalc24();
+		break;
+		//-----------------------------------------------
+		// Rotated Rectangle Processing
+		//-----------------------------------------------
+	case ObjectDrawState::RECT_ROT_ROTATION_PIVOT_MOUSE_DOWN:
+		ObjPiv.pCadObject = FindChildObject(ObjectType::POINT, SubType::PIVOTPOINT, SUBSUBTYPE_ANY);
+		ObjPiv.pCadPoint->SetPoint(MousePos);
+		break;
+	case ObjectDrawState::RECT_ROT_FIRST_POINT_MOUSE_DOWN:
+		ObjRot.pCadObject = FindChildObject(ObjectType::POINT, SubType::PIVOTPOINT, SUBSUBTYPE_ANY);
+		ObjRot.pCadPoint->SetPoint(MousePos);
+		break;
+	case ObjectDrawState::RECT_ROT_SECOND_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_ROT_ROTATE_POINT_MOUSE_DOWN:
+		break;
+		//------------------------------------------
+		//-------- Rect Width/Height/Rotate --------
+		// 
+		// State machine for drawing a rotated
+		// rectangle defined by a base and hiegth
+		//------------------------------------------
+	case ObjectDrawState::RECT_HWR_START_DRAWING:
+		break;
+	case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN:
+		break;
+	//-----------------------------------------------------
+	// Draw a Rectangle from the center point
+	//-----------------------------------------------------
+	case ObjectDrawState::RECT_CENT_START_DRAWING:
+		break;
+	case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_CENTER_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_SECPMD_POINT_MOUSE_DOWN:
+		break;
+	case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_DOWN:
 		break;
 	}
 	GETVIEW->Invalidate();
@@ -938,7 +1075,7 @@ COLORREF CCadRect::CreateThePen(MODE mode, CPen* pen, int Lw)
 
 COLORREF CCadRect::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
-	COLORREF rV;
+	COLORREF rV = RGB(0, 0, 0);;
 
 	switch (mode.DrawMode)
 	{

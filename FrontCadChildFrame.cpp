@@ -36,6 +36,7 @@ BOOL CFrontCadChildFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CFrontCadChildFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 {
+	printf("");
 	SetWindowPos(this,0, 0, 1024, 768, 0);
 	
 	if(!m_ToolBarSplitter.CreateToolBar(this, pContext))
@@ -80,7 +81,7 @@ void CFrontCadChildFrame::ShowToolBar(int nShow)
 void CFrontCadChildFrame::OnSize(UINT nType, int cx, int cy)
 {
 	CMDIChildWnd::OnSize(nType, cx, cy);
-
+	printf("ChildFrame Onsize: Type=%d cx=%d  cy=%d\n", nType, cx, cy);
 	// TODO: Add your message handler code here
 }
 
