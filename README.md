@@ -75,4 +75,7 @@ I took a bit of a vacation from FrontCad.  I am truing to figure out how I shoul
 I thought I had a good way to do it, but it was totally bogus.
 Anyway, today, I made drawing a rectangle work a lot better.
 
-
+Nov 20, 2022
+Among other things, All three of my computers died in a matter of about 3 weeks.  
+One of them has been repaired, thankfully, but for the last month and a half, things 
+have been in a turmoil.  Hopefully, progress will be a little more consistance.
