@@ -79,3 +79,7 @@ Nov 20, 2022
 Among other things, All three of my computers died in a matter of about 3 weeks.  
 One of them has been repaired, thankfully, but for the last month and a half, things 
 have been in a turmoil.  Hopefully, progress will be a little more consistance.
+
+June 27, 2023
+Made a lot of major changes.  Sort of rolled back the scope a bit.
+It should be noted that the exe crashes on startup.  Fix it soon...
