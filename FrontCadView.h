@@ -169,9 +169,6 @@ public:
 	void ToolBarSetDebug(CString& csString) {
 		GetMyFrame()->SetToolbarDebug(csString);
 	}
-	CComboBox& GetOriginSelectCombo() {
-		return GetMyFrame()->GetToolBarView()->GetOriginSelCB();
-	}
 	CMyToolBarView* GetToolBarView() {
 		return GetMyFrame()->GetToolBarView();
 	}

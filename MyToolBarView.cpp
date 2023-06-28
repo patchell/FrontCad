@@ -1,4 +1,4 @@
-	// MyToolBarView.cpp : implementation file
+// MyToolBarView.cpp : implementation file
 //
 
 #include "pch.h"
@@ -23,7 +23,6 @@ BEGIN_MESSAGE_MAP(CMyToolBarView, CWnd)
 	ON_WM_SETFOCUS()
 	ON_WM_PAINT()
 	ON_WM_ERASEBKGND()
-	ON_CBN_SELCHANGE(IDC_COMBO_ORIGINLIST, &CMyToolBarView::OnComboOriginSel)
 	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
@@ -96,49 +95,11 @@ void CMyToolBarView::InitToolbar(CWnd* pWnd, CRulerInfo* pRulerInfo)
 	m_Static_Y.EnableWindow(1);
 	m_Static_Y.ShowWindow(1);
 	UL.x += Sz.cx + Spacing;
-	m_Combo_OriginSelector.Create(WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP, CRect(UL, Sz), this, IDC_COMBO_ORIGINLIST);
-	m_Combo_OriginSelector.EnableWindow(1);
-	m_Combo_OriginSelector.ShowWindow(1);
-	AddOrigin(GetRulerInfo()->GetOrigin());
-	m_Combo_OriginSelector.SetCurSel(0);
 	UL.x += Sz.cx + Spacing;
 	Sz.cx = 300;
 	m_StaticClient.Create(_T("0.000"), WS_BORDER | WS_CHILD, CRect(UL, Sz), this, IDC_STATIC_TOOLBAR_Y);
 	m_StaticClient.EnableWindow(1);
 	m_StaticClient.ShowWindow(1);
-}
-
-//------------------------------------------------
-// Origin ComboBox Methods
-//------------------------------------------------
-
-void CMyToolBarView::AddOrigin(CCadOrigin* pORG)
-{
-	m_Combo_OriginSelector.InsertString(m_ComboOriginIndex, pORG->GetName());
-	m_Combo_OriginSelector.SetItemData(m_ComboOriginIndex++, (DWORD)pORG);
-}
-
-CCadOrigin* CMyToolBarView::GetOrigin(int index)
-{
-	CCadOrigin* pORG;
-
-	m_Combo_OriginSelector.SetCurSel(index);
-	pORG = (CCadOrigin*)m_Combo_OriginSelector.GetItemData(index);
-	return pORG;
-}
-
-
-void CMyToolBarView::OnComboOriginSel()
-{
-	int CurSel;
-
-	CurSel = m_Combo_OriginSelector.GetCurSel();
-	m_pWndMessageDestination->PostMessageW(
-		UINT(WindowsMsg::WM_FROM_TOOLBAR_MESSAGE), 
-		UINT(ToolBarMsg::ORIGIN_SEL_CHANGE), 
-		CurSel
-	);
-	m_pWndMessageDestination->SetFocus();
 }
 
 

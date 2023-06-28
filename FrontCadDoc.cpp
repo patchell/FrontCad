@@ -24,7 +24,9 @@ BOOL CFrontCadDoc::OnNewDocument()
 	CString csTitle;
 	CDlgNewDrawing Dlg;
 	int Id;
+	CCadDrawing* pDrawing;
 	BOOL rV = FALSE;
+
 	csName.Format(_T("FrontCadDoc%d"), ++NewFileCount);
 	csTitle.Format(_T("New FrontCad Drawuing"));
 	Dlg.SetDialogTitle(csTitle);
@@ -43,6 +45,9 @@ BOOL CFrontCadDoc::OnNewDocument()
 		SetDocumentName(Dlg.GetDocumentName());
 		SetTitle(GetDocumentName());
 	}
+	pDrawing = new CCadDrawing;
+	pDrawing->Create(NULL, CCadObject::SubTypes::DEFAULT);
+	SetDrawing(pDrawing);
 	return rV;
 }
 

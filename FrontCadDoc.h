@@ -30,6 +30,9 @@ public:
 	CCadDrawing* GetDrawing() {
 		return (CCadDrawing*)CBaseDocument::GetDocObject();
 	}
+	void SetDrawing(CCadDrawing* pDrawing) {
+		CBaseDocument::SetDocObject(pDrawing);
+	}
 	void SetDocSize(CDoubleSize szDoc) { m_DocSize = szDoc; }
 	CDoubleSize& GetDocSize() { return m_DocSize; }
 	double GetDocWidth() { return m_DocSize.dCX; }

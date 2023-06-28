@@ -30,6 +30,7 @@ public:
 	void SetDocView(CFrontCadView* pFCV) { m_pDocView = pFCV; }
 	CFrontCadView* GetDocView() { return m_pDocView; }
 	CCadObject* GetDocObject() { return m_pDocObject; }
+	void SetDocObject(CCadObject* pDocObj) { m_pDocObject = pDocObj; }
 	//-----------------------------------------------------
 	CString& GetDocumentName() { return csDocName; }
 	void SetDocumentName(CString& csName) { csDocName = csName; }

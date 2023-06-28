@@ -2621,10 +2621,6 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 	switch (submsg)
 	{
 	case ToolBarMsg::ORIGIN_SEL_CHANGE:
-		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
-//		pDoc->SetCurrentOrigin(pCORG);
-		GetRulerInfo().SetOrigin(pCORG);
-		PostMessageToRulers(RW_ZOOM);
 		break;
 	}
 	return 0;
