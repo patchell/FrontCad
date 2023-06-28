@@ -63,13 +63,13 @@ void CDlgArcCentProperies::UpdateControls()
 	CADObjectTypes Obj;
 
 	m_Edit_EndX.SetDecimalPlaces(3);
-	Obj.pCadObject = m_pArc->FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	Obj.pCadObject = m_pArc->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0);
 	m_Edit_EndX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_EndY.SetDecimalPlaces(3);
 	m_Edit_EndY.SetDoubleValue(Obj.pCadPoint->GetY());
 
 	m_Edit_StartX.SetDecimalPlaces(3);
-	Obj.pCadObject = m_pArc->FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	Obj.pCadObject = m_pArc->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
 	m_Edit_StartX.SetDoubleValue(Obj.pCadPoint->GetX());
 	m_Edit_StartY.SetDecimalPlaces(3);
 	m_Edit_StartY.SetDoubleValue(Obj.pCadPoint->GetY());
@@ -86,12 +86,12 @@ void CDlgArcCentProperies::UpdateData()
 
 	m_pArc->GetAttributes().m_colorLine = m_Static_Color.GetColor();
 	m_pArc->GetAttributes().m_LineWidth = m_Edit_Width.GetDoubleValue();
-	Obj.pCadObject = m_pArc->FindChildObject(ObjectType::POINT, SubType::ENDPOINT, 0);
+	Obj.pCadObject = m_pArc->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0);
 	Obj.pCadPoint->SetPoint(
 		m_Edit_EndX.GetDoubleValue(),
 		m_Edit_EndY.GetDoubleValue()
 	);
-	Obj.pCadObject = m_pArc->FindChildObject(ObjectType::POINT, SubType::STARTPOINT, 0);
+	Obj.pCadObject = m_pArc->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
 	Obj.pCadPoint->SetPoint(
 		m_Edit_StartX.GetDoubleValue(),
 		m_Edit_StartY.GetDoubleValue()

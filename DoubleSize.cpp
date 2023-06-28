@@ -10,10 +10,13 @@ CDoubleSize::CDoubleSize(CSize szSize)
     dCY = InchesY;
 }
 
-DocFileParseToken CDoubleSize::Parse(DocFileParseToken Token, CLexer* pLex)
+CLexer::Tokens CDoubleSize::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
-    Token = pLex->DoubleSize(DocFileParseToken::SIZE, *this, Token);
-    return Token;
+     return Token;
 }
 
 double CDoubleSize::Angle(BOOL DegreesMode)

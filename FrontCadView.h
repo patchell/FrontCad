@@ -24,9 +24,9 @@ enum class MouseIsHere {
 	LOWERLEFT,
 	LOWERRIGHT
 };
+
 class CFrontCadView : public CChildViewBase
 {
-	CCadOrigin m_DefaultOrigin;
 	//----------------SnapGrid et all ------------------------
 	CGrid m_Grid;
 	UINT m_SnapOrder[MAX_SNAPS];
@@ -85,6 +85,7 @@ public:
 	void SetObjectEnables(unsigned u) { m_ObjectEnables |= u; }
 	void ClearObjectEnables(unsigned u) { m_ObjectEnables &= ~u; }
 	virtual void OnInitialUpdate();
+	// TODO:WTF is this?
 	CADObjectTypes& GetObjectTypes() { return m_CadObj; }
 	void SetObjectTypes(CCadObject* pObj) { GetObjectTypes().pCadObject = pObj; }
 	//---------------------------------------------
@@ -104,7 +105,7 @@ public:
 	void SetDeltaMousePos(CDoubleSize szDelta) { m_DeltaMousePos = szDelta; }
 	DOUBLEPOINT ConvertMousePosition(
 		CPoint MousePoint,	//mouse position client ref
-		DOUBLEPOINT& ULHC,	//upper left corner of client in inches
+		DOUBLEPOINT& LLHC,	//upper left corner of client in inches
 		CScale& Scale,		//Inches per Pixel
 		CDoubleSize SnapGrid,
 		BOOL SnapGridIsEnabled
@@ -211,12 +212,6 @@ public:
 	void SetDocSize(CDoubleSize sZ) { 
 		GetDocument()->SetDocSize(sZ);
 	}
-	//-----------------------------------------------
-	// CCadOrigin management
-	//-----------------------------------------------
-	void AddOriginAtHead(CCadOrigin* pObj);
-	void AddOriginAtTail(CCadOrigin* pObj);
-	void RemoveOrigin(CCadOrigin* pObj);
 	//-----------------------------------------------
 	// Moving Object Methods
 	//-----------------------------------------------
@@ -326,7 +321,7 @@ public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	void DoVScroll(double Yinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
 	void DoHScroll(double Xinches, BOOL Absolute = FALSE, BOOL Update = TRUE);
-	void UpdateScrollbarInfo(DOUBLEPOINT ULHC);
+	void UpdateScrollbarInfo(DOUBLEPOINT LLHC);
 	void GetDeviceScrollSizes(CSize& sizePage, CSize& sizeLine);
 	void EnableAutoScroll(BOOL flag);
 	SCROLLINFO& GetHScrollBarInfo() { return m_HScrollInfo; }
@@ -348,11 +343,11 @@ public:
 		return result;
 	}
 	BOOL IsAutoScrollEnabled() { return m_AutoScroll; }
-	DOUBLEPOINT CalculateNewULHC(
+	DOUBLEPOINT CalculateNewLLHC(
 		CScale CurrentScale,
 		CScale NextScale,
 		DOUBLEPOINT pointLocation,
-		DOUBLEPOINT pointULHC
+		DOUBLEPOINT pointLLHC
 	);
 	void ZoomIn(DOUBLEPOINT point);
 	void ZoomOut(DOUBLEPOINT point);
@@ -361,7 +356,7 @@ public:
 		CDC* pDC, 
 		DOUBLEPOINT pos,
 		CRect* pRect, 
-		DOUBLEPOINT& ULHC,
+		DOUBLEPOINT& LLHC,
 		CScale &Scale, 
 		COLORREF color
 	);

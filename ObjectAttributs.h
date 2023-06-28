@@ -23,10 +23,15 @@ struct SArcAttributes
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SArcAttributes* pAttrb);
 	static void SaveSettings(SArcAttributes* pAttrb);
 };
@@ -53,39 +58,19 @@ struct SArcCenterAttributes
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SArcCenterAttributes* pAttrb);
 	static void SaveSettings(SArcCenterAttributes* pAttrb);
 };
 
-// Arc Angle Attributes
-
-struct SArcAngleAttributes
-{
-	double m_LineWidth;
-	COLORREF m_colorLine;
-	SArcAngleAttributes() {
-		m_LineWidth = 0.01;	//default line width
-		m_colorLine = RGB(0, 0, 0);	//default color
-	}
-	void CopyFrom(SArcAngleAttributes* pAttributes) {
-		m_LineWidth = pAttributes->m_LineWidth;
-		m_colorLine = pAttributes->m_colorLine;
-	}
-	void CopyTo(SArcAngleAttributes* pAttributes) {
-		pAttributes->m_LineWidth = m_LineWidth;
-		pAttributes->m_colorLine = m_colorLine;
-	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
-	static void LoadSettings(SArcAngleAttributes* pAttrb);
-	static void SaveSettings(SArcAngleAttributes* pAttrb);
-};
 
 //---------- Arrow Attributes ---------
 
@@ -127,10 +112,15 @@ struct SArrowAttributes {
 		for (int i = 0; i < 4; ++i)
 			pAttributes->m_aArrowShape[i] = m_aArrowShape[i];
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, DocFileParseToken TypeToken, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SArrowAttributes* pAttrb);
 	static void SaveSettings(SArrowAttributes* pAttrb);
 };
@@ -151,8 +141,15 @@ struct SBitmapAttributes {
 		pAttrib->m_MaintainAspectRatio = m_MaintainAspectRatio;
 		pAttrib->m_BitmapSize = m_BitmapSize;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, DocFileParseToken TypeToken, int Indent, int flags);
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SBitmapAttributes* pAttrb);
 	static void SaveSettings(SBitmapAttributes* pAttrb);
 };
@@ -215,10 +212,15 @@ struct SCadDimAttributes {
 			sizeof(DOUBLEPOINT) * 4
 		);
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, DocFileParseToken TypeToken, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SCadDimAttributes* pAttrb);
 	static void SaveSettings(SCadDimAttributes* pAttrb);
 };
@@ -253,10 +255,15 @@ struct SEllipseAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SEllipseAttributes* pAttrb);
 	static void SaveSettings(SEllipseAttributes* pAttrb);
 };
@@ -298,10 +305,15 @@ struct SLineAttributes {
 		pAttributes->m_P2_SNAP_POINT = m_P2_SNAP_POINT;
 		pAttributes->m_P2_FIXED_LEN_SNAP_LINE = m_P2_FIXED_LEN_SNAP_LINE;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SLineAttributes* pAttrib);
 	static void SaveSettings(SLineAttributes* pAttrib);
 };
@@ -331,10 +343,15 @@ struct SOriginAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_Radius = m_Radius;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO,
+		int Indent,
+		int flags
+	);
 	static void LoadSettings(SOriginAttributes* pAttrb);
 	static void SaveSettings(SOriginAttributes* pAttrb);
 };
@@ -368,10 +385,15 @@ struct SPolyAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SPolyAttributes* pAttrib);
 	static void SaveSettings(SPolyAttributes* pAttrib);
 };
@@ -404,10 +426,15 @@ struct SRectAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO,
+		int Indent,
+		int flags
+	);
 	static void LoadSettings(SRectAttributes* pAttrb);
 	static void SaveSettings(SRectAttributes* pAttrb);
 };
@@ -445,10 +472,15 @@ struct SRoundedRectAttributes {
 		pAttributes->m_TransparentFill = m_TransparentFill;
 		pAttributes->m_dszCornerRadius = m_dszCornerRadius;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SRoundedRectAttributes* pAttrb);
 	static void SaveSettings(SRoundedRectAttributes* pAttrb);
 };
@@ -497,8 +529,15 @@ struct STextAttributes {
 		pAttributes->m_Transparent = m_Transparent;
 		pAttributes->m_fontWeight = m_fontWeight;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags);
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(STextAttributes* pAttrb);
 	static void SaveSettings(STextAttributes* pAttrb);
 };
@@ -532,10 +571,15 @@ struct SRectHoleAttributes {
 		pAttributes->m_HoleHeight = m_HoleHeight;
 		pAttributes->m_HoleWidth = m_HoleWidth;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SRectHoleAttributes* pAttrb);
 	static void SaveSettings(SRectHoleAttributes* pAttrb);
 };
@@ -564,10 +608,15 @@ struct SRoundHoleAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleRadius = m_HoleRadius;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO,
+		int Indent,
+		int flags
+	);
 	static void LoadSettings(SRoundHoleAttributes* pAttrb);
 	static void SaveSettings(SRoundHoleAttributes* pAttrb);
 };
@@ -600,10 +649,15 @@ struct SRndHole1FlatAttributes {
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SRndHole1FlatAttributes* pAttrb);
 	static void SaveSettings(SRndHole1FlatAttributes* pAttrb);
 };
@@ -638,10 +692,15 @@ struct SRndHole2FlatAttributes
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SRndHole2FlatAttributes* pAttrb);
 	static void SaveSettings(SRndHole2FlatAttributes* pAttrb);
 };
@@ -689,10 +748,15 @@ struct SGridAttributes {
 		pAttributes->m_SnapGridSpacing = m_SnapGridSpacing;
 		pAttributes->m_MajorGridSpacing = m_MajorGridSpacing;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SGridAttributes* pAttrb);
 	static void SaveSettings(SGridAttributes* pAttrb);
 };
@@ -770,36 +834,53 @@ struct SRullerAttributes {
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorCorner = m_colorCorner;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SRullerAttributes* pAttrb);
 	static void SaveSettings(SRullerAttributes* pAttrb);
 };
 
 //------------- Points ----------------------
 
+constexpr auto POINT_PIXELUNITS = 1;
+constexpr auto POINT_REALUNITS = 0;
+
 struct SPointAttributes
 {
 	COLORREF m_colorLine;
 	COLORREF m_colorSelected;
+	int m_SelectedObjectUnits;
 	SPointAttributes() {
 		m_colorLine = 0;
 		m_colorSelected = 0;
+		m_SelectedObjectUnits = POINT_PIXELUNITS;
 	}
 	void CopyFrom(SPointAttributes* pAttrib) {
 		m_colorLine = pAttrib->m_colorLine;
 		m_colorSelected = pAttrib->m_colorSelected;
+		m_SelectedObjectUnits = pAttrib->m_SelectedObjectUnits;
 	}
 	void CopyTo(SPointAttributes* pAttrib) {
 		pAttrib->m_colorLine = m_colorLine;
 		pAttrib->m_colorSelected = m_colorSelected;
+		pAttrib->m_SelectedObjectUnits = m_SelectedObjectUnits;
 	}
-	DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex);
-	void Save(FILE* pO, int Indent, int flags) {
-
-	}
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser	// pointer to parser
+	);
+	void Save(
+		FILE* pO, 
+		int Indent, 
+		int flags
+	);
 	static void LoadSettings(SPointAttributes* pAttrb);
 	static void SaveSettings(SPointAttributes* pAttrb);
 };

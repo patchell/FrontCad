@@ -98,10 +98,10 @@ void CStaticPreview::OnPaint()
 	}
 	dc.SelectObject(oldPen);
 	MODE mode;
-	DOUBLEPOINT ulhc;
+	DOUBLEPOINT LLHC;
 	while(pO)
 	{
-		pO->Draw(&dc, mode, ulhc, m_Scale);
+		pO->Draw(&dc, mode, LLHC, m_Scale);
 		pO = pO->GetNext();
 	}
 }

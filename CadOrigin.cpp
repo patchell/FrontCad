@@ -1,8 +1,7 @@
 #include "pch.h"
 
-CCadOrigin::CCadOrigin():CCadObject()
+CCadOrigin::CCadOrigin():CCadObject(ObjectType::ORIGIN)
 {
-	SetType(ObjectType::ORIGIN);
 	GetName().Format(_T("Origin_%d"), ++m_OriginCount);
 	if (NeedsAttributes())
 	{
@@ -18,18 +17,16 @@ CCadOrigin::~CCadOrigin()
 }
 
 
-BOOL CCadOrigin::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadOrigin::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin,  type);
+	CCadObject::Create(pParent,  type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::ORIGIN_LOCATION);
-	Obj.pCadPoint->SetSubSubType(0);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ORIGIN_LOCATION);
+	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
 }
 
@@ -52,11 +49,11 @@ DOUBLEPOINT CCadOrigin::GetCenterPoint()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ORIGIN_LOCATION, 0);
 	return DOUBLEPOINT(*Obj.pCadPoint);
 }
 
-void CCadOrigin::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadOrigin::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//---------------------------------------------------
 	// Save
@@ -67,7 +64,7 @@ void CCadOrigin::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	// return value:none
 	//--------------------------------------------------
 }
-void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -80,7 +77,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	//
 	// return value:none
 	//--------------------------------------------------
-	CCadObject* pObj = GetChildrenHead(); 
+	CCadObject* pObj = GetHead(); 
 	CPen LinePen, * OldPen = 0;
 	CBrush fillBrush, * oldBrush = 0;
 	CADObjectTypes Obj;
@@ -108,9 +105,9 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 			rectHalfWidth = 10;
 			Radius = double(rectHalfWidth);
 		}
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
-		pointLR = Obj.pCadPoint->ToPixelPoint(ULHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
-		pointUL = Obj.pCadPoint->ToPixelPoint(ULHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ORIGIN_LOCATION, 0);
+		pointLR = Obj.pCadPoint->ToPixelPoint(LLHC,Scale) + CSize(rectHalfWidth, rectHalfWidth);
+		pointUL = Obj.pCadPoint->ToPixelPoint(LLHC, Scale) - CSize(rectHalfWidth, rectHalfWidth);
 		rect.SetRect(pointUL, pointLR);
 		rect.NormalizeRect();
 		CreateThePen(mode, &LinePen, LineWidth);
@@ -118,7 +115,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		fillBrush.CreateStockObject(NULL_BRUSH);
 		oldBrush = pDC->SelectObject(&fillBrush);
 		pDC->Ellipse(&rect);
-		pointCenter = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
+		pointCenter = Obj.pCadPoint->ToPixelPoint(LLHC, Scale);
 		pDC->MoveTo(pointCenter.x + CrossHairLen,pointCenter.y);
 		pDC->LineTo(pointCenter.x - CrossHairLen, pointCenter.y);
 		pDC->MoveTo(pointCenter.x,pointCenter.y + CrossHairLen);
@@ -132,7 +129,7 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	//---------------------------------------
 	while (pObj)
 	{
-		pObj->Draw(pDC, mode, ULHC, Scale);
+		pObj->Draw(pDC, mode, LLHC, Scale);
 		pObj = pObj->GetNext();
 	}
 }
@@ -211,7 +208,7 @@ CString& CCadOrigin::GetObjDescription()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ORIGIN_LOCATION, 0);
 	GetDescription().Format(_T("Origin(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
 	return GetDescription();
 }
@@ -227,12 +224,16 @@ CCadObject * CCadOrigin::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadOrigin *pCO = new CCadOrigin;
-	pCO->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+	pCO->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pCO);
 	return pCO;
 }
 
-DocFileParseToken CCadOrigin::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadOrigin::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
 	//---------------------------------------------------
 	// Parse
@@ -300,7 +301,7 @@ ObjectDrawState CCadOrigin::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ORIGIN_LOCATION, 0);
 		Obj.pCadPoint->SetPoint(MousePosition);
 	}
 	GETVIEW->Invalidate();
@@ -362,10 +363,9 @@ ObjectDrawState CCadOrigin::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ORIGIN_LOCATION, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ORIGIN_LOCATION, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
-		GETVIEW->AddOriginAtTail(this);
 		GETVIEW->EnableAutoScroll(0);
 		GETVIEW->SetObjectTypes(new CCadOrigin);
 		GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
@@ -386,15 +386,15 @@ int CCadOrigin::EditProperties()
 
 void CCadOrigin::CreateThePen(MODE mode, CPen* pen, int Lw)
 {
-	switch (mode.DrawMode)
+	switch (mode.PaintMode)
 	{
-	case ObjectDrawMode::FINAL:
+	case MODE::ObjectPaintMode::FINAL:
 		if (IsSelected())
 			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 		else
 			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 		break;
-	case ObjectDrawMode::SKETCH:
+	case MODE::ObjectPaintMode::SKETCH:
 		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
 		break;
 	}

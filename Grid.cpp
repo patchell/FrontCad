@@ -20,7 +20,7 @@ CGrid::~CGrid()
 void CGrid::Draw(
 	CDC* pDC,
 	MODE mode,
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale,
 	CRect& rectClient
 )
@@ -34,23 +34,23 @@ void CGrid::Draw(
 	//-------------------------------------------------
 	if ((IsSnapGridShowing() && !IsSnapALine()) || (IsMajorGridShowing() && !IsMajorALine()))
 	{
-		DrawSnapDots(pDC, mode, ULHC, Scale, rectClient );
+		DrawSnapDots(pDC, mode, LLHC, Scale, rectClient );
 		if (IsMajorGridShowing() && IsMajorALine())
-			DrawMajLines(pDC, mode, ULHC, Scale, rectClient );
+			DrawMajLines(pDC, mode, LLHC, Scale, rectClient );
 	}
 	else if (IsSnapGridShowing() && IsMajorGridShowing())
 	{
-		DrawSnapLines(pDC, mode, ULHC, Scale, rectClient );
-		DrawMajLines(pDC, mode, ULHC, Scale, rectClient);
+		DrawSnapLines(pDC, mode, LLHC, Scale, rectClient );
+		DrawMajLines(pDC, mode, LLHC, Scale, rectClient);
 	}
 	else if (IsMajorGridShowing())
-		DrawMajLines(pDC, mode, ULHC, Scale, rectClient);
+		DrawMajLines(pDC, mode, LLHC, Scale, rectClient);
 }
 
 void CGrid::DrawSnapDots(
 	CDC* pDC,
 	MODE mode,
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale,
 	CRect& rectClient
 )
@@ -67,7 +67,7 @@ void CGrid::DrawSnapDots(
 	//	Offset......Not really used
 	//	Scale.......Drawing surface scale
 	//	rectClient..Client rectangle
-	//	ULHC........Value of Upper Left Hand Corner
+	//	LLHC........Value of Upper Left Hand Corner
 	//-------------------------------------------
 	int i, j;
 	int x, y;
@@ -88,15 +88,15 @@ void CGrid::DrawSnapDots(
 	PixelSpacing = GetSnapGrid().ToPixelSize(Scale);
 	for (i = 0; i < Nx; ++i)
 	{
-		X = double(i) * GetSnapGrid().dCX + ULHC.dX;
+		X = double(i) * GetSnapGrid().dCX + LLHC.dX;
 		GLT_X = GetGridLineType(X, Axis::X);
-		dTemp = GETAPP.RoundToNearset((X - ULHC.dX) * Scale.GetScaleX(), 1.0);
+		dTemp = GETAPP.RoundToNearset((X - LLHC.dX) * Scale.GetScaleX(), 1.0);
 		x = GETAPP.RoundDoubleToInt(dTemp);
 		for (j = 0; j < Ny; ++j)
 		{
-			Y = double(j) * GetSnapGrid().dCY + ULHC.dY;
+			Y = double(j) * GetSnapGrid().dCY + LLHC.dY;
 			GLT_Y = GetGridLineType(Y, Axis::Y);
-			dTemp = GETAPP.RoundToNearset((Y - ULHC.dY) * Scale.GetScaleY(), 1.0);
+			dTemp = GETAPP.RoundToNearset((Y - LLHC.dY) * Scale.GetScaleY(), 1.0);
 			y = GETAPP.RoundDoubleToInt(dTemp);
 
 			if ((GLT_X == GRID_SNAP || GLT_X == GRID_HALF) &&
@@ -145,7 +145,7 @@ void CGrid::DrawSnapDots(
 void CGrid::DrawMajLines(
 	CDC* pDC,
 	MODE mode,
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale,
 	CRect& rectClient
 )
@@ -159,7 +159,7 @@ void CGrid::DrawMajLines(
 	//	Offset......Not really used
 	//	Scale.......Drawing surface scale
 	//	rectClient..Client rectangle
-	//	ULHC........Value of Upper Left Hand Corner
+	//	LLHC........Value of Upper Left Hand Corner
 	//-------------------------------------------
 	int i;
 	int Nx, Ny;
@@ -188,7 +188,7 @@ void CGrid::DrawMajLines(
 		//----------------------------
 		for (i = 0; i < Nx; ++i)
 		{
-			X = double(i + 1) * GetMajorGrid().dCX - modf(ULHC.dX,&IntPart);
+			X = double(i + 1) * GetMajorGrid().dCX - modf(LLHC.dX,&IntPart);
 			x = GETAPP.RoundDoubleToInt(X * Scale.GetScaleX());
 			pDC->MoveTo(x, 0);
 			pDC->LineTo(x, H - 1);
@@ -198,7 +198,7 @@ void CGrid::DrawMajLines(
 		//--------------------------------------
 		for (i = 0; i < Ny; ++i)
 		{
-			Y = double(i) * GetMajorGrid().dCY - modf(ULHC.dY, &IntPart);
+			Y = double(i) * GetMajorGrid().dCY - modf(LLHC.dY, &IntPart);
 			y = GETAPP.RoundDoubleToInt(Y * Scale.GetScaleX());
 			pDC->MoveTo(0, y);
 			pDC->LineTo(W - 1, y);
@@ -207,7 +207,7 @@ void CGrid::DrawMajLines(
 	}
 }
 
-void CGrid::DrawSnapLines(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale &Scale, CRect& rectClient)
+void CGrid::DrawSnapLines(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale &Scale, CRect& rectClient)
 {
 	//--------------------------------------------------------------
 	// DrawAllLines
@@ -220,7 +220,7 @@ void CGrid::DrawSnapLines(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale &Scale,
 	//	Offset......Not really used
 	//	Scale.......Drawing surface scale
 	//	rectClient..Client rectangle
-	//	ULHC........Value of Upper Left Hand Corner
+	//	LLHC........Value of Upper Left Hand Corner
 	//-------------------------------------------
 	int i;
 	int Nx, Ny;

@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "CadPoint.h"
 
-CCadPoint::CCadPoint()
+CCadPoint::CCadPoint():CCadObject(ObjectType::POINT)
 {
 	dX = 0.0;
 	dY = 0.0;
-	SetType(ObjectType::POINT);
 	if (NeedsAttributes())
 	{
 		ClearNeedsAttributes();
@@ -46,7 +45,7 @@ CCadPoint::CCadPoint(DOUBLEPOINT dp)
 	GetName().Format(_T("Point_%d"), ++m_PointCount);
 }
 
-CCadPoint::CCadPoint(DOUBLEPOINT dp, SubType Sub, UINT SubSub)
+CCadPoint::CCadPoint(DOUBLEPOINT dp, SubTypes Sub, UINT SubSub)
 {
 	dX = dp.dX;
 	dY = dp.dY;
@@ -67,9 +66,9 @@ CCadPoint::~CCadPoint()
 {
 }
 
-BOOL CCadPoint::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadPoint::Create(CCadObject* pParent, SubTypes type)
 {
-	CCadObject::Create(pParent, pOrigin, type);
+	CCadObject::Create(pParent, type);
 	return TRUE;
 }
 
@@ -188,7 +187,7 @@ CCadObject* CCadPoint::CopyObject()
 	return pCP;
 }
 
-void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -196,7 +195,7 @@ void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	// parameters:
 	//	pDC.....pointer to the device context
 	//	mode....drawing mode
-	//	ULHC....Offset to draw objects at
+	//	LLHC....Offset to draw objects at
 	//	Scale..Scale factor to draw objects at
 	//
 	// return value:none
@@ -209,16 +208,16 @@ void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	
 	if (IsRenderEnabled())
 	{
-		PP = ToPixelPoint(ULHC, Scale);
+		PP = ToPixelPoint(LLHC, Scale);
 		rect.SetRect(PP - CSize(2, 2), PP + CSize(2, 2));
 		CreateThePen(mode, &penOutline, 1);
 		CreateTheBrush(mode, &brushFill);
 		oldBrush = pDC->SelectObject(&brushFill);
 		oldPen = pDC->SelectObject(&penOutline);
-		switch (mode.DrawMode)
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
-		case ObjectDrawMode::SKETCH:
+		case MODE::ObjectPaintMode::FINAL:
+		case MODE::ObjectPaintMode::SKETCH:
 			pDC->Rectangle(&rect);
 			break;
 		}
@@ -227,66 +226,70 @@ void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	}
 }
 
-void CCadPoint::MoveTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::MoveTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	pDC->MoveTo(ToPixelPoint(ULHC, Scale));
+	pDC->MoveTo(ToPixelPoint(LLHC, Scale));
 }
 
-void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	pDC->LineTo(ToPixelPoint(ULHC, Scale));
+	pDC->LineTo(ToPixelPoint(LLHC, Scale));
 }
 
-void CCadPoint::LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	pDC->MoveTo(ToPixelPoint(ULHC, Scale));
-	pDC->LineTo(There.ToPixelPoint(ULHC, Scale.GetScaleX(), Scale.GetScaleY()));
+	pDC->MoveTo(ToPixelPoint(LLHC, Scale));
+	pDC->LineTo(There.ToPixelPoint(LLHC, Scale.GetScaleX(), Scale.GetScaleY()));
 }
 
-void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	CCadPoint pointThere;
 
 	pointThere.SetPoint(DOUBLEPOINT(dX,dY )+ There);
-	MoveTo(pDC, ULHC, Scale);
-	pointThere.LineTo(pDC, ULHC, Scale);
+	MoveTo(pDC, LLHC, Scale);
+	pointThere.LineTo(pDC, LLHC, Scale);
 }
 
-void CCadPoint::LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	MoveTo(pDC, ULHC, Scale);
-	pThere->LineTo(pDC, ULHC, Scale);
+	MoveTo(pDC, LLHC, Scale);
+	pThere->LineTo(pDC, LLHC, Scale);
 }
 
 BOOL CCadPoint::FloodFill(
 	COLORREF colorBorder,
 	COLORREF colorFill,
 	CDC* pDC, 
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale
 )
 {
 	BOOL rV;
 	CPoint p;
 
-	p = ToPixelPoint(ULHC, Scale);
+	p = ToPixelPoint(LLHC, Scale);
 	rV = pDC->FloodFill(p.x, p.y, colorBorder);
 	return rV;
 }
 
-CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale)
+CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	DOUBLEPOINT dp = (GetPoint() - ULHC);	//offset to client window
+	DOUBLEPOINT dp = (GetPoint() - LLHC);	//offset to client window
 	dp = dp * Scale;	//convert to pixels
 	return CPoint(dp);
 }
 
-DocFileParseToken CCadPoint::Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadPoint::Parse(
+	CLexer::Tokens Token, 
+	CFileParser* pParser, 
+	CLexer::Tokens TypeToken
+)
 {
 	return Token;
 }
 
-void CCadPoint::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
+void CCadPoint::Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags)
 {
 }
 
@@ -365,7 +368,7 @@ ObjectDrawState CCadPoint::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		SetPoint(MousePos);
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		GETVIEW->SetObjectTypes(new CCadPoint);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Point:Place Point"));
@@ -400,15 +403,15 @@ int CCadPoint::EditProperties()
 	return 0;
 }
 
-void CCadPoint::ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	CRect Rect;
 
-	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	Rect.SetRect(ToPixelPoint(LLHC, Scale), pP2->ToPixelPoint(LLHC, Scale));
 	pDC->Rectangle(&Rect);
 }
 
-void CCadPoint::ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//------------------------------------
 	// "this" is the center point of the
@@ -419,21 +422,21 @@ void CCadPoint::ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOI
 	// w_half.......half of the width
 	// h_half.......half of the hiegth
 	// rect.........reference to where to put CRect
-	// ULHC.........coordinate of the uper left corner of view
+	// LLHC.........coordinate of the uper left corner of view
 	// Scale........Pixels per Inch
 	//------------------------------------
 	CPoint p1, p2;
 	CSize szRect;
 
 	szRect = CDoubleSize(w_half, h_half).ToPixelSize(Scale);
-	p1 = ToPixelPoint(ULHC, Scale) - szRect;
-	p2 = ToPixelPoint(ULHC, Scale) + szRect;
+	p1 = ToPixelPoint(LLHC, Scale) - szRect;
+	p2 = ToPixelPoint(LLHC, Scale) + szRect;
 	rect.SetRect(p1, p2);
 }
 
-void CCadPoint::ToPixelRect(CCadPoint* pP2, CRect& Rect, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::ToPixelRect(CCadPoint* pP2, CRect& Rect, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	Rect.SetRect(ToPixelPoint(LLHC, Scale), pP2->ToPixelPoint(LLHC, Scale));
 }
 
 void CCadPoint::ToPixelArc(
@@ -441,14 +444,14 @@ void CCadPoint::ToPixelArc(
 	CCadPoint* pStart, 
 	CCadPoint* pEnd, 
 	CDC* pDC, 
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale
 )
 {
 	CRect Rect;
 
-	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
-	pDC->Arc(&Rect,pStart->ToPixelPoint(ULHC,Scale),pEnd->ToPixelPoint(ULHC,Scale));
+	Rect.SetRect(ToPixelPoint(LLHC, Scale), pP2->ToPixelPoint(LLHC, Scale));
+	pDC->Arc(&Rect,pStart->ToPixelPoint(LLHC,Scale),pEnd->ToPixelPoint(LLHC,Scale));
 }
 
 void CCadPoint::ToPixelArc(
@@ -457,7 +460,7 @@ void CCadPoint::ToPixelArc(
 	CCadPoint* pStart,	// arc start point
 	CCadPoint* pEnd,	//arc end point
 	CDC* pDC,			//device context
-	DOUBLEPOINT& ULHC,	//upper left hand corner coordinate
+	DOUBLEPOINT& LLHC,	//upper left hand corner coordinate
 	CScale& Scale		//pixels per inch
 )
 {
@@ -467,23 +470,23 @@ void CCadPoint::ToPixelArc(
 	//-----------------------------------------
 	CRect Rect;
 	
-	ToPixelRect(Radius_A, Radius_B, Rect, ULHC, Scale);
+	ToPixelRect(Radius_A, Radius_B, Rect, LLHC, Scale);
 	pDC->Arc(
 		&Rect,
-		pStart->ToPixelPoint(ULHC, Scale),
-		pEnd->ToPixelPoint(ULHC, Scale)
+		pStart->ToPixelPoint(LLHC, Scale),
+		pEnd->ToPixelPoint(LLHC, Scale)
 	);
 }
 
-void CCadPoint::ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	CRect Rect;
 
-	Rect.SetRect(ToPixelPoint(ULHC, Scale), pP2->ToPixelPoint(ULHC, Scale));
+	Rect.SetRect(ToPixelPoint(LLHC, Scale), pP2->ToPixelPoint(LLHC, Scale));
 	pDC->Ellipse(&Rect);
 }
 
-void CCadPoint::ToPixelRndRect(CCadPoint* pP2, CCadPoint* pP3, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPoint::ToPixelRndRect(CCadPoint* pP2, CCadPoint* pP3, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 }
 
@@ -988,15 +991,15 @@ void CCadPoint::Print(const char* s)
 
 void CCadPoint::CreateThePen(MODE mode, CPen* pen, int Lw)
 {
-	switch (mode.DrawMode)
+	switch (mode.PaintMode)
 	{
-	case ObjectDrawMode::FINAL:
+	case MODE::ObjectPaintMode::FINAL:
 		if (IsSelected())
 			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 		else
 			pen->CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 		break;
-	case ObjectDrawMode::SKETCH:
+	case MODE::ObjectPaintMode::SKETCH:
 		pen->CreatePen(PS_DOT, Lw, GetAttributes().m_colorSelected);
 		break;
 	}
@@ -1004,15 +1007,15 @@ void CCadPoint::CreateThePen(MODE mode, CPen* pen, int Lw)
 
 void CCadPoint::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
-	switch (mode.DrawMode)
+	switch (mode.PaintMode)
 	{
-	case ObjectDrawMode::FINAL:
+	case MODE::ObjectPaintMode::FINAL:
 		if (IsSelected())
 			brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
 		else
 			brushFill->CreateSolidBrush(GetAttributes().m_colorLine);
 		break;
-	case ObjectDrawMode::SKETCH:
+	case MODE::ObjectPaintMode::SKETCH:
 		brushFill->CreateSolidBrush(GetAttributes().m_colorSelected);
 		break;
 	}

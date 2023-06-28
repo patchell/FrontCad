@@ -37,7 +37,6 @@ class CFrontCadApp : public CWinApp
 	//-----------------------------------
 	SArcAttributes m_ArcAttributes;
 	SArcCenterAttributes m_ArcCenterAttributes;
-	SArcAngleAttributes m_ArcAngleAttributes;
 	SArrowAttributes m_ArrowAttributes;
 	SBitmapAttributes m_BitmapAttributes;
 	SCadDimAttributes m_DimensionAttributes;
@@ -67,25 +66,14 @@ public:
 	void SetClipBoardRef(DOUBLEPOINT p);
 	void LoadSettings();
 	void SaveSettings();
-	void* GetObjectDefaultAttributes(ObjectType ObjectType);
-	//------------------------------------------
-	// Save Document utility methods
-	//------------------------------------------
-	void NewLine(FILE* pO){fputc('\n', pO);	}
-	void OpenParen(FILE* pO) { fputc('(', pO); }
-	void CloseParen(FILE* pO) { fputc(')', pO); }
-	void Comma(FILE* pO) { fputc(',', pO); }
-	void SaveColor(FILE* pO, int Indent, COLORREF color, DocFileParseToken Token);
-	void SaveString(FILE* pO, int Indent, CString& csStr, DocFileParseToken Token);
-	void SaveDouble(FILE* pO, int Indent, double v, DocFileParseToken Token);
-	void SaveUINT(FILE* pO, int Indent, UINT v, DocFileParseToken Token);
+	void* GetObjectDefaultAttributes(CCadObject::ObjectType ObjectType);
 	afx_msg void OnFileOpen();
 	//------------------------------------------
 	// General utility methodes
 	// -----------------------------------------
 	// String Methodes
 	//-----------------------------------------
-	char* MkIndentString(char* pDest, int count, int c = ' ');
+	char* IndentString(char* pDest, int count, int c = ' ');
 	char* ConvertCStringToChar(char* cpDest, CString& csSource);
 	//-----------------------------------------
 	// Math Methods
@@ -158,7 +146,7 @@ public:
 		CPoint* dest, 
 		DOUBLEPOINT*src,
 		int n,
-		DOUBLEPOINT& ULHC,
+		DOUBLEPOINT& LLHC,
 		CScale& Scale
 	);
 	BOOL IsOnSegment(
@@ -201,7 +189,6 @@ public:
 	//-----------------------------------
 	SArcAttributes* GetArcAttributes(){return &m_ArcAttributes;}
 	SArcCenterAttributes* GetArcCenterAttributes(){ return &m_ArcCenterAttributes;}
-	SArcAngleAttributes* GetArcAngleAttributes(){ return &m_ArcAngleAttributes;}
 	SArrowAttributes* GetArrowAttributes(){ return &m_ArrowAttributes;}
 	SBitmapAttributes* GetBitmapAttributes() { return &m_BitmapAttributes; }
 	SCadDimAttributes* GetDimensionAttributes(){ return &m_DimensionAttributes;}
@@ -220,7 +207,7 @@ public:
 	SRullerAttributes* GetRulerAttributes() { return &m_RulerAttributes; }
 	SPointAttributes*  GetPointAttributes() { return &m_PointAttributes; }
 	//--------------------------------------ClipBoard-----------------------
-	CClipboard& GetClipBoard(void) { return m_ClipBoard; }
+	CClipboard* GetClipBoard(void) { return &m_ClipBoard; }
 	//--------------------------------------Debug---------------------------
 	CString& DrawStateToString(ObjectDrawState State)
 	{

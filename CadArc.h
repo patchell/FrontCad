@@ -14,10 +14,11 @@ class CCadArc :public CCadObject
 public:
 	CCadArc();
 	virtual ~CCadArc();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARC; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -31,17 +32,17 @@ public:
 	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual DocFileParseToken Parse(
-		DocFileParseToken Token, 
-		CLexer *pLex, 
-		DocFileParseToken TypeToken = DocFileParseToken::ARC
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
 	);
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
-//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	double CalcY(double x, double A, double B);
 	BadDelta DeltaIsBad(CPoint P1, CPoint P2);
 	CDoubleSize SlopeIsOneAt(double Asquared, double Bsquared);

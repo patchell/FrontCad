@@ -92,7 +92,7 @@ void CDlgObjectEnable::OnClickedCheckDimensionenable()
 
 void CDlgObjectEnable::OnClickedCheckEllispeenable()
 {
-	CCadElispe::RenderEnable(m_Check_EllipseEnable.GetCheck());
+	CCadEllipse::RenderEnable(m_Check_EllipseEnable.GetCheck());
 }
 
 
@@ -171,7 +171,7 @@ BOOL CDlgObjectEnable::OnInitDialog()
 	m_Check_ArcCenteredEnable.SetCheck(CCadArcCent::IsRenderEnabled());
 	m_Check_ArrowEnable.SetCheck(CCadArrow::IsRenderEnabled());
 	m_Check_DimensionEnable.SetCheck(CCadDimension::IsRenderEnabled());
-	m_Check_EllipseEnable.SetCheck(CCadElispe::IsRenderEnabled());
+	m_Check_EllipseEnable.SetCheck(CCadEllipse::IsRenderEnabled());
 	m_Check_LineEnable.SetCheck(CCadLine::IsRenderEnabled());
 	m_Check_OneFlatHoleEnable.SetCheck(CCadHoleRnd1Flat::IsRenderEnabled());
 	m_Check_OriginEnable.SetCheck(CCadOrigin::IsRenderEnabled());

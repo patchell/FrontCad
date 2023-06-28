@@ -1,6 +1,6 @@
 #include "pch.h"
 
-CCadText::CCadText():CCadObject()
+CCadText::CCadText():CCadObject(ObjectType::TEXT)
 {
 	GetName().Format(_T("Text_%d"), ++m_TextCount);
 	if (NeedsAttributes())
@@ -16,28 +16,23 @@ CCadText::~CCadText()
 {
 }
 
-BOOL CCadText::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadText::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin, type);
 	if (pParent == NULL)
 		pParent = this;
-	CCadObject::Create(pParent, pOrigin);
-	if (pParent == NULL)
-		pParent = this;
+
+	CCadObject::Create(pParent, type);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::TEXT_LOCATION);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::TEXT_LOCATION);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin);
-	Obj.pCadPoint->SetSubType(SubType::TEXT_ROTATION);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::TEXT_ROTATION);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadRect = new CCadRect;
-	Obj.pCadRect->Create(pParent, pOrigin);
-	Obj.pCadRect->SetSubType(SubType::TEXT_RECT);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadRect->Create(pParent, CCadObject::SubTypes::TEXT_RECT);
+	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
 }
 
@@ -56,7 +51,7 @@ void CCadText::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadText::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadText::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//---------------------------------------------------
 	// Save
@@ -68,7 +63,7 @@ void CCadText::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 }
 
-void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -91,9 +86,9 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		LOC.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+		LOC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::TEXT_LOCATION, 0);
 
-		P1 = LOC.pCadPoint->ToPixelPoint(ULHC, Scale);
+		P1 = LOC.pCadPoint->ToPixelPoint(LLHC, Scale);
 		FontHeight = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontHeight());
 		FontWidth = GETAPP.RoundDoubleToInt(Scale.GetScaleX() * GetFontWidth());
 		if (FontHeight > 8 && FontWidth > 8)
@@ -126,10 +121,10 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		pDC->SetBkMode(OldMode);
 		if (IsSelected())
 		{
-			RECT.pCadObject = FindChildObject(ObjectType::RECT, SubType::TEXT_RECT, 0);
+			RECT.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::TEXT_RECT, 0);
 			penLine.CreatePen(PS_SOLID, 2, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
-			RECT.pCadRect->Draw(pDC, mode, ULHC, Scale);
+			RECT.pCadRect->Draw(pDC, mode, LLHC, Scale);
 			pDC->SelectObject(pOldPen);
 		}
 		pDC->SetBkColor(OldBk);
@@ -212,7 +207,7 @@ CString& CCadText::GetObjDescription()
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::TEXT_LOCATION, 0);
 	GetDescription().Format(_T("Text(%7.3lf,%7.3lf)"),Obj.pCadPoint->GetX(),Obj.pCadPoint->GetY());
 	return GetDescription();
 }
@@ -228,12 +223,16 @@ CCadObject * CCadText::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadText *pCT = new CCadText;
-	pCT->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+	pCT->Create(GetParent(),GetSubType());
 	CCadObject::CopyObject(pCT);
 	return pCT;
 }
 
-DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadText::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
 	//---------------------------------------------------
 	// Parse
@@ -248,82 +247,92 @@ DocFileParseToken CCadText::Parse(DocFileParseToken Token, CLexer *pLex, DocFile
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pLex->Accept(Token, DocFileParseToken::TEXT);
-	Token = pLex->Accept(Token, DocFileParseToken('('));
+	Token = pParser->Expect(Token, CLexer::Tokens::TEXT);
+	Token = pParser->Expect(Token, CLexer::Tokens('('));
 	int loop = 1;
 	CString csError,csTemp;
+	int TempInt = 0;
 
 	while (loop)
 	{
 		switch (Token)
 		{
-		case DocFileParseToken::STRING:
-			csTemp = CString(pLex->GetLexBuff());
+		case CLexer::Tokens::STRING:
+			csTemp = CString(pParser->GetLexer()->GetLexBuff());
 			SetText(csTemp);
-			Token = pLex->Accept(Token, DocFileParseToken::STRING);
+			Token = pParser->Expect(Token, CLexer::Tokens::STRING);
 			break;
-		case DocFileParseToken::POINT:
-//			Token = pLex->Point(DocFileParseToken::POINT, m_P1, Token);
+		case CLexer::Tokens::POINT:
+//			Token = pLex->Point(CLexer::Tokens::POINT, m_P1, Token);
 			break;
-		case DocFileParseToken::COLOR:
-			Token = pLex->Color(DocFileParseToken::COLOR, GetAttributes().m_colorText, Token);
+		case CLexer::Tokens::TEXT_COLOR:
+			Token = pParser->Color(
+				CLexer::Tokens::TEXT_COLOR,
+				GetAttributes().m_colorText, 
+				Token
+			);
 			break;
-		case DocFileParseToken::BKCOLOR:
-			Token = pLex->Color(
-				DocFileParseToken::BKCOLOR, 
+		case CLexer::Tokens::BACKGROUND_COLOR:
+			Token = pParser->Color(
+				CLexer::Tokens::BACKGROUND_COLOR,
 				GetAttributes().m_colorBK, 
 				Token
 			);
 			break;
-		case DocFileParseToken::FONT:
-			Token = pLex->csString(
-				DocFileParseToken::FONT, 
+		case CLexer::Tokens::FONT:
+			Token = pParser->StringValue(
+				CLexer::Tokens::FONT, 
 				GetAttributes().m_csFontName, 
 				Token
 			);
 			break;
-		case DocFileParseToken::WEIGHT:
-			Token = pLex->ReadUINTDecimalValue(
-				DocFileParseToken::WEIGHT, 
-				GetAttributes().m_fontWeight, 
+		case CLexer::Tokens::FONT_WEIGHT:
+			Token = pParser->UINTValue(
+				CLexer::Tokens::FONT_WEIGHT, 
+				GetAttributes().m_fontWeight,
 				Token
 			);
+			GetAttributes().m_fontWeight = TempInt;
 			break;
-		case DocFileParseToken::HEIGHT:
-			Token = pLex->ReadDoubleValue(
-				DocFileParseToken::HEIGHT, 
+		case CLexer::Tokens::FONTHEIGHT:
+			Token = pParser->DoubleValue(
+				CLexer::Tokens::FONTHEIGHT,
 				GetAttributes().m_fontHeight, 
 				Token
 			);
 			break;
-		case DocFileParseToken::WIDTH:
-			Token = pLex->ReadDoubleValue(
-				DocFileParseToken::WIDTH, 
+		case CLexer::Tokens::FONTWIDTH:
+			Token = pParser->DoubleValue(
+				CLexer::Tokens::FONTWIDTH,
 				GetAttributes().m_fontWidth, 
 				Token
 			);
 			break;
-		case DocFileParseToken::ANGLE:
-			Token = pLex->ReadDoubleValue(DocFileParseToken::ANGLE, m_Angle, Token);
+		case CLexer::Tokens::ANGLE:
+			Token = pParser->DoubleValue(
+				CLexer::Tokens::ANGLE, 
+				m_Angle, 
+				Token
+			);
 			break;
-		case DocFileParseToken::TRANSPARENTToken:
-			Token = pLex->ReadUINTDecimalValue(
-				DocFileParseToken::TRANSPARENTToken, 
+		case CLexer::Tokens::BK_TRANSPARENT:
+			Token = pParser->UINTValue(
+				CLexer::Tokens::BK_TRANSPARENT,
 				GetAttributes().m_Transparent, 
 				Token
 			);
 			break;
-		case DocFileParseToken(','):
-			Token = pLex->Accept(Token, DocFileParseToken(','));
+		case CLexer::Tokens(','):
+			Token = pParser->Expect(CLexer::Tokens(','), Token);
 			break;
-		case DocFileParseToken(')'):
+		case CLexer::Tokens(')'):
 			loop = 0;
-			Token = pLex->Accept(Token, DocFileParseToken(')'));
+			Token = pParser->Expect(CLexer::Tokens(')'), Token);
 			break;
 		default:
 			loop = 0;
-			csError.Format(_T("Unexpected Token %lS"), CString(pLex->TokenToString(Token)).GetBuffer());
-			pLex->Error(csError);
+//			csError.Format(_T("Unexpected Token %lS"), CString(pLex->TokenLookup(Token)).GetBuffer());
+//			pLex->Error(csError);
 			break;
 		}
 	}
@@ -410,7 +419,7 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT,SubType::TEXT_LOCATION,0);
+		Obj.pCadObject = FindObject(ObjectType::POINT,CCadObject::SubTypes::TEXT_LOCATION,0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("TEXT:Define Text Angle"));
@@ -421,7 +430,7 @@ ObjectDrawState CCadText::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::ROTATE_LBUTTON_UP:
 		DrawState = ObjectDrawState::SET_ATTRIBUTES;
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		GETAPP.UpdateStatusBar(_T("TEXT:Enter Text Parameters"));
 		GETVIEW->SetObjectTypes(new CCadText);
 		break;
@@ -451,7 +460,11 @@ ObjectDrawState CCadText::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 		case ObjectDrawState::ROTATE_LBUTTON_DOWN:
-			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_ROTATION);
+			Obj.pCadObject = FindObject(
+				ObjectType::POINT, 
+				CCadObject::SubTypes::TEXT_ROTATION,
+				SUBSUBTYPE_ANY
+			);
 			Obj.pCadPoint->SetPoint(MousePos);
 			GETVIEW->Invalidate();
 			break;
@@ -481,9 +494,9 @@ void CCadText::Rotate()
 	//-------------------------------------
 	// Get objects that define text object
 	//-------------------------------------
-	LOC.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_LOCATION, 0);
-	ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::TEXT_ROTATION, 0);
-	RECT.pCadObject = FindChildObject(ObjectType::RECT,SubType::TEXT_RECT,0);
+	LOC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::TEXT_LOCATION, 0);
+	ROT.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::TEXT_ROTATION, 0);
+	RECT.pCadObject = FindObject(ObjectType::RECT,CCadObject::SubTypes::TEXT_RECT,0);
 	X = ROT.pCadPoint->GetX() - LOC.pCadPoint->GetX();	// run
 	Y = LOC.pCadPoint->GetY() - ROT.pCadPoint->GetY();	// rise
 	m_Angle = GETAPP.ArcTan(X, Y);

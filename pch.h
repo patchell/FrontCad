@@ -19,6 +19,8 @@
 #include "afxdialogex.h"
 #include <afxmt.h>
 
+#include "Exception.h"
+#include "Lexer.h"
 #include "MyEvent.h"
 #include "Primitives.h"
 #include "FrontCadDefines.h"
@@ -30,16 +32,14 @@
 #include "DoubleSize.h"
 #include "resource.h"
 #include "ObjectAttributs.h"
-#include "Lexer.h"
 #include "ComboBoxFontWeight.h"
 #include "MyBitmap.h"
 #include "StaticDouble.h"
 //-------------------------------------------------
 #include "MainFrm.h"
-#include "Clipboard.h"
-#include "Frontcad.h"
 //-------------- Drawing Objects ------------------
 #include "CadObject.h"
+#include "Clipboard.h"
 #include "CadPoint.h"
 #include "CadArc.h"
 #include "CadArcCent.h"
@@ -57,6 +57,14 @@
 #include "CadRndRect.h"
 #include "CadText.h"
 #include "CadDimension.h"
+#include "CadLibPart.h"
+#include "CadLibrary.h"
+#include "CadDrawing.h"
+
+#include "FileParser.h"
+
+#include "Frontcad.h"
+
 //------------------------------------------
 #include "StaticPreview.h"
 //------------ Dialog Boxes ----------------

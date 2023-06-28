@@ -1,6 +1,6 @@
 #pragma once
 
-class CCadElispe:public CCadObject
+class CCadEllipse:public CCadObject
 {
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_ElipseCount;
@@ -10,12 +10,13 @@ class CCadElispe:public CCadObject
 	inline static BOOL m_RenderEnable = TRUE;
 	SEllipseAttributes m_Attrib;
 public:
-	CCadElispe();
-	virtual ~CCadElispe();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	CCadEllipse();
+	virtual ~CCadEllipse();
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::CIRCLE; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -29,10 +30,10 @@ public:
 	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual DocFileParseToken Parse(
-		DocFileParseToken Token, 
-		CLexer *pLex, 
-		DocFileParseToken TypeToken = DocFileParseToken::ELIPSE
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token, 
+		CFileParser *pParser, 
+		CLexer::Tokens TypeToken = CLexer::Tokens::CIRCLE
 	);
 	void CopyAttributesTo(SEllipseAttributes *pAttrb);
 	void CopyAttributesFrom(SEllipseAttributes *pAttrb);

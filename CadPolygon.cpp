@@ -13,10 +13,9 @@
 
 using namespace std;
 
-CCadPolygon::CCadPolygon():CCadObject()
+CCadPolygon::CCadPolygon():CCadObject(ObjectType::POLYGON)
 {
 	SetSelected(0);	//initial not selected
-	SetType(ObjectType::POLYGON);
 	GetName().Format(_T("Polygon_%d"), ++m_PolygonCount);
 	if (NeedsAttributes())
 	{
@@ -33,16 +32,16 @@ CCadPolygon::~CCadPolygon()
 {
 }
 
-BOOL CCadPolygon::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadPolygon::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin, type);
+	CCadObject::Create(pParent, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::CENTERPOINT);
+	AddObjectAtTail(Obj.pCadObject);
 	AddPoint(DOUBLEPOINT(0.0, 0.0));
 	return TRUE;
 }
@@ -62,7 +61,7 @@ void CCadPolygon::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadPolygon::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//---------------------------------------------------
 	// Save
@@ -75,9 +74,9 @@ void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 	char* String = new char[256];
 
 	fprintf(pO, "%s%s(%s(%d),", 
-		GETAPP.MkIndentString(String, Indent),
-		CLexer::TokenToString(Token),
-		CLexer::TokenToString(DocFileParseToken::VERTEX),
+		GETAPP.IndentString(String, Indent),
+		CLexer::TokenLookup(Token),
+		CLexer::TokenLookup(CLexer::Tokens::VERTEX),
 		GetNumVerticies());
 
 	UINT i;
@@ -85,27 +84,27 @@ void CCadPolygon::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags
 
 	for (i = 0; i< GetNumVerticies(); ++i)
 	{
-		pPoint = (CCadPoint*)FindChildObject(
+		pPoint = (CCadPoint*)FindObject(
 			ObjectType::POINT,
-			SubType::VERTEX,
+			CCadObject::SubTypes::VERTEX,
 			i + 1
 		);
-		pPoint->Save(pO, DocFileParseToken::POINT, Indent + 1, flags);
+		pPoint->Save(pO, CLexer::Tokens::POINT, Indent + 1, flags);
 	}
 	m_Attrib.Save(pO, Indent + 1, flags);
 	delete[] String;
 }
 
-BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	CCadPoint* pPoint, *pFirstPoint;
 	BOOL bFirstPoint = TRUE;
 	int VertexCount = 0;
 	BOOL rV = FALSE;
 
-	pPoint = (CCadPoint*)FindChildObject(
+	pPoint = (CCadPoint*)FindObject(
 		ObjectType::POINT,
-		SubType::VERTEX,
+		CCadObject::SubTypes::VERTEX,
 		++VertexCount
 	);
 	pFirstPoint = pPoint;
@@ -114,22 +113,22 @@ BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Sc
 		if (bFirstPoint)
 		{
 			bFirstPoint = FALSE;
-			pPoint->MoveTo(pDC, ULHC, Scale);
+			pPoint->MoveTo(pDC, LLHC, Scale);
 		}
 		else
 		{
-			pPoint->LineTo(pDC, ULHC, Scale);
+			pPoint->LineTo(pDC, LLHC, Scale);
 		}
 		if (VertexCount == 3)
 			rV = TRUE;
-		pPoint = (CCadPoint*)FindChildObject(
+		pPoint = (CCadPoint*)FindObject(
 			ObjectType::POINT,
-			SubType::VERTEX,
+			CCadObject::SubTypes::VERTEX,
 			++VertexCount
 		);
 	}
 	if (pFirstPoint)
-		pFirstPoint->LineTo(pDC, ULHC, Scale);
+		pFirstPoint->LineTo(pDC, LLHC, Scale);
 	return rV;
 }
 
@@ -143,7 +142,7 @@ CCadPoint* CCadPolygon::CalculateCenterPoint()
 	GetPoints(&pPolyPoints);
 	Center = GETAPP.GetPolygonCenter(pPolyPoints, m_NumVertices - 1);
 	Center.Print("Poly Center");
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, SUBSUBTYPE_ANY);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, SUBSUBTYPE_ANY);
 	Obj.pCadPoint->SetPoint(Center);
 	delete[] pPolyPoints; 
 	return Obj.pCadPoint;
@@ -154,9 +153,9 @@ CCadPoint *CCadPolygon::GetCenter()
 	double x = 0.0, y = 0.0;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(
+	Obj.pCadObject = FindObject(
 		ObjectType::POINT,
-		SubType::CENTERPOINT,
+		CCadObject::SubTypes::CENTERPOINT,
 		SUBSUBTYPE_ANY
 	);
 	if (Obj.pCadPoint->GetX() == 0.0 && Obj.pCadPoint->GetY() == 0.0)
@@ -169,7 +168,7 @@ void CCadPolygon::FillPolygon(
 	COLORREF colorFill,
 	CDC* pDC,
 	MODE mode, 
-	DOUBLEPOINT& ULHC, 
+	DOUBLEPOINT& LLHC, 
 	CScale& Scale
 )
 {
@@ -180,12 +179,12 @@ void CCadPolygon::FillPolygon(
 		pCenter = GetCenter();
 		if (pCenter)
 		{
-			pCenter->FloodFill(colorBoarder, colorFill, pDC, ULHC, Scale);
+			pCenter->FloodFill(colorBoarder, colorFill, pDC, LLHC, Scale);
 		}
 	}
 }
 
-void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -213,14 +212,14 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		colorFill = CreateTheBrush(mode, &brushFill);
 		pOldPen = pDC->SelectObject(&penLine);
 		pOldBrush = pDC->SelectObject(&brushFill);
-		switch (mode.DrawMode)
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
-		case ObjectDrawMode::SKETCH:
-			if (DrawPolygon(pDC, mode, ULHC, Scale))
+		case MODE::ObjectPaintMode::FINAL:
+		case MODE::ObjectPaintMode::SKETCH:
+			if (DrawPolygon(pDC, mode, LLHC, Scale))
 			{
 				if(!GetAttributes().m_TransparentFill)
-					FillPolygon(colorLine, colorFill, pDC, mode, ULHC, Scale);
+					FillPolygon(colorLine, colorFill, pDC, mode, LLHC, Scale);
 			}
 			break;
 		}
@@ -238,9 +237,9 @@ BOOL CCadPolygon::GetPoints(DOUBLEPOINT** ppPolyPoints)
 
 	for (i = 0; i < n; ++i)
 	{
-		Obj.pCadObject = FindChildObject(
+		Obj.pCadObject = FindObject(
 			ObjectType::POINT,
-			SubType::VERTEX,
+			CCadObject::SubTypes::VERTEX,
 			i + 1
 		);
 		if (Obj.pCadObject)
@@ -352,7 +351,7 @@ CCadObject * CCadPolygon::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadPolygon *pP = new CCadPolygon;
-	pP->Create(NULL, GetOrigin());
+	pP->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pP);
 	pP->GetAttributes().CopyFrom(GetPtrToAttributes());
 	pP->m_NumVertices = GetNumVerticies();
@@ -369,9 +368,9 @@ BOOL CCadPolygon::GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& 
 	n = GetNumVerticies();
 	for (i = 0; i < n; ++i)
 	{
-		pPoint = (CCadPoint*)FindChildObject(
+		pPoint = (CCadPoint*)FindObject(
 			ObjectType::POINT,
-			SubType::VERTEX,
+			CCadObject::SubTypes::VERTEX,
 			i + 1
 		);
 		if (pPoint)
@@ -414,10 +413,10 @@ CDoubleSize CCadPolygon::GetSize()
 	return size;
 }
 
-DocFileParseToken CCadPolygon::Parse(
-	DocFileParseToken Token, 
-	CLexer *pLex, 
-	DocFileParseToken TypeToken 
+CLexer::Tokens CCadPolygon::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -486,7 +485,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		m_FirstPoint = MousePos;
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, m_NumVertices);
 		Obj.pCadPoint->SetPoint(MousePos);
 		AddPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
@@ -503,9 +502,9 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//done
 			//-----
 			GETVIEW->EnableAutoScroll(FALSE);
-			GETVIEW->GetDocument()->AddObjectAtTail(this);
+			GetParent()->AddObjectAtTail(this);
 			pPoly = new CCadPolygon;
-			pPoly->Create(NULL, GETVIEW->GetDocument()->GetCurrentOrigin());
+			pPoly->Create(GetParent(), GetSubType());
 			GETVIEW->SetObjectTypes(pPoly);
 			DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 			GETAPP.UpdateStatusBar(_T("Polygon:Place First Point"));
@@ -516,7 +515,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//-----------------------------------
 			// Keep Looping and adding points
 			//----------------------------------
-			Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
+			Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, m_NumVertices);
 			Obj.pCadPoint->SetPoint(MousePos);
 			if (GetNumVerticies() > 3)
 				CalculateCenterPoint();
@@ -548,7 +547,7 @@ ObjectDrawState CCadPolygon::MouseMove(ObjectDrawState DrawState)
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, m_NumVertices);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, m_NumVertices);
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
@@ -581,10 +580,10 @@ CCadPoint* CCadPolygon::AddPoint(DOUBLEPOINT newPoint)
 	CCadPoint* pPoint;
 
 	pPoint = new CCadPoint;
-	pPoint->Create(this, GetOrigin(), SubType::VERTEX);
+	pPoint->Create(this, CCadObject::SubTypes::VERTEX);
 	pPoint->SetSubSubType(++m_NumVertices);
 	pPoint->SetPoint(newPoint);
-	AddObjectAtChildTail(pPoint);
+	AddObjectAtTail(pPoint);
 	return pPoint;;
 }
 
@@ -654,9 +653,9 @@ COLORREF CCadPolygon::CreateThePen(MODE mode, CPen* pen, int Lw)
 {
 	COLORREF rColor = RGB(192,192,192);
 
-	switch (mode.DrawMode)
+	switch (mode.PaintMode)
 	{
-	case ObjectDrawMode::FINAL:
+	case MODE::ObjectPaintMode::FINAL:
 		if (IsSelected())
 		{
 			rColor = GetAttributes().m_colorSelected;
@@ -668,7 +667,7 @@ COLORREF CCadPolygon::CreateThePen(MODE mode, CPen* pen, int Lw)
 			pen->CreatePen(PS_SOLID, Lw,rColor);
 		}
 		break;
-	case ObjectDrawMode::SKETCH:
+	case MODE::ObjectPaintMode::SKETCH:
 		rColor = GetAttributes().m_colorSelected;
 		pen->CreatePen(PS_DOT, Lw, rColor);
 		break;
@@ -680,9 +679,9 @@ COLORREF CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
 {
 	COLORREF rV = RGB(0, 0, 0);
 	;
-	switch (mode.DrawMode)
+	switch (mode.PaintMode)
 	{
-	case ObjectDrawMode::FINAL:
+	case MODE::ObjectPaintMode::FINAL:
 		if (IsSelected())
 		{
 			rV = GetAttributes().m_colorFill;
@@ -694,7 +693,7 @@ COLORREF CCadPolygon::CreateTheBrush(MODE mode, CBrush* brushFill)
 			brushFill->CreateSolidBrush(rV);
 		}
 		break;
-	case ObjectDrawMode::SKETCH:
+	case MODE::ObjectPaintMode::SKETCH:
 		rV = GetAttributes().m_colorFill;
 		brushFill->CreateSolidBrush(rV);
 		break;

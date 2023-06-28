@@ -151,27 +151,27 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CBitmap* pOldbm;
 	CFrontCadDoc* pDoc = GetDocument();
 	CCadObject* pDrawingObjectList;
-	DOUBLEPOINT ULHC;		//upper left hand corner offset
+	DOUBLEPOINT LLHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
 	static int count;
 
-	ULHC = GetRulerInfo().GetUpperLeft();
+	LLHC = GetRulerInfo().GetUpperLeft();
 	GetClientRect(&rectClient);
 	memDC.CreateCompatibleDC(pDC);
 	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
 	pOldbm = memDC.SelectObject(&memDCbitmap);
-	pDrawingObjectList = pDoc->GetHead();
+	pDrawingObjectList = pDoc->GetDrawing()->GetHead();
 	CScale Scale = GetGrid().GetPixelsPerInch();
-	mode.DrawMode = ObjectDrawMode::FINAL;
+	mode.PaintMode = MODE::ObjectPaintMode::FINAL;
 
 	br.CreateSolidBrush(RGB(0, 0, 0));
 	memDC.FillRect(&rectClient, &br);
 
-	GetGrid().Draw(&memDC, mode, ULHC, Scale, rectClient);
+	GetGrid().Draw(&memDC, mode, LLHC, Scale, rectClient);
 	while (pDrawingObjectList)
 	{
-		pDrawingObjectList->Draw(&memDC, mode, ULHC, Scale);
+		pDrawingObjectList->Draw(&memDC, mode, LLHC, Scale);
 		pDrawingObjectList = pDrawingObjectList->GetNext();
 	}
 	if (GetObjectTypes().pCadObject)	//is an object being draw?
@@ -190,18 +190,18 @@ void CFrontCadView::OnDraw(CDC* pDC)
 		case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP:
 		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
 		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
-			mode.DrawMode = ObjectDrawMode::SKETCH;
+			mode.PaintMode = MODE::ObjectPaintMode::SKETCH;
 			break;
 		case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
 		case ObjectDrawState::ARCSTART_LBUTTON_UP:
-			mode.DrawMode = ObjectDrawMode::ARCSTART;
+			mode.PaintMode = MODE::ObjectPaintMode::ARCSTART;
 			break;
 		case ObjectDrawState::ARCEND_LBUTTON_DOWN:
 		case ObjectDrawState::ARCEND_LBUTTON_UP:
-			mode.DrawMode = ObjectDrawMode::ARCEND;
+			mode.PaintMode = MODE::ObjectPaintMode::ARCEND;
 			break;
 		}
-		GetObjectTypes().pCadObject->Draw(&memDC, mode, ULHC, Scale);
+		GetObjectTypes().pCadObject->Draw(&memDC, mode, LLHC, Scale);
 	}
 //	if (GetMoveObjectes())	//are there any objects being moved?
 //		GetMoveObjectes()->Draw(&memDC, UprLHCorner, Scale);
@@ -210,7 +210,7 @@ void CFrontCadView::OnDraw(CDC* pDC)
 		&memDC, 
 		GetCurrentMousePosition(),
 		&rectClient,
-		ULHC,
+		LLHC,
 		Scale,
 		RGB(255, 255, 255)
 	);
@@ -490,7 +490,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				// check to see if the mouse clicked
 				// in an object
 				//------------------------------------
-				pDoc->UnSelectAll();
+				pDoc->GetDrawing()->UnSelectAll(OBJKIND_ALL);
 			}
 			ppSel = new CCadObject * [DEFALT_SELECT_BUFFER_SIZE];
 			if (n = pDoc->PointInObjectAndSelect(
@@ -505,32 +505,33 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				if (n > 1)
 				{
 					//Let the user choose the object
-					int index = pDoc->SelectAnObject(ppSel, n, MousePos);
-					if (index < 0)
-						break;
-					pObjSel = ppSel[index];
+//					int index = pDoc->SelectAnObject(ppSel, n, MousePos);
+//					if (index < 0)
+//						break;
+					pObjSel = ppSel[0];
+//					pObjSel = ppSel[index];
 				}
 				else
 					pObjSel = ppSel[0];
 				if (pObjSel->IsSelected())
 				{
 					pObjSel->SetSelected(0);	//deselect object
-					pDoc->RemoveSelectedObject(pObjSel);
 				}
 				else
 				{
-					if (pDoc->GetTotalSelectedItems() && !m_ControlKeyDown)
+					if (pDoc->GetDrawing()->GetTotalNumberOfSelectedItems() && !m_ControlKeyDown)
 					{
-						CCadObject* pO = pDoc->GetSelListHead();
+						CCadObject* pO = pDoc->GetDrawing()->GetHead();
 						while (pO)
 						{
-							pDoc->RemoveSelectedObject(pO);	//remove object from selection list
-							pO->SetSelected(0);	//set to unselected
-							pO = pDoc->GetSelListHead();	//get next object, if any
+							if (pO->IsSelected())
+							{
+								pO->SetSelected(0);
+							}
+							pO = pDoc->GetDrawing()->GetNext();	//get next object, if any
 						}
 					}
 					pObjSel->SetSelected(1);
-					pDoc->AddToSelListHead(pObjSel);
 				}
 				Invalidate();
 			}//end of if(n = pDoc->PointInObjectAndSelect(m_ScalePos, pSel, 8, DrawingCheckSelectFlags::FLAG_ALL))
@@ -542,15 +543,10 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				// we will deselect all of the objects
 				// that have already been selected
 				//---------------------------------
-				if (pDoc->GetTotalSelectedItems() && !m_ControlKeyDown)
+				if (pDoc->GetDrawing()->GetTotalNumberOfSelectedItems() && !m_ControlKeyDown)
 				{
-					CCadObject* pO = pDoc->GetSelListHead();
-					while (pO)
-					{
-						pDoc->RemoveSelectedObject(pO);	//remove object from selection list
-						pO->SetSelected(FALSE);	//set to unselected
-						pO = pDoc->GetSelListHead();	//get next object, if any
-					}
+					CCadObject* pO = pDoc->GetDrawing()->GetHead();
+					pO->RemoveAndDestroySelectedObjects();
 					Invalidate();
 				}
 			}
@@ -560,13 +556,16 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 			break;
 		case ObjectDrawState::SELECT_MOVE:	// Mode:Select/LButtonUP
 		case ObjectDrawState::SELECT_COPY:	// Mode:Select/LButtonUP
-			pObj = pDoc->RemoveSelectedObjectFromHead();
+			pObj = pDoc->GetDrawing()->GetHead();
 			while (pObj)
 			{
-				pObj->Move(GetDeltaMousePos());
-				pObj->SetSelected(0);
-				pDoc->AddObjectAtTail(pObj);
-				pObj = pDoc->RemoveSelectedObjectFromHead();
+				if (pObj->IsSelected())
+				{
+					pObj->Move(GetDeltaMousePos());
+					pObj->SetSelected(0);
+					pDoc->GetDrawing()->AddObjectAtTail(pObj);
+				}
+				pObj = pObj->GetNext();
 			}
 			m_DrawState = ObjectDrawState::SELECT_WAITFOR_LBUTTON_DOWN;
 			Invalidate();
@@ -583,14 +582,14 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 		//-----------------------------------------------------
 		break;
 	case DrawingMode::COPY:		//LButton Up
-		GETAPP.GetClipBoard().RemoveAndDestroyALL();		//clear old contents from clipboard
+		GETAPP.GetClipBoard()->RemoveAndDestroyALL();		//clear old contents from clipboard
 		pDoc->CopyToClipBoard();
-		GETAPP.GetClipBoard().SetRef(GetCurrentMousePosition());
+		GETAPP.GetClipBoard()->SetRef(GetCurrentMousePosition());
 		Invalidate();
 		break;
 	case DrawingMode::CUT:		//LButton Up
 		pDoc->CutToClipBoard();
-		GETAPP.GetClipBoard().SetRef(GetCurrentMousePosition());
+		GETAPP.GetClipBoard()->SetRef(GetCurrentMousePosition());
 		Invalidate();
 		break;
 	case DrawingMode::PASTE:	//Mouse Button Up
@@ -609,12 +608,13 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 				//	Copy Everyting from the clipboard
 				// and add it to the drawing
 				//--------------------------------------
-				pObj = GETAPP.GetClipBoard().RemoveFromHead();
+				pObj = GETAPP.GetClipBoard()->RemoveObjectFromHead();
 				while (pObj)
 				{
 					pObj->SetSelected(0);		//unselect
 					pObj->Move(GetDeltaMousePos());
-					pDoc->AddObjectAtTail(pObj);
+					pDoc->GetDrawing()->AddObjectAtTail(pObj);
+					pObj = GETAPP.GetClipBoard()->RemoveObjectFromHead();
 				}
 			}
 			break;
@@ -691,7 +691,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 			// going to grab and either move or
 			// copy/cut the objects
 			//------------------------------------
-			pObj = pDoc->GetSelListHead();
+			pObj = pDoc->GetDrawing()->GetHead();
 			while (pObj)
 			{
 				pObj->Move(GetDeltaMousePos());
@@ -739,12 +739,6 @@ void CFrontCadView::OnInitialUpdate()
 	CFrontCadDoc *pDoc = GetDocument();
 	CString csOrgName = _T("Default");
 
-	//------------ Setup Default Origin --------------
-	m_DefaultOrigin.Create(NULL, NULL);
-	m_DefaultOrigin.SetName(csOrgName);
-	pDoc->AddObjectAtHead(&m_DefaultOrigin);
-	GetRulerInfo().SetOrigin(&m_DefaultOrigin);
-	pDoc->SetCurrentOrigin(&m_DefaultOrigin);
 	// This will be finished up later when
 	// a message is recieved that the toolbard
 	// has been set up.
@@ -763,8 +757,8 @@ void CFrontCadView::OnInitialUpdate()
 	//-----------------------------------------
 	GetMyFrame()->InitToolBar(this, GetPtrToRulerInfo());
 	//------------- Scroll Bars ---------------
-	CCadPoint ulhc = CCadPoint(0.0, 0.0);
-	GetRulerInfo().SetUpperLeft(ulhc);
+	CCadPoint LLHC = CCadPoint(0.0, 0.0);
+	GetRulerInfo().SetUpperLeft(LLHC);
 	GetGrid().SetSnapGrid(CDoubleSize(0.125,0.125));
 	UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 	ShowScrollBar(SB_BOTH, TRUE);
@@ -824,6 +818,7 @@ BOOL CFrontCadView::OnEraseBkgnd(CDC* pDC)
 void CFrontCadView::OnDrawArcCenter()
 {
 	CCadArcCent* pArc;
+	CCadDrawing* pDrawing = GetDocument()->GetDrawing();
 
 	if (GetObjectTypes().pCadObject)
 	{
@@ -831,7 +826,7 @@ void CFrontCadView::OnDrawArcCenter()
 		GetObjectTypes().pCadObject = 0;
 	}
 	pArc = new CCadArcCent;
-	pArc->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pArc->Create(pDrawing, CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pArc);
 	SetDrawMode(DrawingMode::ARC_CENTER);
 	GETAPP.UpdateStatusBar(_T("Arc:Place Center Point"));
@@ -848,7 +843,8 @@ void CFrontCadView::OnUpdateDrawArccnter(CCmdUI* pCmdUI)
 void CFrontCadView::OnDrawArc()
 {
 	CCadArc* pArc;
-
+	CFrontCadDoc* pDoc;
+	pDoc = GetDocument();
 	if (GetObjectTypes().pCadObject)
 	{
 		delete GetObjectTypes().pCadObject;
@@ -856,7 +852,7 @@ void CFrontCadView::OnDrawArc()
 	}
 	SetDrawMode(DrawingMode::ARC);
 	pArc = new CCadArc;
-	pArc->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pArc->Create(pDoc->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pArc);
 	GETAPP.UpdateStatusBar(_T("Arc:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -880,7 +876,7 @@ void CFrontCadView::OnDrawArrow()
 	}
 	SetDrawMode(DrawingMode::ARROW);
 	pArrow = new CCadArrow;
-	pArrow->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pArrow->Create(GetDocument()->GetDrawing(),CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pArrow);
 	GETAPP.UpdateStatusBar(_T("Arrow:Place Location of Tip"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -893,7 +889,7 @@ void CFrontCadView::OnUpdateDrawArrow(CCmdUI* pCmdUI)
 
 void CFrontCadView::OnDrawEllipse()
 {
-	CCadElispe* pE;
+	CCadEllipse* pE;
 
 	if (GetObjectTypes().pCadObject)
 	{
@@ -901,8 +897,8 @@ void CFrontCadView::OnDrawEllipse()
 		GetObjectTypes().pCadObject = 0;
 	}
 	SetDrawMode(DrawingMode::ELIPSE);
-	pE = new CCadElispe;
-	pE->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pE = new CCadEllipse;
+	pE->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pE);
 	GETAPP.UpdateStatusBar(_T("Ellispe Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -926,7 +922,7 @@ void CFrontCadView::OnDrawLine()
 	}
 	SetDrawMode(DrawingMode::LINE);
 	pL = new CCadLine;
-	pL->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pL->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -944,7 +940,7 @@ void CFrontCadView::OnLineLinefixedlen()
 	}
 	SetDrawMode(DrawingMode::LINE);
 	pL = new CCadLine;
-	pL->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pL->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING_LINE_FIXED_LEN);
@@ -980,7 +976,7 @@ void CFrontCadView::OnDrawOrigin()
 	}
 	SetDrawMode(DrawingMode::ORIGIN);
 	pO = new CCadOrigin;
-	pO->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pO->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pO);
 	GETAPP.UpdateStatusBar(_T("Origin:Set Origin Name"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1004,7 +1000,7 @@ void CFrontCadView::OnDrawPoint()
 	}
 	SetDrawMode(DrawingMode::POINT);
 	pP = new CCadPoint;
-	pP->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pP->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pP);
 	GETAPP.UpdateStatusBar(_T("Point:PlacePoint"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1027,7 +1023,7 @@ void CFrontCadView::OnDrawPlaceBitmap()
 	}
 	SetDrawMode(DrawingMode::BITMAP);
 	pBM = new CCadBitmap;
-	pBM->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pBM->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pBM);
 	GETAPP.UpdateStatusBar(_T("Bitmap:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1049,7 +1045,7 @@ void CFrontCadView::OnDrawPolygon()
 	}
 	SetDrawMode(DrawingMode::POLYGON);
 	pPG = new CCadPolygon;
-	pPG->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pPG->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pPG);
 	GETAPP.UpdateStatusBar(_T("Polygon:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1085,7 +1081,7 @@ void CFrontCadView::OnDrawRectangle()
 	}
 	SetDrawMode(DrawingMode::RECT);
 	pR = new CCadRect;
-	pR->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1109,7 +1105,7 @@ void CFrontCadView::OnDrawRectangularhole()
 	}
 	SetDrawMode(DrawingMode::HOLE_RECT);
 	pRH = new CCadHoleRect;
-	pRH->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pRH->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pRH);
 	GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Location of Center"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1133,7 +1129,7 @@ void CFrontCadView::OnDrawRotatedrectangle()
 	}
 	SetDrawMode(DrawingMode::RECT);
 	pR = new CCadRect;
-	pR->Create(NULL, GetDocument()->GetCurrentOrigin(), SubType::RECT_ROTATED);;
+	pR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::RECT_ROTATED);;
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1150,7 +1146,7 @@ void CFrontCadView::OnDrawRectangleFromCenter()
 	}
 	SetDrawMode(DrawingMode::RECT);
 	pR = new CCadRect;
-	pR->Create(NULL, GetDocument()->GetCurrentOrigin(), SubType::RECT_FROM_CENTER);
+	pR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::RECT_FROM_CENTER);
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1178,7 +1174,7 @@ void CFrontCadView::OnDrawRoundedrectangle()
 	}
 	SetDrawMode(DrawingMode::RNDRECT);
 	pRR = new CCadRndRect;
-	pRR->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pRR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pRR);
 	GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
@@ -1201,7 +1197,7 @@ void CFrontCadView::OnDrawRoundhole()
 	SetDrawMode(DrawingMode::HOLE_ROUND);
 	GETAPP.UpdateStatusBar(_T("Round Hole:Place Location of Hole Center"));
 	pHole = new CCadHoleRound;
-	pHole->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pHole->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
@@ -1224,7 +1220,7 @@ void CFrontCadView::OnDrawRoundholewith1flat()
 	}
 	SetDrawMode(DrawingMode::HOLE_RND1F);
 	pHR1F = new CCadHoleRnd1Flat;
-	pHR1F->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pHR1F->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pHR1F);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With one Flat:Place location of Center"));
@@ -1246,7 +1242,7 @@ void CFrontCadView::OnDrawRoundholewith2flats()
 	}
 	SetDrawMode(DrawingMode::HOLE_RND2F);
 	pHole = new CCadHoleRnd2Flat;
-	pHole->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pHole->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pHole);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Round Hole With two Flats:Place Location of Center"));
@@ -1270,7 +1266,7 @@ void CFrontCadView::OnDrawText()
 	}
 	SetDrawMode(DrawingMode::TEXT);
 	pText = new CCadText;
-	pText->Create(NULL, GetDocument()->GetCurrentOrigin());
+	pText->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pText);
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 	GETAPP.UpdateStatusBar(_T("Text:Place location of Text"));
@@ -1419,16 +1415,16 @@ void CFrontCadView::OnSnapSnaptoobject()
 	m_ppObjList = new CCadObject * [16];
 
 	pLine = new CCadLine;
-	pLine->Create(NULL, NULL);
+	pLine->Create(NULL, CCadObject::SubTypes::DEFAULT);
 	m_ppObjList[0] = pLine;
 	pLine = new CCadLine;
-	pLine->Create(NULL, NULL);
+	pLine->Create(NULL, CCadObject::SubTypes::DEFAULT);
 	m_ppObjList[1] = pLine;
 	pLine = new CCadLine;
-	pLine->Create(NULL, NULL);
+	pLine->Create(NULL, CCadObject::SubTypes::DEFAULT);
 	m_ppObjList[2] = pLine;
 	pLine = new CCadLine;
-	pLine->Create(NULL, NULL);
+	pLine->Create(NULL, CCadObject::SubTypes::DEFAULT);
 	m_ppObjList[3] = pLine;
 	CreateObjectSelectionMenu(
 		m_ppObjList,
@@ -1513,14 +1509,14 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	CFrontCadDoc* pDoc = GetDocument();
 	CMenu ConTexMenu;
 	CMenu PlaceMenu;
-
+	CCadObject* pO;
 	int id;
 	//	CPoint m_MousePos = point;
 	//	CCadPoint CurPos;
 
 	//	ScreenToClient(&m_MousePos);
 	//	CurPos = ConvertMousePosition(m_MousePos).Snap(GetSnapGrid(), IsSnapGridOn();
-	CCadObject* pObj = pDoc->GetSelListHead();
+	CCadObject* pObj = pDoc->GetDrawing()->GetHead();
 	//-----------------------------------------
 	// create place submenu
 	//------------------------------------------
@@ -1570,7 +1566,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		ConTexMenu.EnableMenuItem(ID_CM_DELETE, MF_ENABLED);
 		ConTexMenu.EnableMenuItem(ID_CM_DESELECT, MF_ENABLED);
 		ConTexMenu.EnableMenuItem(ID_CM_DESELECT_ALL, MF_ENABLED);
-		if (pObj->GetType() == ObjectType::BITMAP)
+		if (pObj->GetType() == CCadObject::ObjectType::BITMAPTYPE)
 		{
 			ConTexMenu.AppendMenu(MF_STRING, ID_CM_RESTOREASPECTRATIO, _T("Restore Aspect Ratio"));
 			ConTexMenu.EnableMenuItem(ID_CM_RESTOREASPECTRATIO, MF_ENABLED);
@@ -1610,63 +1606,50 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 			GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::SET_ATTRIBUTES);
 		break;
 	case ID_CM_FORWARD:		//make object draw last
-	{
-		CCadObject* pO = pDoc->GetSelListHead();
+		pO = pDoc->GetDrawing()->GetHead();
 		while (pO)
 		{
-			pDoc->RemoveObject(pO);
-			pDoc->AddObjectAtTail(pO);
-			pO = pO->GetNextSel();
+			pDoc->GetDrawing()->RemoveObject(pO);
+			pDoc->GetDrawing()->AddObjectAtTail(pO);
+			pO = pO->GetNext();
 		}
 		Invalidate();
-	}
-	break;
+		break;
 	case ID_CM_BACKWARD:	//make object draw first
-	{
-		CCadObject* pO = pDoc->GetSelListHead();
+		pO = pDoc->GetDrawing()->GetHead();
 		while (pO)
 		{
-			pDoc->RemoveObject(pO);
-			pDoc->AddObjectAtTail(pO);
-			pO = pO->GetNextSel();
+			if (pO->IsSelected())
+			{
+				pDoc->GetDrawing()->RemoveObject(pO);
+				pDoc->GetDrawing()->AddObjectAtTail(pO);
+			}
+			pO = pO->GetNext();
 		}
 		Invalidate();
-	}
 		break;
 	case ID_CM_DELETE:	//delete selected object(s)
-		{
-			CCadObject* pO = pDoc->GetSelListHead();
-			while (pO)
-			{
-				pDoc->RemoveSelectedObject(pO);
-				pDoc->RemoveObject(pO);
-				delete pO;
-				pO = pDoc->GetSelListHead();
-			}
-			Invalidate();
-		}
+		pO = pDoc->GetDrawing()->GetHead();
+		if (pO)
+			pO->RemoveAndDestroySelectedObjects();
+		Invalidate();
 		break;
 	case ID_CM_RESTOREASPECTRATIO:
 		break;
 	case ID_CM_DESELECT:
-		{
-			CCadObject* pO = pDoc->GetSelListHead();
-			pDoc->RemoveSelectedObject(pO);
-			pO->SetSelected(0);
-			Invalidate();
-		}
+		// TODP This is just wrong
+		pO = pDoc->GetDrawing()->GetHead();
+		pO->SetSelected(0);
+		Invalidate();
 		break;
 	case ID_CM_DESELECT_ALL:
+		pO = pDoc->GetDrawing()->GetHead();
+		while (pO)
 		{
-			CCadObject* pO = pDoc->GetSelListHead();
-			while (pO)
-			{
-				pDoc->RemoveSelectedObject(pO);
-				pO->SetSelected(0);
-				pO = pDoc->GetSelListHead();
-			}
-			Invalidate();
+			pO->SetSelected(0);
+			pO = pO->GetNext();
 		}
+		Invalidate();
 		break;
 		//------------------------------------
 		// PLACE menu response
@@ -1897,7 +1880,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (n > 0)
 		{
 			CCadPoint *pCenter;
-			pCenter = (CCadPoint * )ppSelList[0]->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			pCenter = (CCadPoint * )ppSelList[0]->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 			ppSelList[0]->Flip(pCenter, 0);
 		}
 		delete[]ppSelList;
@@ -1915,7 +1898,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (n > 0)
 		{
 			CCadPoint *pCenter;
-			pCenter = (CCadPoint * )ppSelList[0]->FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+			pCenter = (CCadPoint * )ppSelList[0]->FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 			ppSelList[0]->Flip(pCenter, 1);
 		}
 		delete[]ppSelList;
@@ -1988,23 +1971,25 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 	//		This method is called in response to
 	// a WM_SIZE message
 	//----------------------------------------------
-	printf("On Size\n");
+	printf("CFrontCadView::On Size Type:%d  cX=%d  cY=%d", nType, cx, cy);
 	switch (nType)
 	{
 	case SIZE_MAXIMIZED:
-		printf("   Maximize\n");
+		printf("   Maximized\n");
 		UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 		GetRulerInfo().SetClientSize(CSize(cx, cy));
 		if (GetRulerInfo().AreFulersReady())
+		{
 			PostMessageToRulers(RW_ZOOM);
-//		SendMessageToRulers(RW_SHOW, TRUE);
+			SendMessageToRulers(RW_SHOW, TRUE);
+		}
 		Invalidate();
 		break;
 	case SIZE_MINIMIZED:
-		printf("   Minimize\n");
+		printf("   Minimized\n");
 		break;
 	case SIZE_RESTORED:
-		printf("   Restored %d  cX=%d  cY=%d\n", nType, cx, cy);
+		printf("   Restored\n");
 		UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
 		GetRulerInfo().SetClientSize(CSize(cx, cy));
 		if (GetRulerInfo().AreFulersReady())
@@ -2029,9 +2014,20 @@ void CFrontCadView::OnSize(UINT nType, int cx, int cy)
 
 void CFrontCadView::OnSizing(UINT fwSide, LPRECT pRect)
 {
+	CRect Rect;
+
+	Rect = CRect(*pRect);
+
 	CChildViewBase::OnSizing(fwSide, pRect);
-	printf("Sizing\n");
-	// TODO: Add your message handler code here
+	printf("FrontCadView::Sizing  Side=%d\n", fwSide);
+	UpdateScrollbarInfo(GetRulerInfo().GetUpperLeft());
+	GetRulerInfo().SetClientSize(CSize(Rect.Width(), Rect.Height()));
+	if (GetRulerInfo().AreFulersReady())
+	{
+		PostMessageToRulers(RW_ZOOM);
+		SendMessageToRulers(RW_SHOW, TRUE);
+	}
+	Invalidate();
 }
 
 void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
@@ -2088,28 +2084,28 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 void CFrontCadView::DoVScroll(double Yinches, BOOL Absolute, BOOL Update)
 {
 	CFrontCadDoc* pDoc = GetDocument();
-	DOUBLEPOINT ULHC; //upper left hand corner
+	DOUBLEPOINT LLHC; //Lower left hand corner
 
 	if (Update)
 	{
 		if (Absolute)
 		{
-			ULHC = GetRulerInfo().GetUpperLeft();
-			ULHC.dY = Yinches;
+			LLHC = GetRulerInfo().GetUpperLeft();
+			LLHC.dY = Yinches;
 		}
 		else
-			ULHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
+			LLHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(0.0, Yinches);
 
-		if (ULHC.dY < 0.0)
-			ULHC.dY = 0.0;
-		else if (ULHC.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
+		if (LLHC.dY < 0.0)
+			LLHC.dY = 0.0;
+		else if (LLHC.dY > (pDoc->GetDocSize().dCY - GetClientHieght()))
 		{
-			ULHC.dY = pDoc->GetDocSize().dCY - GetClientHieght();
-			if (ULHC.dY < 0.0)
-				ULHC.dY = 0.0;
+			LLHC.dY = pDoc->GetDocSize().dCY - GetClientHieght();
+			if (LLHC.dY < 0.0)
+				LLHC.dY = 0.0;
 		}
-		GetRulerInfo().SetUpperLeft(ULHC);
-		double pos = ULHC.dY;
+		GetRulerInfo().SetUpperLeft(LLHC);
+		double pos = LLHC.dY;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleY();
 		SetScrollPos(SB_VERT, GETAPP.RoundDoubleToInt(pos), TRUE);
 		PostMessageToRulers(RW_VSCROLL);
@@ -2172,29 +2168,29 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 {
-	DOUBLEPOINT ULHC;
+	DOUBLEPOINT LLHC;
 	CFrontCadDoc* pDoc = GetDocument();
 
 	if (Update)
 	{
 		if (Absolute)
 		{
-			ULHC = GetRulerInfo().GetUpperLeft();
-			ULHC.dX = Xinches;
+			LLHC = GetRulerInfo().GetUpperLeft();
+			LLHC.dX = Xinches;
 		}
 		else
-			ULHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
-		if (ULHC.dX < 0.0)
-			ULHC.dX = 0.0;
-		else if (ULHC.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
+			LLHC = GetRulerInfo().GetUpperLeft() + CDoubleSize(Xinches, 0.0);
+		if (LLHC.dX < 0.0)
+			LLHC.dX = 0.0;
+		else if (LLHC.dX > (pDoc->GetDocSize().dCX - GetClientWidth()))
 		{
-			ULHC.dX = pDoc->GetDocSize().dCX - GetClientWidth();
-			if (ULHC.dX < 0.0)
-				ULHC.dX = 0;
+			LLHC.dX = pDoc->GetDocSize().dCX - GetClientWidth();
+			if (LLHC.dX < 0.0)
+				LLHC.dX = 0;
 		}
-		GetRulerInfo().SetUpperLeft(ULHC);
+		GetRulerInfo().SetUpperLeft(LLHC);
 
-		double pos = ULHC.dX;
+		double pos = LLHC.dX;
 		pos = pos * GetGrid().GetPixelsPerInch().GetScaleX();
 		SetScrollPos(SB_HORZ, GETAPP.RoundDoubleToInt(pos), TRUE);
 		//----------------------------------------------------------
@@ -2206,7 +2202,7 @@ void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 	}
 }
 
-void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT ULHC)
+void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT LLHC)
 {
 	//---------------------------------------------------------------------
 	//  UpdateScrollbarInfo
@@ -2214,7 +2210,7 @@ void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT ULHC)
 	//      This Method updates the positions of the scrollbars (really?)
 	// 
 	// Parameters:
-	// ULHC........Upper Left hand corner (in inches)
+	// LLHC........Upper Left hand corner (in inches)
 	// 
 	// Returns Nothing
 	// Update Upper Left Hand Corner
@@ -2232,7 +2228,7 @@ void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT ULHC)
 	// cx is in pixels (width of the work space)
 	//------------------------------------------------
 	ScrollArea = DocSize.dCX - GetClientWidth();
-	ScrollPos = ULHC.dX / ScrollArea;
+	ScrollPos = LLHC.dX / ScrollArea;
 	if (GetClientWidth() < GetDocSize().dCX)
 	{
 		if (ScrollArea < 0)ScrollArea = 0.0;
@@ -2248,7 +2244,7 @@ void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT ULHC)
 	// Vertical Scrolling 
 	//------------------------------------------------
 	ScrollArea = DocSize.dCY - GetClientHieght();
-	ScrollPos = ULHC.dY / ScrollArea;
+	ScrollPos = LLHC.dY / ScrollArea;
 	if (GetClientHieght() < GetDocSize().dCY)
 	{
 		if (ScrollArea < 0)ScrollArea = 0.0;
@@ -2304,7 +2300,7 @@ void CFrontCadView::DrawCursor(
 	CDC* pDC, 
 	DOUBLEPOINT pos,// Cursor Position
 	CRect* pRect,	// Client Rectangle
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale &Scale, 
 	COLORREF color
 )
@@ -2332,7 +2328,7 @@ void CFrontCadView::DrawCursor(
 	pen.CreatePen(PS_SOLID, 1, color);
 	pOldPen = pDC->SelectObject(&pen);
 
-	p = pos.ToPixelPoint(ULHC, Scale.GetScaleX(), Scale.GetScaleY());
+	p = pos.ToPixelPoint(LLHC, Scale.GetScaleX(), Scale.GetScaleY());
 	w = pRect->Width() - 1;
 	h = pRect->Height() - 1;
 	pDC->MoveTo(0, p.y);
@@ -2344,15 +2340,15 @@ void CFrontCadView::DrawCursor(
 
 // Zoom in around a point
 
-DOUBLEPOINT CFrontCadView::CalculateNewULHC(
+DOUBLEPOINT CFrontCadView::CalculateNewLLHC(
 	CScale CurrentScale, 
 	CScale NextScale, 
 	DOUBLEPOINT pointLocation,
-	DOUBLEPOINT pointULHC
+	DOUBLEPOINT pointLLHC
 )
 {
 	//--------------------------------------
-	//	CalculateNewULHC
+	//	CalculateNewLLHC
 	// Calculate a New Upper Left Hand 
 	// corner coordinate.  So far, primarily
 	// used when zooming in and out
@@ -2362,7 +2358,7 @@ DOUBLEPOINT CFrontCadView::CalculateNewULHC(
 	//	NextScale........New Scale factor
 	//	pointResult......Store result here
 	//	pointLocation....Point to zoom around
-	//	pointULHC........Current Upper Left
+	//	pointLLHC........Current Upper Left
 	//					Hand Corner
 	// 
 	// Returns:
@@ -2373,10 +2369,10 @@ DOUBLEPOINT CFrontCadView::CalculateNewULHC(
 	DOUBLEPOINT pointResult;
 
 	Temp = CurrentScale.GetScaleX() / NextScale.GetScaleX();
-	Temp *= (pointLocation.dX - pointULHC.dX);
+	Temp *= (pointLocation.dX - pointLLHC.dX);
 	Ux = pointLocation.dX - Temp;
 	Temp = CurrentScale.GetScaleY() / NextScale.GetScaleY();
-	Temp *= (pointLocation.dY - pointULHC.dY);
+	Temp *= (pointLocation.dY - pointLLHC.dY);
 	Uy = pointLocation.dY - Temp;
 	pointResult = DOUBLEPOINT(Ux, Uy);
 	return pointResult;
@@ -2396,27 +2392,27 @@ void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 	// returns:nothing
 	//-----------------------------------------
 	CScale CurrentScale, NextScale;
-	DOUBLEPOINT pointNewULHC;
-	DOUBLEPOINT ptCurrentULHC;
+	DOUBLEPOINT pointNewLLHC;
+	DOUBLEPOINT ptCurrentLLHC;
 	CFrontCadDoc* pDoc;
 	CPoint p;
 
-	ptCurrentULHC = GetRulerInfo().GetUpperLeft();
+	ptCurrentLLHC = GetRulerInfo().GetUpperLeft();
 	CurrentScale = GetGrid().GetPixelsPerInch();
-	p = point.ToPixelPoint(ptCurrentULHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
+	p = point.ToPixelPoint(ptCurrentLLHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
 	if (GetGrid().ZoomIn())	// did a zoom?
 	{
 		NextScale = GetGrid().GetInchesPerPixel();
-		pointNewULHC = point.ULHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
+		pointNewLLHC = point.LLHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		//---------------------------------
-		// Clean up ULHC ie Snap
+		// Clean up LLHC ie Snap
 		//--------------------------------
-		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
-		GetRulerInfo().SetUpperLeft(pointNewULHC);
+		pointNewLLHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		GetRulerInfo().SetUpperLeft(pointNewLLHC);
 		//--------------------------------
 		// Update the Scroll Position
 		//--------------------------------
-		UpdateScrollbarInfo(pointNewULHC);
+		UpdateScrollbarInfo(pointNewLLHC);
 		pDoc = GetDocument();
 		pDoc->ProcessZoom(GetGrid().GetInchesPerPixel());
 		Invalidate();
@@ -2439,24 +2435,24 @@ void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 	// returns:nothing
 	//-----------------------------------------
 	CScale CurrentScale, NextScale;
-	DOUBLEPOINT pointNewULHC;
-	DOUBLEPOINT ptULHC = GetRulerInfo().GetUpperLeft();
+	DOUBLEPOINT pointNewLLHC;
+	DOUBLEPOINT ptLLHC = GetRulerInfo().GetUpperLeft();
 	CFrontCadDoc* pDoc = GetDocument();
 	CPoint p;
 
 	CurrentScale = GetGrid().GetPixelsPerInch();
-	p = point.ToPixelPoint(ptULHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
+	p = point.ToPixelPoint(ptLLHC, CurrentScale.GetScaleX(), CurrentScale.GetScaleY());
 	if (GetGrid().ZoomOut())	// did a zoom
 	{
 		NextScale = GetGrid().GetInchesPerPixel();
-		pointNewULHC = point.ULHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
-		pointNewULHC.Snap(GetGrid().GetSnapGrid(), TRUE);
-		GetRulerInfo().SetUpperLeft(pointNewULHC);
+		pointNewLLHC = point.LLHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
+		pointNewLLHC.Snap(GetGrid().GetSnapGrid(), TRUE);
+		GetRulerInfo().SetUpperLeft(pointNewLLHC);
 		//--------------------------------
 		// Update the Scroll Position
 		//--------------------------------
 		pDoc->ProcessZoom(GetGrid().GetInchesPerPixel());
-		UpdateScrollbarInfo(pointNewULHC);
+		UpdateScrollbarInfo(pointNewLLHC);
 		Invalidate();
 	}
 }
@@ -2615,26 +2611,6 @@ void CFrontCadView::OnMButtonUp(UINT nFlags, CPoint point)
 // Tool Bar Methods
 //--------------------------------------------------------------
 
-void CFrontCadView::AddOriginAtHead(CCadOrigin* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-
-	GetToolBarView()->AddOrigin(pObj);
-	pDoc->AddOriginAtHead(pObj);
-}
-
-void CFrontCadView::AddOriginAtTail(CCadOrigin* pObj)
-{
-	CFrontCadDoc* pDoc = GetDocument();
-
-	GetToolBarView()->AddOrigin(pObj);
-	pDoc->AddOriginAtTail(pObj);
-}
-
-void CFrontCadView::RemoveOrigin(CCadOrigin* pObj)
-{
-}
-
 afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Data)
 {
 	ToolBarMsg submsg = ToolBarMsg(SubMessage);
@@ -2646,7 +2622,7 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 	{
 	case ToolBarMsg::ORIGIN_SEL_CHANGE:
 		pCORG = (CCadOrigin *) GetOriginSelectCombo().GetItemData(Data);
-		pDoc->SetCurrentOrigin(pCORG);
+//		pDoc->SetCurrentOrigin(pCORG);
 		GetRulerInfo().SetOrigin(pCORG);
 		PostMessageToRulers(RW_ZOOM);
 		break;
@@ -2917,7 +2893,7 @@ CCadObject* CFrontCadView::SnapToObject(
 
 DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 	CPoint MousePoint,	//mouse position client ref
-	DOUBLEPOINT& ULHC,	//upper left corner of client in inches
+	DOUBLEPOINT& LLHC,	//upper left corner of client in inches
 	CScale& Scale,		//Inches per Pixel
 	CDoubleSize SnapGrid,
 	BOOL SnapGridIsEnabled
@@ -2934,7 +2910,7 @@ DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 	//
 	// parameters:
 	//	MousePoint......Position of mouse pointer in view
-	//  ULHC............Upper Left Hand Corner Coordinate
+	//  LLHC............Upper Left Hand Corner Coordinate
 	//	Scale...........Inches Per Pixel Scale
 	//	SnapGrid........Snap to closest.
 	//	SnapGridIsEnabled..Snap if true
@@ -2949,7 +2925,7 @@ DOUBLEPOINT CFrontCadView::ConvertMousePosition(
 	//-----------------------------------------------
 	DOUBLEPOINT MousePos;
 
-	MousePos.Raw(MousePoint, ULHC, SCALE(Scale));
+	MousePos.Raw(MousePoint, LLHC, SCALE(Scale));
 	MousePos.Snap(DOUBLESIZE(SnapGrid), SnapGridIsEnabled);
 	m_DeltaMousePos = MousePos - m_LastMousePos;
 	m_LastMousePos = m_CurMousePos;

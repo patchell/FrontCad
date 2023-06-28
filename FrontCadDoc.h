@@ -27,6 +27,9 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 #endif
+	CCadDrawing* GetDrawing() {
+		return (CCadDrawing*)CBaseDocument::GetDocObject();
+	}
 	void SetDocSize(CDoubleSize szDoc) { m_DocSize = szDoc; }
 	CDoubleSize& GetDocSize() { return m_DocSize; }
 	double GetDocWidth() { return m_DocSize.dCX; }

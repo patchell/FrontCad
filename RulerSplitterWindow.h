@@ -29,10 +29,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 };
 
-#define PANE_VRULER				0,0
-#define PANE_MAINPANE			0,1
-#define PANE_RULERCORNER		1,0
-#define PANE_HRULER				1,1
+#define PANE_VRULER				1,0
+#define PANE_MAINPANE			1,1
+#define PANE_RULERCORNER		0,0
+#define PANE_HRULER				0,1
 
 #define HORIZONTALRULER		((CRulerView*)GetPane(PANE_HRULER))
 #define VERTICALRULER		((CRulerView*)GetPane(PANE_VRULER))

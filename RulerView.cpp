@@ -171,6 +171,7 @@ void CRulerView::DrawTicker(
 	switch (GetRulerType())
 	{
 	case RT_HORIZONTAL:
+		printf("   ->RulerView::Draw Horizontal\n");
 		PixPerInch = RulerPixPerIn.GetScaleX();
 		nSize = GetRulersInfo()->GetClientSize().cx;
 		Inches = double(nSize) / PixPerInch;
@@ -187,6 +188,7 @@ void CRulerView::DrawTicker(
 		);
 		break;
 	case RT_VERTICAL:
+		printf("   ->RulerView::Draw Vertical\n");
 		PixPerInch = RulerPixPerIn.GetScaleY();
 		nSize = GetRulersInfo()->GetClientSize().cy;
 		Inches = double(nSize) / PixPerInch;
@@ -487,9 +489,10 @@ void CRulerView::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
 
-	printf("RulerView::OnSize\n");
-	printf("  %s type=%d cx=%d cy=%d\n", 
+	printf("\n");
+	printf("RulerView::OnSize  %s:%d type=%d cx=%d cy=%d\n", 
 		(m_rulerType == RT_HORIZONTAL) ? "Horizontal" : "Vertical",
+		m_rulerType,
 		nType,
 		cx,
 		cy

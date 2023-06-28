@@ -7,7 +7,7 @@ class CDlgEllispeProperties : public CDialog
 	//-------------------------------------
 	//Data
 	//-------------------------------------
-	CCadElispe* m_pEllipse;
+	CCadEllipse* m_pEllipse;
 	//-------------------------------------
 	//Controls
 	//-------------------------------------
@@ -19,7 +19,7 @@ class CDlgEllispeProperties : public CDialog
 public:
 	CDlgEllispeProperties(CWnd* pParent = NULL);   // standard constructor
 	virtual ~CDlgEllispeProperties();
-	void SetEllipse(CCadElispe* pCE) { m_pEllipse = pCE; }
+	void SetEllipse(CCadEllipse* pCE) { m_pEllipse = pCE; }
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	afx_msg void OnStnClickedStaticFillcolor();

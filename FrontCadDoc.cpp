@@ -73,7 +73,7 @@ void CFrontCadDoc::Dump(CDumpContext& dc) const
 
 void CFrontCadDoc::Serialize(CArchive& ar)
 {
-	DocFileParseToken Token;
+	CLexer::Tokens Token;
 
 	if (ar.IsStoring())
 	{
@@ -81,9 +81,11 @@ void CFrontCadDoc::Serialize(CArchive& ar)
 	}
 	else
 	{
-		CLexer Lex;
-		CADObjectTypes Obj;
-		memset(&Obj, 0, sizeof(CADObjectTypes));
+		//-----------------------------
+		// Open Input file
+		//-----------------------------
+		CFileParser Parser;
+
 		CFileDialog Dlg(
 			TRUE, 
 			_T("frontCad"), 
@@ -94,55 +96,9 @@ void CFrontCadDoc::Serialize(CArchive& ar)
 			0,
 			1
 		);
-
-		Token = Lex.Lex();
-		if (Token > DocFileParseToken::ERRORToken)
-		{
-			try
-			{
-				switch (Token)
-				{
-				case DocFileParseToken::ARC:
-					Obj.pCadArc = new CCadArc;
-					Token = Obj.pCadArc->Parse(Token, &Lex);
-					break;
-				case DocFileParseToken::ARCANGLE:
-					break;
-				case DocFileParseToken::ARCCENTERED:
-					break;
-				case DocFileParseToken::ARROW:
-					break;
-				case DocFileParseToken::BITMAP:
-					break;
-				case DocFileParseToken::LIBPART:
-					break;
-				case DocFileParseToken::LINE:
-					break;
-				case DocFileParseToken::POLYGON:
-					break;
-				case DocFileParseToken::RECT:
-					break;
-				case DocFileParseToken::ROUNDRECT:
-					break;
-				case DocFileParseToken::HOLERECT:
-					break;
-				case DocFileParseToken::HOLERND1FLAT:
-					break;
-				case DocFileParseToken::HOLERND2FLAT:
-					break;
-				case DocFileParseToken::HOLEROUND:
-					break;
-				case DocFileParseToken::DIMENSION:
-					break;
-				case DocFileParseToken::ORIGIN:
-					break;
-				}
-			}
-			catch (CString csError)
-			{
-				MessageBoxW(NULL, csError, _T("Bad FrontCad Document"), MB_ICONHAND | MB_OK);
-			}
-		}
+		CString FileName;
+		FileName = Dlg.GetPathName();
+		Parser.Create(FileName);
 	}
 }
 #endif
@@ -174,7 +130,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	//	returns:
 	//		number of objects that are under the point
 	//--------------------------------------------
-	CCadObject* pObject = GetHead();
+	CCadObject* pObject = GetDrawing()->GetHead();
 	int index = 0;
 
 	while (pObject && (index < n))

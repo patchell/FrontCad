@@ -14,9 +14,10 @@ public:
 	CCadDimension();
 	virtual ~CCadDimension();
 	virtual void OnCreate(void);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::DIMENSION; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual BOOL PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -30,7 +31,11 @@ public:
 	virtual CString& GetObjDescription();
 	virtual CPoint ScalePoint(CPoint p, int Scale, int ScaleDiv);
 	virtual CCadObject * CopyObject(void);
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+	);
 	void CopyAttributesFrom(SCadDimAttributes *pAttrib);
 	void CopyAttributesTo(SCadDimAttributes* pAttrib);
 	int EditProperties();
@@ -73,7 +78,7 @@ public:
 		m_LineType = 0;
 	};
 	void Create(CCadPoint P1, CCadPoint P2, UINT LineType);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	//---------------------------------------------
 	void SetSlope(double m) { m_Slope = m; }
 	double GetSlope() { return m_Slope; }

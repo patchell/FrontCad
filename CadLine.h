@@ -20,10 +20,11 @@ public://public methodes
 	CCadLine();
 	CCadLine(CCadLine &line);
 	virtual ~CCadLine();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::LINE; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(
 		DOUBLEPOINT point
 	);
@@ -39,7 +40,11 @@ public://public methodes
 	virtual CString& GetObjDescription();
 	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken);
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+	);
 	//---------------------------------------------
 	// Draw Object Methodes
 	//---------------------------------------------

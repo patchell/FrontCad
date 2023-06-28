@@ -1,9 +1,8 @@
 #include "pch.h"
 
-CCadBitmap::CCadBitmap():CCadObject()
+CCadBitmap::CCadBitmap():CCadObject(ObjectType::BITMAPTYPE)
 {
 	m_pBM = 0;
-	SetType(ObjectType::BITMAP);
 	GetName().Format(_T("Bitmap_%d"), ++m_BitmapCount);
 	if (NeedsAttributes())
 	{
@@ -19,23 +18,23 @@ CCadBitmap::~CCadBitmap()
 	if (m_pBM) delete m_pBM;
 }
 
-BOOL CCadBitmap::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadBitmap::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin, type);
+	CCadObject::Create(pParent, type);
 	if (pParent == NULL)
 		pParent = this;
 
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::VERTEX);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::VERTEX);
 	Obj.pCadPoint->SetSubSubType(1);
-	AddObjectAtChildTail(Obj.pCadObject);
+	AddObjectAtTail(Obj.pCadObject);
 
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::VERTEX);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::VERTEX);
 	Obj.pCadPoint->SetSubSubType(2);
-	AddObjectAtChildTail(Obj.pCadObject);
+	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
 }
 
@@ -54,7 +53,7 @@ void CCadBitmap::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadBitmap::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
+void CCadBitmap::Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -67,7 +66,7 @@ void CCadBitmap::Save(FILE* pO, DocFileParseToken Token, int Indent, int flags)
 }
 
 
-void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -89,13 +88,13 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		ObjP1.pCadObject = FindChildObject(ObjectType::RECT, SubType::VERTEX, 1);
-		ObjP2.pCadObject = FindChildObject(ObjectType::RECT, SubType::VERTEX, 2);
-		ObjP1.pCadPoint->ToPixelRect(ObjP2.pCadPoint, rect, ULHC, Scale);
+		ObjP1.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::VERTEX, 1);
+		ObjP2.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::VERTEX, 2);
+		ObjP1.pCadPoint->ToPixelRect(ObjP2.pCadPoint, rect, LLHC, Scale);
 
-		switch (mode.DrawMode)
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
+		case MODE::ObjectPaintMode::FINAL:
 			bmDC.CreateCompatibleDC(pDC);
 			bitmapOld = bmDC.SelectObject(this->m_pBM);
 			pDC->StretchBlt(
@@ -122,7 +121,7 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 				pDC->SelectObject(ppenOld);
 			}
 			break;
-		case ObjectDrawMode::SKETCH:
+		case MODE::ObjectPaintMode::SKETCH:
 			penLine.CreatePen(PS_DOT, 1, RGB(255, 0, 0));
 			ppenOld = pDC->SelectObject(&penLine);
 			pDC->DrawDragRect(&rect, CSize(1, 1), NULL, CSize(1, 1));
@@ -137,7 +136,7 @@ BOOL CCadBitmap::PointInThisObject(DOUBLEPOINT point)
 	BOOL rV;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -242,12 +241,16 @@ CDoubleSize CCadBitmap::GetSize()
 	//--------------------------------------------------
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
 
 	return Obj.pCadRect->GetSize();
 }
 
-DocFileParseToken CCadBitmap::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadBitmap::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
 	//--------------------------------------------------
 	// Parse
@@ -342,8 +345,8 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		ObjP1.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 1);
-		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
+		ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
@@ -353,10 +356,10 @@ ObjectDrawState CCadBitmap::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		ObjP2.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
 		ObjP2.pCadPoint->SetPoint(MousePos);
 		GETVIEW->EnableAutoScroll(FALSE);
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
 		GETVIEW->Invalidate();
@@ -386,7 +389,7 @@ ObjectDrawState CCadBitmap::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::VERTEX, 2);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
 		Obj.pCadPoint->SetPoint(MousePos);
 		break;
 	}
@@ -421,7 +424,7 @@ void CCadBitmap::RestoreAspectRatio()
 	CADObjectTypes Obj;
 	double AspectRatioBM;
 
-	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
 	AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
 	Obj.pCadRect->SetHeight(AspectRatioBM * Obj.pCadRect->GetWidth());
 	GetAttributes().m_MaintainAspectRatio = TRUE;

@@ -256,7 +256,11 @@ void CFrontCadApp::OnAppAbout()
 
 void CFrontCadApp::SetClipBoardRef(DOUBLEPOINT p)
 {
-	m_ClipBoard.SetRef(p);
+	//----------------------------------------
+	// Sets the reference point for objects
+	// in the clipboard
+	//----------------------------------------
+	GetClipBoard()->SetRef(p);
 }
 
 //----------------------------------------------
@@ -267,7 +271,6 @@ void CFrontCadApp::LoadSettings()
 {
 	SArcAttributes::LoadSettings(&m_ArcAttributes);
 	SArcCenterAttributes::LoadSettings(&m_ArcCenterAttributes);
-	SArcAngleAttributes::LoadSettings(&m_ArcAngleAttributes);
 	SArrowAttributes::LoadSettings(&m_ArrowAttributes);
 	SCadDimAttributes::LoadSettings(&m_DimensionAttributes);
 	SEllipseAttributes::LoadSettings(&m_EllipseAttributes);
@@ -290,7 +293,6 @@ void CFrontCadApp::SaveSettings()
 {
 	SArcAttributes::SaveSettings(&m_ArcAttributes);
 	SArcCenterAttributes::SaveSettings(&m_ArcCenterAttributes);
-	SArcAngleAttributes::SaveSettings(&m_ArcAngleAttributes);
 	SArrowAttributes::SaveSettings(&m_ArrowAttributes);
 	SCadDimAttributes::SaveSettings(&m_DimensionAttributes);
 	SEllipseAttributes::SaveSettings(&m_EllipseAttributes);
@@ -309,64 +311,61 @@ void CFrontCadApp::SaveSettings()
 	SPointAttributes::SaveSettings(&m_PointAttributes);
 }
 
-void* CFrontCadApp::GetObjectDefaultAttributes(ObjectType ObjectType)
+void* CFrontCadApp::GetObjectDefaultAttributes(CCadObject::ObjectType ObjectType)
 {
 	void* pAttributes;
 
 	switch (ObjectType)
 	{
-		case ObjectType::ARC:
+	case CCadObject::ObjectType::ARC:
 			pAttributes = (void*)&m_ArcAttributes;
 			break;
-		case ObjectType::ARCCENTERED:
+		case CCadObject::ObjectType::ARCCENTERED:
 			pAttributes = (void*)&m_ArcCenterAttributes;
 			break;
-		case ObjectType::ARCANGLE:
-			pAttributes = (void*)&m_ArcAngleAttributes;
-			break;
-		case ObjectType::ARROW:
+		case CCadObject::ObjectType::ARROW:
 			pAttributes = (void*)&m_ArrowAttributes;
 			break;
-		case ObjectType::BITMAP:
+		case CCadObject::ObjectType::BITMAPTYPE:
 			pAttributes = (void*)0;
 			break;
-		case ObjectType::DIMENSION:
+		case CCadObject::ObjectType::DIMENSION:
 			pAttributes = (void*)&m_DimensionAttributes;
 			break;
-		case ObjectType::ELIPSE:
+		case CCadObject::ObjectType::ELIPSE:
 			pAttributes = (void*)&m_EllipseAttributes;
 			break;
-		case ObjectType::HOLE_RECTANGLE:
+		case CCadObject::ObjectType::HOLE_RECTANGLE:
 			pAttributes = (void*)&m_RectangularHoleAtrributes;
 			break;
-		case ObjectType::HOLE_RND1FLAT:
+		case CCadObject::ObjectType::HOLE_RND1FLAT:
 			pAttributes = (void*)&m_RoundHole1FlatAttributes;
 			break;
-		case ObjectType::HOLE_RND2FLAT:
+		case CCadObject::ObjectType::HOLE_RND2FLAT:
 			pAttributes = (void*)&m_RoundHole2FlatsAttributes;
 			break;
-		case ObjectType::HOLE_ROUND:
+		case CCadObject::ObjectType::HOLE_ROUND:
 			pAttributes = (void*)&m_RoundHoleAttributes;
 			break;
-		case ObjectType::LIBCOMP:
+		case CCadObject::ObjectType::LIBPART:
 			pAttributes = (void*)0;
 			break;
-		case ObjectType::LINE:			//drawing case ObjectType::OBJECTs
+		case CCadObject::ObjectType::LINE:			//drawing case ObjectType::OBJECTs
 			pAttributes = (void*)&m_LineAttributes;
 			break;
-		case ObjectType::ORIGIN:
+		case CCadObject::ObjectType::ORIGIN:
 			pAttributes = (void*)&m_OriginAttributes;
 			break;
-		case ObjectType::POLYGON:
+		case CCadObject::ObjectType::POLYGON:
 			pAttributes = (void*)&m_PolygonAttributes;
 			break;
-		case ObjectType::RECT:
+		case CCadObject::ObjectType::RECT:
 			pAttributes = (void*)&m_RectangleAttributes;
 			break;
-		case ObjectType::ROUNDEDRECT:
+		case CCadObject::ObjectType::ROUNDEDRECT:
 			pAttributes = (void*)&m_RoundedRectangleAttributes;
 			break;
-		case ObjectType::TEXT:
+		case CCadObject::ObjectType::TEXT:
 			pAttributes = (void*)&m_TextAttributes;
 			break;
 		default:
@@ -380,10 +379,10 @@ void* CFrontCadApp::GetObjectDefaultAttributes(ObjectType ObjectType)
 // String Methods
 //----------------------------------------------
 
-char * CFrontCadApp::MkIndentString(char *pDest, int count, int c)
+char * CFrontCadApp::IndentString(char *pDest, int count, int c)
 {
 	//-----------------------------------------
-	// MkIndentString
+	// IndentString
 	//	This method is used to create an Indent
 	// that is generally used in saving files.
 	//	parameters:
@@ -820,7 +819,7 @@ CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
 	CPoint* dest,
 	DOUBLEPOINT* src,
 	int n,
-	DOUBLEPOINT& ULHC,
+	DOUBLEPOINT& LLHC,
 	CScale& Scale
 )
 {
@@ -828,7 +827,7 @@ CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
 
 	for (i = 0; i < n; ++i)
 	{
-		dest[i] = CPoint((ULHC + src[i]) * Scale);
+		dest[i] = CPoint((LLHC + src[i]) * Scale);
 	}
 	return dest;
 }
@@ -1175,78 +1174,6 @@ double CFrontCadApp::ArcSin(double X, double Y)
 		return Angle;
 }
 
-//------------------------------------------------
-// Saving Various Attributes
-//-----------------------------------------------
-
-void CFrontCadApp::SaveColor(
-	FILE* pO, 
-	int Indent, 
-	COLORREF color, 
-	DocFileParseToken Token)
-{
-	char* IndentString = new char[256];
-	MkIndentString(IndentString, Indent, ' ');
-	fprintf(pO, "%s%s(", 
-		IndentString,
-		CLexer::TokenToString(Token));
-	fprintf(pO, "%s(%d),",
-		CLexer::TokenToString(DocFileParseToken::RED),
-		RED(color)
-	);
-	fprintf(pO, "%s(%d),",
-		CLexer::TokenToString(DocFileParseToken::GREEN),
-		GREEN(color)
-	);
-	fprintf(pO, "%s(%d)",
-		CLexer::TokenToString(DocFileParseToken::BLUE),
-		BLUE(color)
-	);
-	CloseParen(pO);
-	NewLine(pO);
-	delete[]IndentString;
-}
-
-void CFrontCadApp::SaveString(FILE* pO, int Indent, CString& csStr, DocFileParseToken Token)
-{
-	char* IndentString = new char[256];
-	char* StringString = new char[256];
-
-	MkIndentString(IndentString, Indent);
-	fprintf(pO, "%s%s(\"%s\"\n",
-		IndentString,
-		CLexer::TokenToString(Token),
-		ConvertCStringToChar(StringString, csStr)
-	);
-	delete[] StringString;
-	delete[] IndentString;
-}
-
-void CFrontCadApp::SaveDouble(FILE* pO, int Indent, double v, DocFileParseToken Token)
-{
-	char* IndentString = new char[256];
-
-	MkIndentString(IndentString, Indent);
-	fprintf(pO, "%s%s(%6.1lf)\n",
-		IndentString,
-		CLexer::TokenToString(Token),
-		v
-	);
-	delete[] IndentString;
-}
-
-void CFrontCadApp::SaveUINT(FILE* pO, int Indent, UINT v, DocFileParseToken Token)
-{
-	char* IndentString = new char[256];
-
-	MkIndentString(IndentString, Indent);
-	fprintf(pO, "%s%s(%u)\n",
-		IndentString,
-		CLexer::TokenToString(Token),
-		v
-	);
-	delete[] IndentString;
-}
 
 void CFrontCadApp::OnFileOpen()
 {

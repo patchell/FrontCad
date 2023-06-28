@@ -12,11 +12,12 @@ class CCadArrow :public CCadObject
 public:
 	CCadArrow();
 	virtual ~CCadArrow();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARROW; }
 	virtual void Move(CDoubleSize Diff);
 	virtual CDoubleSize GetSize();
-	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT pPoint,
@@ -29,10 +30,10 @@ public:
 	virtual CString& GetTypeString(void);
 	virtual CString& GetObjDescription();
 	virtual CCadObject* CopyObject(void);
-	virtual DocFileParseToken Parse(
-		DocFileParseToken Token,
-		CLexer* pLex,
-		DocFileParseToken TypeToken = DocFileParseToken::ARROW
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,
+		CFileParser* pParser,
+		CLexer::Tokens TypeToken = CLexer::Tokens::ARROW
 	);
 	//---------------------------------------------
 	// Draw Object Methodes
@@ -58,7 +59,7 @@ public:
 	double GetL1();
 	double GetL2();
 	double GetW();
-	void MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);;
+	void MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);;
 	//--------------------------------------------
 	static BOOL NeedsAttributes() {
 		return (m_AttributesGood == FALSE);

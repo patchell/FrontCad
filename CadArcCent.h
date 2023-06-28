@@ -12,11 +12,12 @@ class CCadArcCent :public CCadObject
 public:
 	CCadArcCent();
 	virtual ~CCadArcCent();
-	BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARC_CENTER; }
 	virtual CString& GetObjDescription();
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -28,10 +29,10 @@ public:
 	);
 	CString& GetTypeString(void);
 	virtual CCadObject* CopyObject(void);
-	virtual DocFileParseToken Parse(
-		DocFileParseToken Token,
-		CLexer* pLex,
-		DocFileParseToken TypeToken = DocFileParseToken::ARCCENTERED
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,
+		CFileParser* pParser,
+		CLexer::Tokens TypeToken = CLexer::Tokens::ARC_CENTER
 	);
 	//---------------------------------------------
 	// Draw Object Methodes
@@ -42,7 +43,7 @@ public:
 	// object geometry
 	//------------------------------------------
 	DOUBLEPOINT CalculateP2(CCadPoint* pPC, CCadPoint* pP1);
-//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
+//	void DrawArc(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 //	double CalcY(double x, double A, double B);
 //	BadDelta DeltaIsBad(CPoint P1, CPoint P2);
 //	CDoubleSize SlopeIsOneAt(double Asquared, double Bsquared);

@@ -1,6 +1,7 @@
 #pragma once
 //------------------------------------------
 
+constexpr auto MAX_STRING_FIELD_SIZE = 128;
 #define GETAPP	(theApp)
 #define GETVIEW	((CFrontCadView *)(theApp.GetCurrentView()))
 //------------------------------------------
@@ -146,12 +147,14 @@ union CADObjectTypes {
 	class CCadArrow *pCadArrow;
 	class CCadBitmap *pCadBitmap;
 	class CCadDimension *pCadDimension;
-	class CCadElispe *pCadElispe;
+	class CCadDrawing* pCadDrawing;
+	class CCadEllipse *pCadElispe;
 	class CCadHoleRect *pCadHoleRect;
 	class CCadHoleRnd1Flat *pCadHoleRnd1Flat;
 	class CCadHoleRnd2Flat *pCadHoleRnd2Flat;
 	class CCadHoleRound *pCadHoleRound;
-	class CCadLibComp *pCadLibComp;
+	class CCadLibPart*pCadLibPart;
+	class CCadLibrary* pLibrary;
 	class CCadLine *pCadLine;
 	class CCadOrigin *pCadOrigin;
 	class CCadPoint* pCadPoint;
@@ -214,86 +217,6 @@ enum class DrawingCheckSelectFlags {
 };
 
 
-//----------------------------------
-// Defines for parsers
-//----------------------------------
-
-enum class DocFileParseToken {
-	EOFToken = -1,
-	ERRORToken,
-	MATCHED,
-	NUM	=256,
-	STRING,
-	LINE,
-	RECT,
-	ELIPSE,
-	ROUNDRECT,
-	POLYGON,
-	LIBPART,
-	HOLEROUND,
-	HOLERECT,
-	HOLERND1FLAT,
-	HOLERND2FLAT,
-	TEXT,
-	ARC,
-	ARCCENTERED,
-	ARCANGLE,
-	BITMAP,
-	ARROW,
-	ORIGIN,
-	DIMENSION,
-	COLOR,
-	BKCOLOR,
-	FILLCOLOR,
-	WIDTH,
-	POINT,
-	SIZE,
-	DRAWING,
-	RED,
-	GREEN,
-	BLUE,
-	RADIUS,
-	VERTEX,
-	FONT,
-	WEIGHT,
-	HEIGHT,
-	ANGLE,
-	TRANSPARENTToken,
-	DOUBLERECT,
-	SHAPE,
-	START,
-	END,
-	CENTER,
-	ARROW_TIP,
-	ARROW_END,
-	ATTRIB_ARC,
-	ATTRIB_ARCANGLE,
-	ATTRIB_ARCCENTER,
-	ATTRIB_ARROW,
-	ATTRIB_BITMAP,
-	ATTRIB_DIMENSION,
-	ATTRIB_ELLIPSE,
-	ATTRIB_HOLERECT,
-	ATTRIB_HOLERND1F,
-	ATTRIB_HOLERND2F,
-	ATTRIB_HOLERND,
-	ATTRIB_LINE,
-	ATTRIB_ORIGIN,
-	ATTRIB_POLYGON,
-	ATTRIB_RECT,
-	ATTRIB_RNDRECT,
-	ATTRIB_TEXT,
-	TEXTCOLOR,
-	LINECOLOR,
-	FORMAT
-};
-
-struct KEYWORD {
-	DocFileParseToken m_Token;
-	const char *m_pName;
-};
-
-
 //-----------------------------------
 // CCadObject Enable Flags
 //-----------------------------------
@@ -325,7 +248,7 @@ constexpr auto OBJKIND_HOLE_RECTANGLE = 0x00000080;
 constexpr auto OBJKIND_HOLE_RND1FLAT = 0x00000100;
 constexpr auto OBJKIND_HOLE_RND2FLAT = 0x00000200;
 constexpr auto OBJKIND_HOLE_ROUND = 0x00000400;
-constexpr auto OBJKIND_LIBCOMP = 0x00000800;
+constexpr auto OBJKIND_LIBPART = 0x00000800;
 constexpr auto OBJKIND_LINE = 0x00001000;			
 constexpr auto OBJKIND_ORIGIN = 0x00002000;
 constexpr auto OBJKIND_POINT = 0x00004000;
@@ -334,86 +257,13 @@ constexpr auto OBJKIND_RECT = 0x00010000;
 constexpr auto OBJKIND_RECT_ROTATED = 0X00020000;
 constexpr auto OBJKIND_ROUNDEDRECT = 0x00040000;
 constexpr auto OBJKIND_TEXT = 0x00080000;
+constexpr auto OBJKIND_DRAWING = 0x00100000;
 constexpr auto OBJKIND_CHOOSE = 0x40000000;
 constexpr auto OBJKIND_SELECT = 0x80000000;
 
 
 constexpr auto MAX_SNAPS = 16;
 
-//----------------------------------
-// CCadObject derived types
-//----------------------------------
-
-enum class ObjectType{
-	BASE		=0,
-	ARC,
-	ARCCENTERED,
-	ARCANGLE,
-	ARROW,
-	BITMAP,
-	DIMENSION,
-	ELIPSE,
-	HOLE_RECTANGLE,
-	HOLE_RND1FLAT,
-	HOLE_RND2FLAT,
-	HOLE_ROUND,
-	LIBCOMP,
-	LINE,			//drawing objects
-	ORIGIN,
-	POINT,
-	POLYGON,
-	RECT,
-	RECT_ROTATED,
-	ROUNDEDRECT,
-	TEXT	
-};
-
-//--------------------------------------------
-// Catagories for Object Types
-// -------------------------------------------
-enum class SubType{
-	ANY,						//0
-	DEFALT,						//1
-	LINE_FIXED_LEN,
-	//--- Arc/Ellipse ---
-	RECTSHAPE,
-	STARTPOINT,
-	ENDPOINT,
-	//--- Arrow Points ---
-	ARROW_TIP,
-	ARROW_END,
-	ARROW_TOP,
-	ARROW_BOT,
-	ARROW_ROTATION,
-	//--- Rectangle Subtypes ---
-	RECT_ROTATED,
-	RECT_FROM_CENTER,
-	RECT_BASE_DEFINED,
-	//--- Rectangle Points ---
-	RECT_TOP_CENTER,
-	RECT_BOT_CENTER,
-	RECT_LEFT_CENTER,
-	RECT_RGIHT_CENTER,
-	CORNER_RADIUS,
-	//--- Text Point Subtypes ---
-	TEXT_LOCATION,
-	TEXT_ROTATION,
-	TEXT_RECT,
-	//--- Misc Point Subtypes ---
-	ORIGIN_LOCATION,
-	CENTERPOINT,
-	PIVOTPOINT,
-	MIDPOINT,
-	ROTATION_POINT,
-	VERTEX,
-	RIGHTANGLE_VERTEX
-};
-
-constexpr auto SUBSUBTYPE_ANY = 0;
-constexpr auto RECT_SUBSUB_UL = 1;
-constexpr auto RECT_SUBSUB_LL = 2;
-constexpr auto RECT_SUBSUB_LR = 3;
-constexpr auto RECT_SUBSUB_UR = 4;
 
 
 //--------------------------------------------
@@ -421,19 +271,19 @@ constexpr auto RECT_SUBSUB_UR = 4;
 // these values are used to dtermine how
 // various objects are drawin
 //--------------------------------------------
-enum class ObjectDrawMode {
-	NOP = -1,
-	FINAL=0,
-	SKETCH,
-	ARCSTART,
-	ARCEND,
-	GRABBED,
-};
 
 struct MODE {
-	ObjectDrawMode DrawMode;
+	enum ObjectPaintMode {
+		NOP = -1,
+		FINAL = 0,
+		SKETCH,
+		ARCSTART,
+		ARCEND,
+		GRABBED,
+	};
+	ObjectPaintMode PaintMode;
 	MODE() {
-		DrawMode = ObjectDrawMode::NOP;
+		PaintMode = ObjectPaintMode::NOP;
 	}
 };
 

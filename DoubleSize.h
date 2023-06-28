@@ -1,6 +1,6 @@
 #pragma once
 
-class CLexer;
+class CFileParser;
 
 constexpr auto DOUBLESIZE_RADIANS = FALSE;
 constexpr auto DOUBLESIZE_DEGREES = TRUE;;
@@ -56,9 +56,10 @@ public:
 		Result = CDoubleSize(dCX / x, dCY / x);
 		return Result;
 	}
-	DocFileParseToken Parse(
-		DocFileParseToken Token,
-		CLexer* pLex
+	CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
 	);
 	double Magnitude() {
 		return sqrt(dCX * dCX + dCY * dCY);

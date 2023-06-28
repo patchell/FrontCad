@@ -1,8 +1,7 @@
 #include "pch.h"
 
-CCadArrow::CCadArrow():CCadObject()
+CCadArrow::CCadArrow():CCadObject(ObjectType::ARROW)
 {
-	SetType(ObjectType::ARROW);
 	GetName().Format(_T("Arrow%d"), ++CCadArrow::m_ArrowCount);
 	if (NeedsAttributes())
 	{
@@ -17,28 +16,28 @@ CCadArrow::~CCadArrow()
 {
 }
 
-BOOL CCadArrow::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadArrow::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin, type);
+	CCadObject::Create(pParent, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_TIP);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARROW_TIP);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_TOP);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARROW_TOP);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_END);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARROW_END);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_BOT);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARROW_BOT);
+	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::ARROW_ROTATION);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARROW_ROTATION);
+	AddObjectAtTail(Obj.pCadObject);
 
 	return TRUE;
 }
@@ -58,7 +57,7 @@ void CCadArrow::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadArrow::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadArrow::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -70,7 +69,7 @@ void CCadArrow::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
 	//--------------------------------------------------
 }
 
-void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -92,18 +91,18 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		MakeCPointArray(ArrowPoints, pDC, mode, ULHC, Scale);
+		MakeCPointArray(ArrowPoints, pDC, mode, LLHC, Scale);
 		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
 		if (Lw < 1)
 			Lw = 1;
-		TIP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
-		TOP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
-		END.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
-		BOT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
-		ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
-		switch (mode.DrawMode)
+		TIP.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TIP, 0);
+		TOP.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TOP, 0);
+		END.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_END, 0);
+		BOT.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_END, 0);
+		ROT.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_ROTATION, 0);
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
+		case MODE::ObjectPaintMode::FINAL:
 			if (IsSelected())
 			{
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
@@ -120,7 +119,7 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 			pDC->SelectObject(pOldPen);
 			pDC->SelectObject(pOldBr);
 			break;
-		case ObjectDrawMode::SKETCH:
+		case MODE::ObjectPaintMode::SKETCH:
 			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			brushFill.CreateStockObject(NULL_BRUSH);
@@ -139,13 +138,13 @@ BOOL CCadArrow::PointInThisObject(DOUBLEPOINT point)
 	CADObjectTypes Obj;
 	BOOL rV;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TIP, 0);
 	Points[ARROW_TIP] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TOP, 0);
 	Points[ARROW_TOP] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_END, 0);
 	Points[ARROW_BACK] = DOUBLEPOINT(*Obj.pCadPoint);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_BOT, 0);
 	Points[ARROW_BOT] = DOUBLEPOINT(*Obj.pCadPoint);
 	rV = GETAPP.PtEnclosedInPolygon(point, Points,4);
 	return rV;
@@ -233,7 +232,7 @@ CCadObject * CCadArrow::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadArrow *pArrow = new CCadArrow;
-	pArrow->Create(GetParent(), GetOrigin());
+	pArrow->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pArrow);
 	return pArrow;
 }
@@ -255,7 +254,11 @@ CDoubleSize CCadArrow::GetSize()
 }
 
 
-DocFileParseToken CCadArrow::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadArrow::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
 	//--------------------------------------------------
 	// Parse
@@ -353,9 +356,9 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TIP, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_ROTATION, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::ROTATE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Place Rotation Point"));
@@ -365,9 +368,9 @@ ObjectDrawState CCadArrow::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::ROTATE_LBUTTON_UP:
 		Rotate(MousePos);
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		Obj.pCadArrow = new CCadArrow;
-		Obj.pCadArrow->Create(GetParent(), GetOrigin());
+		Obj.pCadArrow->Create(GetParent(), GetSubType());
 		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Arrow:Locate Arrow Tip Point"));
@@ -415,13 +418,13 @@ void CCadArrow::Rotate(DOUBLEPOINT MousePos)
 	CCadPoint pointExtent;
 
 
-	TIP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
-	TOP.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
-	END.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
-	BOT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
+	TIP.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TIP, 0);
+	TOP.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TOP, 0);
+	END.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_END, 0);
+	BOT.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_BOT, 0);
 	//------------------------------------------------------------
 	// This point defines the angle that the arrow is 
-	ROT.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_ROTATION, 0);
+	ROT.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_ROTATION, 0);
 	ROT.pCadPoint->SetPoint(MousePos);
 	//------------------------------------
 	// rotate the End point
@@ -513,18 +516,18 @@ int CCadArrow::EditProperties()
 	return Id;
 }
 
-void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadArrow::MakeCPointArray(CPoint* PolyPoints, CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TIP, 0);
-	PolyPoints[ARROW_TIP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_TOP, 0);
-	PolyPoints[ARROW_TOP] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_END, 0);
-	PolyPoints[ARROW_BACK] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
-	Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::ARROW_BOT, 0);
-	PolyPoints[ARROW_BOT] = Obj.pCadPoint->ToPixelPoint(ULHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TIP, 0);
+	PolyPoints[ARROW_TIP] = Obj.pCadPoint->ToPixelPoint(LLHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_TOP, 0);
+	PolyPoints[ARROW_TOP] = Obj.pCadPoint->ToPixelPoint(LLHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_END, 0);
+	PolyPoints[ARROW_BACK] = Obj.pCadPoint->ToPixelPoint(LLHC, Scale);
+	Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARROW_BOT, 0);
+	PolyPoints[ARROW_BOT] = Obj.pCadPoint->ToPixelPoint(LLHC, Scale);
 }
 
 //-------------------------------------------

@@ -1,9 +1,8 @@
 #include "pch.h"
 
 
-CCadHoleRect::CCadHoleRect():CCadObject()
+CCadHoleRect::CCadHoleRect():CCadObject(ObjectType::HOLE_RECTANGLE)
 {
-	SetType(ObjectType::HOLE_RECTANGLE);
 	GetName().Format(_T("RectangleHole_%d"), ++m_RectHoleCount);
 	if (NeedsAttributes())
 	{
@@ -18,16 +17,16 @@ CCadHoleRect::~CCadHoleRect()
 {
 }
 
-BOOL CCadHoleRect::Create(CCadObject* pParent, CCadObject* pOrigin, SubType type)
+BOOL CCadHoleRect::Create(CCadObject* pParent, SubTypes type)
 {
 	CADObjectTypes Obj;
 
-	CCadObject::Create(pParent, pOrigin, type);
+	CCadObject::Create(pParent, type);
 	if (pParent == NULL)
 		pParent = this;
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, pOrigin, SubType::CENTERPOINT);
-	AddObjectAtChildTail(Obj.pCadObject);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::CENTERPOINT);
+	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
 }
 
@@ -46,7 +45,7 @@ void CCadHoleRect::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadHoleRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadHoleRect::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//---------------------------------------------------
 	// Save
@@ -58,7 +57,7 @@ void CCadHoleRect::Save(FILE * pO, DocFileParseToken Token, int Indent, int flag
 	//--------------------------------------------------
 }
 
-void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//---------------------------------------------------
 	// Draw
@@ -85,27 +84,27 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 		brushFill.CreateStockObject(NULL_BRUSH);
 		W2 = GetAttributes().m_HoleWidth / 2.0;
 		H2 = GetAttributes().m_HoleHeight / 2.0;
-		ObjCenter.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		ObjCenter.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		P1 = *ObjCenter.pCadPoint + CDoubleSize(-W2, -H2);
 		P2 = *ObjCenter.pCadPoint + CDoubleSize(W2, H2);
 		Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetAttributes().m_LineWidth);
 		if (Lw < 1) Lw = 1;
 
-		switch (mode.DrawMode)
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
-		case ObjectDrawMode::SKETCH:
+		case MODE::ObjectPaintMode::FINAL:
+		case MODE::ObjectPaintMode::SKETCH:
 			pOldBrush = pDC->SelectObject(&brushFill);
 			if(IsSelected())
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			else
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOldPen = pDC->SelectObject(&penLine);
-			P2.ToPixelRect(&P1, pDC, ULHC, Scale);
-			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta,Delta),pDC,ULHC,Scale);
-			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta, -Delta), pDC, ULHC, Scale);
-			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, Delta), pDC, ULHC, Scale);
-			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, -Delta), pDC, ULHC, Scale);
+			P2.ToPixelRect(&P1, pDC, LLHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta,Delta),pDC,LLHC,Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(Delta, -Delta), pDC, LLHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, Delta), pDC, LLHC, Scale);
+			ObjCenter.pCadPoint->LineFromHereToThere(CDoubleSize(-Delta, -Delta), pDC, LLHC, Scale);
 			pDC->SelectObject(pOldBrush);
 			break;
 		}
@@ -116,7 +115,7 @@ BOOL CCadHoleRect::PointInThisObject(DOUBLEPOINT point)
 {
 	CADObjectTypes Obj;
 	BOOL rV;
-	Obj.pCadObject = FindChildObject(ObjectType::RECT, SubType::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -223,7 +222,11 @@ CDoubleSize CCadHoleRect::GetSize()
 	return CSize();
 }
 
-DocFileParseToken CCadHoleRect::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadHoleRect::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken// Token type to save object as
+)
 {
 	//---------------------------------------------------
 	// Parse
@@ -321,12 +324,12 @@ ObjectDrawState CCadHoleRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		Obj.pCadHoleRect = new CCadHoleRect;
 		GETVIEW->SetObjectTypes(Obj.pCadHoleRect);
-		Obj.pCadHoleRect->Create(GetParent(), GetOrigin());
+		Obj.pCadHoleRect->Create(GetParent(), GetSubType());
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Rectangular Hole:Place Center Point"));
 		GETVIEW->Invalidate();
@@ -355,7 +358,7 @@ ObjectDrawState CCadHoleRect::MouseMove(ObjectDrawState DrawState)
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindChildObject(ObjectType::POINT, SubType::CENTERPOINT, 0);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(MousePos);
 		GETVIEW->Invalidate();
 		break;

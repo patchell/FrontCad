@@ -1,10 +1,8 @@
 #include "pch.h"
-#include "CadDimension.h"
 
 
-CCadDimension::CCadDimension():CCadObject()
+CCadDimension::CCadDimension():CCadObject(ObjectType::DIMENSION)
 {
-	SetType(ObjectType::DIMENSION);
 	GetName().Format(_T("Dimension_%d"), ++m_DimensionCount);
 	if (NeedsAttributes())
 	{
@@ -40,7 +38,7 @@ void CCadDimension::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadDimension::Save(FILE * pO, DocFileParseToken Token, int Indent, int flags)
+void CCadDimension::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -52,7 +50,7 @@ void CCadDimension::Save(FILE * pO, DocFileParseToken Token, int Indent, int fla
 	//--------------------------------------------------
 }
 
-void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -67,12 +65,12 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	//--------------------------------------------------
 	if (IsRenderEnabled())
 	{
-		if (GetChildrenHead())
+		if (GetHead())
 		{
-			CCadObject* pObj = GetChildrenHead();
+			CCadObject* pObj = GetHead();
 			while (pObj)
 			{
-				pObj->Draw( pDC, mode, ULHC, Scale);
+				pObj->Draw( pDC, mode, LLHC, Scale);
 				pObj = pObj->GetNext();
 			}
 		}
@@ -180,7 +178,11 @@ CCadObject * CCadDimension::CopyObject(void)
 	return pCD;
 }
 
-DocFileParseToken CCadDimension::Parse(DocFileParseToken Token, CLexer *pLex, DocFileParseToken TypeToken)
+CLexer::Tokens CCadDimension::Parse(
+	CLexer::Tokens Token,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	CLexer::Tokens TypeToken // Token type to save object as
+)
 {
 	//--------------------------------------------------
 	// Parse
@@ -295,7 +297,7 @@ ObjectDrawState CCadDimension::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::EXTENSION_LINES_LBUTTON_UP:
 		DrawState = ObjectDrawState::SELECT_OBJECT_TO_DIMENSION_LBUTTON_DOWN;
 		GETVIEW->EnableAutoScroll(FALSE);
-		GETVIEW->GetDocument()->AddObjectAtTail(this);
+		GetParent()->AddObjectAtTail(this);
 		GETVIEW->SetObjectTypes(new CCadDimension);
 		GETAPP.UpdateStatusBar(_T("Dimension:Select Line To Dimension"));
 		GETVIEW->Invalidate();
@@ -339,7 +341,7 @@ void CDimLine::Create(CCadPoint P1, CCadPoint P2, UINT LineType)
 // CDimLine, Derived from CCadLine
 //----------------------------------------------------------------
 
-void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
+void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	//--------------------------------------------------
 	// Draw
@@ -347,7 +349,7 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	// parameters:
 	//	pDC.....pointer to the device context
 	//	mode....drawing mode
-	//	ULHC....Offset to draw objects at
+	//	LLHC....Offset to draw objects at
 	//	Scale..Scale factor to draw objects at
 	//
 	// return value:none
@@ -361,47 +363,47 @@ void CDimLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale)
 	{
 		Lw = int(Scale.dSX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
-		switch (mode.DrawMode)
+		switch (mode.PaintMode)
 		{
-		case ObjectDrawMode::FINAL:
+		case MODE::ObjectPaintMode::FINAL:
 			if(IsSelected())
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			else
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
 			pOldPen = pDC->SelectObject(&penLine);
-			ObjP1.pCadObject = FindChildObject(
+			ObjP1.pCadObject = FindObject(
 				ObjectType::POINT,
-				SubType::VERTEX,
+				CCadObject::SubTypes::VERTEX,
 				1
 			);
-			ObjP2.pCadObject = FindChildObject(
+			ObjP2.pCadObject = FindObject(
 				ObjectType::POINT,
-				SubType::VERTEX,
+				CCadObject::SubTypes::VERTEX,
 				2
 			);
-			ObjP1.pCadPoint->MoveTo(pDC, ULHC, Scale);
-			ObjP2.pCadPoint->LineTo(pDC, ULHC, Scale);
+			ObjP1.pCadPoint->MoveTo(pDC, LLHC, Scale);
+			ObjP2.pCadPoint->LineTo(pDC, LLHC, Scale);
 			pDC->SelectObject(pOldPen);
 			break;
-		case ObjectDrawMode::SKETCH:
+		case MODE::ObjectPaintMode::SKETCH:
 			penLine.CreatePen(
 				PS_DOT, 
 				1, 
 				GetAttributes().m_colorSelected
 			);
 			pOldPen = pDC->SelectObject(&penLine);
-			ObjP1.pCadObject = FindChildObject(
+			ObjP1.pCadObject = FindObject(
 				ObjectType::POINT,
-				SubType::VERTEX,
+				CCadObject::SubTypes::VERTEX,
 				1
 			);
-			ObjP2.pCadObject = FindChildObject(
+			ObjP2.pCadObject = FindObject(
 				ObjectType::POINT,
-				SubType::VERTEX,
+				CCadObject::SubTypes::VERTEX,
 				2
 			);
-			ObjP1.pCadPoint->MoveTo(pDC, ULHC, Scale);
-			ObjP2.pCadPoint->LineTo(pDC, ULHC, Scale);
+			ObjP1.pCadPoint->MoveTo(pDC, LLHC, Scale);
+			ObjP2.pCadPoint->LineTo(pDC, LLHC, Scale);
 			pDC->SelectObject(pOldPen);
 			break;
 		}	//end of switch(mode)

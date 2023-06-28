@@ -2,10 +2,12 @@
 
 #include "pch.h"
 
+SException Exception;
+
 // if you love a klugue and you're happy, clap your hands
 DOUBLEPOINT DOUBLEPOINT::Raw(
 	CPoint p,	//point in client view (pixels)
-	DOUBLEPOINT& ULHC,	//Upper Left Hand Corner offset
+	DOUBLEPOINT& LLHC,	//Upper Left Hand Corner offset
 	SCALE Scale	//Inches per pixel
 )
 {
@@ -15,15 +17,15 @@ DOUBLEPOINT DOUBLEPOINT::Raw(
 	// 
 	// 
 	//-------------------------------------
-	dX = double(p.x) * Scale.dSX + ULHC.dX;
-	dY = double(p.y) * Scale.dSY + ULHC.dY;
+	dX = double(p.x) * Scale.dSX + LLHC.dX;
+	dY = double(p.y) * Scale.dSY + LLHC.dY;
 	return *this;
 }
 
-DOUBLEPOINT DOUBLEPOINT::ULHCfromPixelPoint(CPoint point, double cX, double cY)
+DOUBLEPOINT DOUBLEPOINT::LLHCfromPixelPoint(CPoint point, double cX, double cY)
 {
 	//--------------------------------------------------
-	// ULHCfromPixelPoint
+	// LLHCfromPixelPoint
 	// Does the oposite of ToPixel Point. "this" defines
 	// the double point value where the point of
 	// interest is.
@@ -31,20 +33,20 @@ DOUBLEPOINT DOUBLEPOINT::ULHCfromPixelPoint(CPoint point, double cX, double cY)
 	// point.....The pixel in the window to map to
 	// cX,cY.....Scale factor in InchesPerPixel
 	//--------------------------------------------------
-	DOUBLEPOINT ULHC;
+	DOUBLEPOINT LLHC;
 
-	ULHC.dX = dX - double(point.x) * cX;
-	ULHC.dY = dY - double(point.y) * cY ;
-	ULHC.Print("**** ULHC ****");
-	return ULHC;
+	LLHC.dX = dX - double(point.x) * cX;
+	LLHC.dY = dY - double(point.y) * cY ;
+	LLHC.Print("**** LLHC ****");
+	return LLHC;
 }
 
-CPoint DOUBLEPOINT::ToPixelPoint(DOUBLEPOINT& ULHC,  double cX, double cY)
+CPoint DOUBLEPOINT::ToPixelPoint(DOUBLEPOINT& LLHC,  double cX, double cY)
 {
 	CPoint Result;
 
-	Result.x = GETAPP.RoundDoubleToInt((dX - ULHC.dX) * cX);
-	Result.y = GETAPP.RoundDoubleToInt((dY - ULHC.dY) * cY);
+	Result.x = GETAPP.RoundDoubleToInt((dX - LLHC.dX) * cX);
+	Result.y = GETAPP.RoundDoubleToInt((dY - LLHC.dY) * cY);
 	return Result;
 }
 

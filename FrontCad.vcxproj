@@ -191,11 +191,14 @@
     <ClInclude Include="CadArrow.h" />
     <ClInclude Include="CadBitmap.h" />
     <ClInclude Include="CadDimension.h" />
+    <ClInclude Include="CadDrawing.h" />
     <ClInclude Include="CadElispe.h" />
     <ClInclude Include="CadHoleRect.h" />
     <ClInclude Include="CadHoleRnd1Flat.h" />
     <ClInclude Include="CadHoleRnd2Flat.h" />
     <ClInclude Include="CadHoleRound.h" />
+    <ClInclude Include="CadLibPart.h" />
+    <ClInclude Include="CadLibrary.h" />
     <ClInclude Include="CadLine.h" />
     <ClInclude Include="CadObject.h" />
     <ClInclude Include="CadOrigin.h" />
@@ -235,6 +238,8 @@
     <ClInclude Include="DoubleSize.h" />
     <ClInclude Include="EditDecimal.h" />
     <ClInclude Include="EditText.h" />
+    <ClInclude Include="Exception.h" />
+    <ClInclude Include="FileParser.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FrontCad.h" />
     <ClInclude Include="FrontCadChildFrame.h" />
@@ -269,11 +274,14 @@
     <ClCompile Include="CadArrow.cpp" />
     <ClCompile Include="CadBitmap.cpp" />
     <ClCompile Include="CadDimension.cpp" />
+    <ClCompile Include="CadDrawing.cpp" />
     <ClCompile Include="CadElispe.cpp" />
     <ClCompile Include="CadHoleRect.cpp" />
     <ClCompile Include="CadHoleRnd1Flat.cpp" />
     <ClCompile Include="CadHoleRnd2Flat.cpp" />
     <ClCompile Include="CadHoleRound.cpp" />
+    <ClCompile Include="CadLibPart.cpp" />
+    <ClCompile Include="CadLibrary.cpp" />
     <ClCompile Include="CadLine.cpp" />
     <ClCompile Include="CadObject.cpp" />
     <ClCompile Include="CadOrigin.cpp" />
@@ -313,6 +321,7 @@
     <ClCompile Include="DoubleSize.cpp" />
     <ClCompile Include="EditDecimal.cpp" />
     <ClCompile Include="EditText.cpp" />
+    <ClCompile Include="FileParser.cpp" />
     <ClCompile Include="FrontCad.cpp" />
     <ClCompile Include="FrontCadChildFrame.cpp" />
     <ClCompile Include="FrontCadDoc.cpp" />

@@ -13,7 +13,8 @@ class CCadRect:public CCadObject
 public:
 	CCadRect();
 	virtual ~CCadRect();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::RECT; }
 	//------------------- Set Rectangle --------------------------------
 	void SetRect(DOUBLEPOINT P1, DOUBLEPOINT P2);
 	void SetRect(CCadPoint* pP1, CCadPoint* pP2);
@@ -46,22 +47,26 @@ public:
 	void SetAllPoints(DOUBLEPOINT p);
 	//------------------------------------------------------------------
 	virtual void Move(CDoubleSize Diff);
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
-	virtual void Save(FILE * pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+	);
+	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	//----------- dc paint methods ------------------
 	virtual void Draw(
 		CDC* pDC, 
 		MODE mode, 
-		DOUBLEPOINT& ULHC, 
+		DOUBLEPOINT& LLHC, 
 		CScale& Scale
 	);
-	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale, BOOL bFill);
+	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale, BOOL bFill);
 	void FillRect(
 		COLORREF colorBoarder,
 		COLORREF colorFill,
 		CDC* pDC, 
 		MODE mode, 
-		DOUBLEPOINT& ULHC, 
+		DOUBLEPOINT& LLHC, 
 		CScale& Scale
 	);
 	//------------------------------------------------------------------

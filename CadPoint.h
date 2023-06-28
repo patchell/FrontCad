@@ -3,7 +3,6 @@
 
 class CCadPoint : public CCadObject
 {
-	friend CCadRect;
 	inline static BOOL m_AttributesDirty = FALSE;
 	inline static int m_PointCount = 0;
 	inline static SPointAttributes m_LastAttributes;
@@ -11,14 +10,18 @@ class CCadPoint : public CCadObject
 	inline static BOOL m_AttributesGood = FALSE;
 	inline static BOOL m_RenderEnable = TRUE;
 	double dX, dY;
+	int m_PointID;
 	SPointAttributes m_Attributes;
 public:
 	CCadPoint();
 	CCadPoint(double x, double y);
 	CCadPoint(DOUBLEPOINT dp);
-	CCadPoint(DOUBLEPOINT dp, SubType Sub, UINT SubSub);
+	CCadPoint(DOUBLEPOINT dp, SubTypes Sub, UINT SubSub);
 	~CCadPoint();
-	virtual BOOL Create(CCadObject* pParent, CCadObject* pOrigin, SubType type = SubType::DEFALT);
+	virtual BOOL Create(CCadObject* pParent, SubTypes type);
+	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::POINT; }
+	void SetID(int ID) { m_PointID = ID; }
+	int GetID() { return m_PointID; }
 	virtual CString& GetObjDescription();
 	virtual CString& GetTypeString();
 	void SetX(double x) { dX = x; }
@@ -56,23 +59,27 @@ public:
 	);
 	virtual CCadObject* CopyObject();
 	//----------- Paint to Screen Ops ----------------------
-	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& ULHC, CScale& Scale);
-	void MoveTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	void LineTo(CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	void LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	void MoveTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void LineTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
 	BOOL FloodFill(
 		COLORREF colorBorder,
 		COLORREF colorFill,
 		CDC* pDC, 
-		DOUBLEPOINT& ULHC, 
+		DOUBLEPOINT& LLHC, 
 		CScale& Scale
 	);
-	CPoint ToPixelPoint(DOUBLEPOINT& ULHC, CScale& Scale);
+	CPoint ToPixelPoint(DOUBLEPOINT& LLHC, CScale& Scale);
 	//---------- Load/ Save --------------------
-	virtual DocFileParseToken Parse(DocFileParseToken Token, CLexer* pLex, DocFileParseToken TypeToken);
-	virtual void Save(FILE* pO, DocFileParseToken Token, int Indent = 0, int flags = 0);
+	virtual CLexer::Tokens Parse(
+		CLexer::Tokens Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+	);
+	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	//---------- Attributes --------------------
 	void CopyAttributesTo(SPointAttributes* pAttrb);
 	void CopyAttributesFrom(SPointAttributes* pAttrb);
@@ -87,15 +94,15 @@ public:
 	//-----------------------------------
 	// Pointy Things to do with Shapes
 	//-----------------------------------
-	void ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
-	void ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale);
-	void ToPixelRect(CCadPoint* pP2, CRect& rect, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelRect(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOINT& LLHC, CScale& Scale);
+	void ToPixelRect(CCadPoint* pP2, CRect& rect, DOUBLEPOINT& LLHC, CScale& Scale);
 	void ToPixelArc(
 		CCadPoint* pP2, 
 		CCadPoint* pStart, 
 		CCadPoint* pEnd, 
 		CDC* pDC, 
-		DOUBLEPOINT& ULHC, 
+		DOUBLEPOINT& LLHC, 
 		CScale& Scale
 	);
 	void ToPixelArc(
@@ -104,15 +111,15 @@ public:
 		CCadPoint* pStart,
 		CCadPoint* pEnd,
 		CDC* pDC,
-		DOUBLEPOINT& ULHC,
+		DOUBLEPOINT& LLHC,
 		CScale& Scale
 	);
-	void ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& ULHC, CScale& Scale);
+	void ToPixelEllipse(CCadPoint* pP2, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
 	void ToPixelRndRect(
 		CCadPoint* pP2, 
 		CCadPoint* pP3, 
 		CDC* pDC, 
-		DOUBLEPOINT& ULHC,
+		DOUBLEPOINT& LLHC,
 		CScale& Scale
 	);
 	//----------------------------------
