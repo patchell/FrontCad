@@ -83,16 +83,15 @@ CCadObject::~CCadObject()
 	// return value:
 	//	none
 	//--------------------------------------------------
-	CCadObject* pObj;
+	CCadObject* pObj, *pNextObj;
 
 	pObj = GetHead();
 	while (pObj)
 	{
-		if (pObj->GetHead())
-		{
-			delete pObj->GetHead();
-		}
-		pObj = DeleteObject(pObj);
+		pNextObj = pObj->GetNext();
+		RemoveObject(pObj);
+		delete pObj;
+		pObj = pNextObj;
 	}
 	//TODO implement handling of dependent objects
 }
