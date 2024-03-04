@@ -51,7 +51,11 @@ void CCadText::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadText::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadText::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -133,6 +137,11 @@ void CCadText::Draw(CDC * pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadText::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadText::PointInThisObject(DOUBLEPOINT point)
 {
 	return 0;
@@ -157,7 +166,7 @@ int CCadText::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -189,7 +198,7 @@ int CCadText::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadText::GetTypeString(void)
+CString& CCadText::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -212,7 +221,7 @@ CString& CCadText::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadText::CopyObject(void)
+CCadObject * CCadText::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -228,10 +237,16 @@ CCadObject * CCadText::CopyObject(void)
 	return pCT;
 }
 
-CLexer::Tokens CCadText::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadText::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadText*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadText::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -247,8 +262,8 @@ CLexer::Tokens CCadText::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pParser->Expect(Token, CLexer::Tokens::TEXT);
-	Token = pParser->Expect(Token, CLexer::Tokens('('));
+	Token = pParser->Expect(pcfInFile, Token, TOKEN_TEXT);
+	Token = pParser->Expect(pcfInFile, Token, int('('));
 	int loop = 1;
 	CString csError,csTemp;
 	int TempInt = 0;
@@ -257,81 +272,89 @@ CLexer::Tokens CCadText::Parse(
 	{
 		switch (Token)
 		{
-		case CLexer::Tokens::STRING:
-			csTemp = CString(pParser->GetLexer()->GetLexBuff());
+		case TOKEN_STRING:
+			csTemp = CString(pParser->GetLexBuff());
 			SetText(csTemp);
-			Token = pParser->Expect(Token, CLexer::Tokens::STRING);
+			Token = pParser->Expect(pcfInFile, Token, TOKEN_STRING);
 			break;
-		case CLexer::Tokens::POINT:
-//			Token = pLex->Point(CLexer::Tokens::POINT, m_P1, Token);
+		case TOKEN_POINT:
+//			Token = pLex->Point(TOKEN_POINT, m_P1, Token);
 			break;
-		case CLexer::Tokens::TEXT_COLOR:
+		case TOKEN_TEXT_COLOR:
 			Token = pParser->Color(
-				CLexer::Tokens::TEXT_COLOR,
+				pcfInFile,
+				TOKEN_TEXT_COLOR,
 				GetAttributes().m_colorText, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::BACKGROUND_COLOR:
+		case TOKEN_BACKGROUND_COLOR:
 			Token = pParser->Color(
-				CLexer::Tokens::BACKGROUND_COLOR,
+				pcfInFile,
+				TOKEN_BACKGROUND_COLOR,
 				GetAttributes().m_colorBK, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::FONT:
+		case TOKEN_FONT:
 			Token = pParser->StringValue(
-				CLexer::Tokens::FONT, 
+				pcfInFile,
+				TOKEN_FONT, 
 				GetAttributes().m_csFontName, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::FONT_WEIGHT:
+		case TOKEN_FONT_WEIGHT:
 			Token = pParser->UINTValue(
-				CLexer::Tokens::FONT_WEIGHT, 
+				pcfInFile,
+				TOKEN_FONT_WEIGHT, 
 				GetAttributes().m_fontWeight,
 				Token
 			);
 			GetAttributes().m_fontWeight = TempInt;
 			break;
-		case CLexer::Tokens::FONTHEIGHT:
+		case TOKEN_FONTHEIGHT:
 			Token = pParser->DoubleValue(
-				CLexer::Tokens::FONTHEIGHT,
+				pcfInFile,
+				TOKEN_FONTHEIGHT,
 				GetAttributes().m_fontHeight, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::FONTWIDTH:
+		case TOKEN_FONTWIDTH:
 			Token = pParser->DoubleValue(
-				CLexer::Tokens::FONTWIDTH,
+				pcfInFile,
+				TOKEN_FONTWIDTH,
 				GetAttributes().m_fontWidth, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::ANGLE:
+		case TOKEN_ANGLE:
 			Token = pParser->DoubleValue(
-				CLexer::Tokens::ANGLE, 
+				pcfInFile,
+				TOKEN_ANGLE, 
 				m_Angle, 
 				Token
 			);
 			break;
-		case CLexer::Tokens::BK_TRANSPARENT:
+		case TOKEN_BK_TRANSPARENT:
 			Token = pParser->UINTValue(
-				CLexer::Tokens::BK_TRANSPARENT,
+				pcfInFile,
+				TOKEN_BK_TRANSPARENT,
 				GetAttributes().m_Transparent, 
 				Token
 			);
 			break;
-		case CLexer::Tokens(','):
-			Token = pParser->Expect(CLexer::Tokens(','), Token);
+		case int(','):
+			Token = pParser->Expect(pcfInFile,int(','), Token);
 			break;
-		case CLexer::Tokens(')'):
+		case int(')'):
 			loop = 0;
-			Token = pParser->Expect(CLexer::Tokens(')'), Token);
+			Token = pParser->Expect(pcfInFile, int(')'), Token);
 			break;
 		default:
 			loop = 0;
-//			csError.Format(_T("Unexpected Token %lS"), CString(pLex->TokenLookup(Token)).GetBuffer());
+//			csError.Format(_T("Unexpected Token %lS"), CString(CFileParser::TokenLookup(Token)).GetBuffer());
 //			pLex->Error(csError);
 			break;
 		}
@@ -523,7 +546,7 @@ void CCadText::Rotate()
 }
 
 
-int CCadText::EditProperties(void)
+int CCadText::EditProperties()
 {
 	int Id;
 	CDlgTextProperties Dlg;

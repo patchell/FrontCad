@@ -14,7 +14,7 @@ public:
 	CCadRect();
 	virtual ~CCadRect();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::RECT; }
+	virtual int GetDefaultToken() { return TOKEN_RECT; }
 	//------------------- Set Rectangle --------------------------------
 	void SetRect(DOUBLEPOINT P1, DOUBLEPOINT P2);
 	void SetRect(CCadPoint* pP1, CCadPoint* pP2);
@@ -47,12 +47,6 @@ public:
 	void SetAllPoints(DOUBLEPOINT p);
 	//------------------------------------------------------------------
 	virtual void Move(CDoubleSize Diff);
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
-	);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	//----------- dc paint methods ------------------
 	virtual void Draw(
 		CDC* pDC, 
@@ -60,6 +54,7 @@ public:
 		DOUBLEPOINT& LLHC, 
 		CScale& Scale
 	);
+	virtual CCadPoint* GetVertex(UINT Vertex, BOOL bRotate = FALSE);
 	void DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale, BOOL bFill);
 	void FillRect(
 		COLORREF colorBoarder,
@@ -71,6 +66,8 @@ public:
 	);
 	//------------------------------------------------------------------
 	CCadPoint* GetRectPoints(CCadPoint** pointDest, int n);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -81,16 +78,34 @@ public:
 		UINT nKinds
 	);
 	//--------------------------------------------
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
 	double GetWidth();
 	void SetWidth(double width);
 	double GetHeight();
 	void SetHeight(double Height);
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -104,11 +119,11 @@ public:
 	void CopyAttributesFrom(SRectAttributes* pAttrb);
 	SRectAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	SRectAttributes& GetAttributes() { return m_Attrib; }
-	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	COLORREF GetFillColor(void) { return GetAttributes().m_colorFill; }
+	COLORREF GetFillColor() { return GetAttributes().m_colorFill; }
 	void SetFillColor(COLORREF c) { GetAttributes().m_colorFill = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	UINT GetTransparent(){ return GetAttributes().m_TransparentFill; }
 	void SetTransparent(UINT t) { GetAttributes().m_TransparentFill = t; }

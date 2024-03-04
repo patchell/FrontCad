@@ -4,7 +4,7 @@
 // This is one of my oldest drawing objects
 // It dates to the Risk Game Map Editor
 // I wrote a while back.  Its name has
-// changed, but some of the klugy code that
+// changed, but some of the kludgey code that
 // was in the original is still here.
 // Well, even less now.
 //------------------------------------------
@@ -61,7 +61,11 @@ void CCadPolygon::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadPolygon::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadPolygon::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -71,64 +75,52 @@ void CCadPolygon::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 	//
 	// return value:none
 	//--------------------------------------------------
-	char* String = new char[256];
-
-	fprintf(pO, "%s%s(%s(%d),", 
-		GETAPP.IndentString(String, Indent),
-		CLexer::TokenLookup(Token),
-		CLexer::TokenLookup(CLexer::Tokens::VERTEX),
-		GetNumVerticies());
-
+	char* IndentString = new char[256];
+	CString csOut;
 	UINT i;
 	CCadPoint* pPoint;
 
-	for (i = 0; i< GetNumVerticies(); ++i)
+	csOut.Format( _T("%hs %hs %hs %d"), 
+		 "junk", "junk","junk",5
+//		GETAPP.IndentString(IndentString, 256, Indent, ' '),
+//		CFileParser::TokenLookup(TOKEN_POLY),
+//		CFileParser::TokenLookup(TOKEN_VERTEX),
+//		GetNumVertices()
+	);
+
+
+	for (i = 0; i< GetNumVertices(); ++i)
 	{
 		pPoint = (CCadPoint*)FindObject(
 			ObjectType::POINT,
 			CCadObject::SubTypes::VERTEX,
 			i + 1
 		);
-		pPoint->Save(pO, CLexer::Tokens::POINT, Indent + 1, flags);
+		pPoint->Save(pcfFile, Indent + 1, flags);
 	}
-	m_Attrib.Save(pO, Indent + 1, flags);
-	delete[] String;
+	m_Attrib.Save(pcfFile, Indent + 1, flags);
+	delete[] IndentString;
 }
 
 BOOL CCadPolygon::DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
-	CCadPoint* pPoint, *pFirstPoint;
+	CPoint* pPointArray;
 	BOOL bFirstPoint = TRUE;
 	int VertexCount = 0;
-	BOOL rV = FALSE;
+	BOOL rV = TRUE;
+	int i;
+	int n;
 
-	pPoint = (CCadPoint*)FindObject(
-		ObjectType::POINT,
-		CCadObject::SubTypes::VERTEX,
-		++VertexCount
-	);
-	pFirstPoint = pPoint;
-	while (pPoint)
+	n = GetNumVertices();
+	pPointArray = new CPoint[n];
+	for (i = 0; i < n; ++i)
 	{
-		if (bFirstPoint)
-		{
-			bFirstPoint = FALSE;
-			pPoint->MoveTo(pDC, LLHC, Scale);
-		}
-		else
-		{
-			pPoint->LineTo(pDC, LLHC, Scale);
-		}
-		if (VertexCount == 3)
-			rV = TRUE;
-		pPoint = (CCadPoint*)FindObject(
+		pPointArray[i] = ((CCadPoint*)(FindObject(
 			ObjectType::POINT,
 			CCadObject::SubTypes::VERTEX,
-			++VertexCount
-		);
+			i + 1)))->ToPixelPoint(LLHC, Scale);
 	}
-	if (pFirstPoint)
-		pFirstPoint->LineTo(pDC, LLHC, Scale);
+	pDC->Polygon(pPointArray, GetNumVertices());
 	return rV;
 }
 
@@ -138,7 +130,7 @@ CCadPoint* CCadPolygon::CalculateCenterPoint()
 	DOUBLEPOINT* pPolyPoints;
 	DOUBLEPOINT Center;
 
-	pPolyPoints = new DOUBLEPOINT[GetNumVerticies()];
+	pPolyPoints = new DOUBLEPOINT[GetNumVertices()];
 	GetPoints(&pPolyPoints);
 	Center = GETAPP.GetPolygonCenter(pPolyPoints, m_NumVertices - 1);
 	Center.Print("Poly Center");
@@ -163,26 +155,6 @@ CCadPoint *CCadPolygon::GetCenter()
 	return Obj.pCadPoint;;
 }
 
-void CCadPolygon::FillPolygon(
-	COLORREF colorBoarder,
-	COLORREF colorFill,
-	CDC* pDC,
-	MODE mode, 
-	DOUBLEPOINT& LLHC, 
-	CScale& Scale
-)
-{
-	CCadPoint* pCenter;
-
-	if (GetNumVerticies() > 3)
-	{
-		pCenter = GetCenter();
-		if (pCenter)
-		{
-			pCenter->FloodFill(colorBoarder, colorFill, pDC, LLHC, Scale);
-		}
-	}
-}
 
 void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 {
@@ -216,11 +188,7 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 		{
 		case MODE::ObjectPaintMode::FINAL:
 		case MODE::ObjectPaintMode::SKETCH:
-			if (DrawPolygon(pDC, mode, LLHC, Scale))
-			{
-				if(!GetAttributes().m_TransparentFill)
-					FillPolygon(colorLine, colorFill, pDC, mode, LLHC, Scale);
-			}
+			DrawPolygon(pDC, mode, LLHC, Scale);
 			break;
 		}
 		pDC->SelectObject(pOldPen);
@@ -231,7 +199,7 @@ void CCadPolygon::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 BOOL CCadPolygon::GetPoints(DOUBLEPOINT** ppPolyPoints)
 {
 	BOOL rV = FALSE;
-	int n = GetNumVerticies();
+	int n = GetNumVertices();
 	int i;
 	CADObjectTypes Obj;
 
@@ -252,10 +220,15 @@ exit:
 	return rV;
 }
 
+BOOL CCadPolygon::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadPolygon::PointInThisObject(DOUBLEPOINT point)
 {
 	DOUBLEPOINT* pPolyPoints;
-	int n = GetNumVerticies();
+	int n = GetNumVertices();
 	pPolyPoints = new DOUBLEPOINT[n];
 	BOOL rV = FALSE;
 
@@ -286,7 +259,7 @@ int CCadPolygon::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -340,10 +313,10 @@ CString& CCadPolygon::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadPolygon::CopyObject(void)
+CCadObject * CCadPolygon::Copy()
 {
 	//---------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -353,9 +326,12 @@ CCadObject * CCadPolygon::CopyObject(void)
 	CCadPolygon *pP = new CCadPolygon;
 	pP->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pP);
-	pP->GetAttributes().CopyFrom(GetPtrToAttributes());
-	pP->m_NumVertices = GetNumVerticies();
 	return pP;
+}
+
+void CCadPolygon::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadPolygon*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 BOOL CCadPolygon::GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& MaxY)
@@ -365,7 +341,7 @@ BOOL CCadPolygon::GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& 
 	BOOL rV = FALSE;
 	double X, Y;
 
-	n = GetNumVerticies();
+	n = GetNumVertices();
 	for (i = 0; i < n; ++i)
 	{
 		pPoint = (CCadPoint*)FindObject(
@@ -396,7 +372,7 @@ CDoubleSize CCadPolygon::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -413,10 +389,11 @@ CDoubleSize CCadPolygon::GetSize()
 	return size;
 }
 
-CLexer::Tokens CCadPolygon::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadPolygon::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -495,7 +472,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		if ((m_FirstPoint == MousePos) && (GetNumVerticies() > 3))	//is figure closed?
+		if ((m_FirstPoint == MousePos) && (GetNumVertices() > 3))	//is figure closed?
 		{
 			CCadPolygon* pPoly;
 			//------
@@ -517,7 +494,7 @@ ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)
 			//----------------------------------
 			Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, m_NumVertices);
 			Obj.pCadPoint->SetPoint(MousePos);
-			if (GetNumVerticies() > 3)
+			if (GetNumVertices() > 3)
 				CalculateCenterPoint();
 			AddPoint(MousePos);
 			GETAPP.UpdateStatusBar(_T("Polygon:Place Next Point :End by Placing on First Point"));
@@ -552,13 +529,13 @@ ObjectDrawState CCadPolygon::MouseMove(ObjectDrawState DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 		Obj.pCadPoint->SetPoint(MousePos);
-		if (GetNumVerticies() > 3)
+		if (GetNumVertices() > 3)
 			CalculateCenterPoint();
 		GETVIEW->Invalidate();
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		Obj.pCadPoint->SetPoint(MousePos);
-		if (GetNumVerticies() > 3)
+		if (GetNumVertices() > 3)
 			CalculateCenterPoint();
 		GETVIEW->Invalidate();
 		break;
@@ -602,9 +579,9 @@ BOOL CCadPolygon::PointEnclosed(CCadPoint point)
 	DOUBLEPOINT *pPolyPoints;
 	BOOL rV;
 
-	pPolyPoints = new DOUBLEPOINT[GetNumVerticies()];
+	pPolyPoints = new DOUBLEPOINT[GetNumVertices()];
 	GetPoints(&pPolyPoints);
-	rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, GetNumVerticies());
+	rV = GETAPP.PtEnclosedInPolygon(point, pPolyPoints, GetNumVertices());
 	delete[] pPolyPoints;
 	return rV;
 }

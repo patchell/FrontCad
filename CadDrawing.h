@@ -24,14 +24,38 @@ public:
 		SubTypes type
 	);
 	CCadLibPart * CreatePartFromSelected(CString& csName);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::DRAWFILE; }
+	virtual int GetDefaultToken() { return TOKEN_DRAWFILE; }
 	int CheckSelected(DOUBLEPOINT p,CCadObject **ppSelList,int n,int flag= CADDRAWUBG_CHECKSEL_FLAG_ALL);
 	void Print(CDC *pDC,MODE mode,DOUBLEPOINT ULHC,CScale Scale);
-	virtual CLexer::Tokens Parse(CLexer::Tokens LookAHeadToken, CFileParser* pParser);
-	virtual void Save(FILE *pO,  int Indent);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual void Draw(CDC *pDC,MODE mode, DOUBLEPOINT ULHC,CScale Scale);
-	CLexer::Tokens DrawObjects(CLexer::Tokens LookAHeadToken, CFileParser* pParser, CCadObject* pParent);
+	int DrawObjects(
+		CFile* pcfFile,
+		int LookAHeadToken, 
+		CFileParser* pParser, 
+		CCadObject* pParent
+	);
 	void SetBkColor(COLORREF c){m_BkColor = c;}
-	COLORREF& GetBkColor(void){return m_BkColor;}
+	COLORREF& GetBkColor(){return m_BkColor;}
 	CCadPrintRect *GetPrintRect();
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* cfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 };

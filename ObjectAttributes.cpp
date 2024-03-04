@@ -42,7 +42,7 @@ void SArcAttributes::SaveSettings(SArcAttributes* pAttrib)
 }
 
 void SArcAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -50,8 +50,9 @@ void SArcAttributes::Save(
 
 }
 
-CLexer::Tokens SArcAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SArcAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -69,21 +70,27 @@ CLexer::Tokens SArcAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_ARC, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARC, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -132,7 +139,7 @@ void SArcCenterAttributes::SaveSettings(SArcCenterAttributes* pAttrib)
 }
 
 void SArcCenterAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -140,8 +147,9 @@ void SArcCenterAttributes::Save(
 
 }
 
-CLexer::Tokens SArcCenterAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SArcCenterAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -159,21 +167,27 @@ CLexer::Tokens SArcCenterAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_ARCCENTER, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARCCENTER, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -258,7 +272,7 @@ void SArrowAttributes::SaveSettings(SArrowAttributes* pAttrib)
 }
 
 void SArrowAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -266,8 +280,9 @@ void SArrowAttributes::Save(
 
 }
 
-CLexer::Tokens SArrowAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SArrowAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -285,21 +300,27 @@ CLexer::Tokens SArrowAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_ARROW, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARROW, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -310,28 +331,35 @@ CLexer::Tokens SArrowAttributes::Parse(
 
 //------------- Bitmap Attributes -----------------
 
-CLexer::Tokens SBitmapAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SBitmapAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_BITMAP, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_BITMAP, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -341,7 +369,7 @@ CLexer::Tokens SBitmapAttributes::Parse(
 }
 
 void SBitmapAttributes::Save(
-	FILE* pO, 
+	CFile* pcfFile, 
 	int Indent, 
 	int flags
 )
@@ -472,7 +500,7 @@ void SCadDimAttributes::SaveSettings(SCadDimAttributes* pAttrib)
 }
 
 void SCadDimAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -480,8 +508,9 @@ void SCadDimAttributes::Save(
 
 }
 
-CLexer::Tokens SCadDimAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SCadDimAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -499,21 +528,27 @@ CLexer::Tokens SCadDimAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_DIMENSION, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_DIMENSION, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -522,7 +557,7 @@ CLexer::Tokens SCadDimAttributes::Parse(
 	return Token;
 }
 
-//-------------- Ellispe Attributes -----------------
+//-------------- Ellipse Attributes -----------------
 
 
 void SEllipseAttributes::LoadSettings(SEllipseAttributes* pAttrib)
@@ -568,7 +603,7 @@ void SEllipseAttributes::SaveSettings(SEllipseAttributes* pAttrib)
 }
 
 void SEllipseAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -576,8 +611,9 @@ void SEllipseAttributes::Save(
 
 }
 
-CLexer::Tokens SEllipseAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SEllipseAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -595,21 +631,27 @@ CLexer::Tokens SEllipseAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_ELLIPSE, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ELLIPSE, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
-		switch (Token)
+			switch (Token)
 		{
-		default:
+			case TOKEN_LINE_WIDTH:
+				break;
+			case TOKEN_LINE_COLOR:
+				break;;
+			case TOKEN_SELECTED_COLOR:
+				break;
+			default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -669,7 +711,7 @@ void SLineAttributes::SaveSettings(SLineAttributes* pAttrib)
 }
 
 void SLineAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -677,8 +719,9 @@ void SLineAttributes::Save(
 
 }
 
-CLexer::Tokens SLineAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SLineAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -696,21 +739,27 @@ CLexer::Tokens SLineAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_LINE, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_LINE, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -765,7 +814,7 @@ void SOriginAttributes::SaveSettings(SOriginAttributes* pAttrib)
 }
 
 void SOriginAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -773,8 +822,9 @@ void SOriginAttributes::Save(
 
 }
 
-CLexer::Tokens SOriginAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SOriginAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -792,21 +842,27 @@ CLexer::Tokens SOriginAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_ORIGIN, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ORIGIN, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -860,7 +916,7 @@ void SPolyAttributes::SaveSettings(SPolyAttributes* pAttrib)
 }
 
 void SPolyAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -868,8 +924,9 @@ void SPolyAttributes::Save(
 
 }
 
-CLexer::Tokens SPolyAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SPolyAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -887,21 +944,27 @@ CLexer::Tokens SPolyAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_POLYGON, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_POLYGON, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -958,7 +1021,7 @@ void SRectAttributes::SaveSettings(SRectAttributes* pAttrib)
 }
 
 void SRectAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -966,8 +1029,9 @@ void SRectAttributes::Save(
 
 }
 
-CLexer::Tokens SRectAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRectAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -985,21 +1049,27 @@ CLexer::Tokens SRectAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_RECT, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RECT, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1029,8 +1099,10 @@ void SRoundedRectAttributes::LoadSettings(SRoundedRectAttributes* pAttrib)
 	csVal = GETAPP.GetProfileStringW(_T("RNDRECT"), _T("LINEWIDTH"), _T("0.05"));
 	pAttrib->m_LineWidth = GETAPP.StringToDouble(csVal);
 	pAttrib->m_TransparentFill = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("TRANSPARENT_FILL"), 0);
-	pAttrib->m_dszCornerRadius.dCX = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("RADIUS_X"), 100);
-	pAttrib->m_dszCornerRadius.dCY = GETAPP.GetProfileIntW(_T("RNDRECT"), _T("RADIUS_Y"), 100);
+	csVal = GETAPP.GetProfileStringW(_T("RNDRECT"), _T("C_RADIUS_X"), _T("0.1"));
+	pAttrib->m_dszCornerRadius.dCX = GETAPP.StringToDouble(csVal);
+	csVal = GETAPP.GetProfileStringW(_T("RNDRECT"), _T("C_RADIUS_Y"), _T("0.1"));
+	pAttrib->m_dszCornerRadius.dCY = GETAPP.StringToDouble(csVal);
 }
 
 void SRoundedRectAttributes::SaveSettings(SRoundedRectAttributes* pAttrib)
@@ -1052,12 +1124,14 @@ void SRoundedRectAttributes::SaveSettings(SRoundedRectAttributes* pAttrib)
 	csString.Format(_T("%lf"), pAttrib->m_LineWidth);
 	GETAPP.WriteProfileStringW(_T("RNDRECT"), _T("LINEWIDTH"), csString);
 	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("TRANSPARENT_FILL"), pAttrib->m_TransparentFill);
-	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("RADIUS_X"), (int)(pAttrib->m_dszCornerRadius.dCX * 1000.0));
-	GETAPP.WriteProfileInt(_T("RNDRECT"), _T("RADIUS_Y"), (int)(pAttrib->m_dszCornerRadius.dCY * 1000.0));
+	csString.Format(_T("%10.6lf"), pAttrib->m_dszCornerRadius.dCX);
+	GETAPP.WriteProfileStringW(_T("RNDRECT"), _T("C_RADIUS_X"), csString);
+	csString.Format(_T("%10.6lf"), pAttrib->m_dszCornerRadius.dCY);
+	GETAPP.WriteProfileStringW(_T("RNDRECT"), _T("C_RADIUS_Y"), csString);
 }
 
 void SRoundedRectAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -1065,8 +1139,9 @@ void SRoundedRectAttributes::Save(
 
 }
 
-CLexer::Tokens SRoundedRectAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRoundedRectAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -1084,21 +1159,27 @@ CLexer::Tokens SRoundedRectAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_RNDRECT, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RNDRECT, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1109,8 +1190,8 @@ CLexer::Tokens SRoundedRectAttributes::Parse(
 
 //----------- Text Attributes ---------------------
 
-CLexer::Tokens Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int Parse(
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
@@ -1118,7 +1199,7 @@ CLexer::Tokens Parse(
 }
 
 void STextAttributes::Save(
-	FILE* pO, 
+	CFile* pcfFile, 
 	int Indent, 
 	int flags
 )
@@ -1126,46 +1207,58 @@ void STextAttributes::Save(
 	char* IndentString = new char[256];
 	char* IndentString2 = new char[256];
 	char* s = new char[256];
+	CString csOut;
 
-	GETAPP.IndentString(IndentString, Indent);
-	GETAPP.IndentString(IndentString2, Indent+2);
-	fprintf(pO, "%s%s(\n",
+	GETAPP.IndentString(IndentString, 256, Indent,' ');
+	GETAPP.IndentString(IndentString2, 256, Indent+2,' ');
+	csOut.Format(
+		_T("%hs%hs(\n"),
 		IndentString,
-		CLexer::TokenLookup(CLexer::Tokens::ATTRIB_TEXT)
+		CFileParser::TokenLookup(TOKEN_ATTRIB_TEXT)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveString(s, 64, CLexer::Tokens::FONT_NAME, m_csFontName)
+		CFileParser::SaveString(s, 64, TOKEN_FONT_NAME, m_csFontName)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveColor(s, 64, CLexer::Tokens::TEXT_COLOR, m_colorText)
+		CFileParser::SaveColor(s, 64, TOKEN_TEXT_COLOR, m_colorText)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveColor(s, 64, CLexer::Tokens::BACKGROUND_COLOR, m_colorBK)
+		CFileParser::SaveColor(s, 64, TOKEN_BACKGROUND_COLOR, m_colorBK)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format( _T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveDoubleValue(s, 64, CLexer::Tokens::FONTHEIGHT, m_fontHeight)
+		CFileParser::SaveDoubleValue(s, 64, TOKEN_FONTHEIGHT, m_fontHeight)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveDoubleValue(s, 64, CLexer::Tokens::FONTWIDTH, m_fontWidth)
+		CFileParser::SaveDoubleValue(s, 64, TOKEN_FONTWIDTH, m_fontWidth)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, CLexer::Tokens::FONT_FORMAT, m_Format)
+		CFileParser::SaveUINTValue(s, 64, TOKEN_FONT_FORMAT, m_Format)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format(
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, CLexer::Tokens::BK_TRANSPARENT, m_Transparent)
+		CFileParser::SaveUINTValue(s, 64, TOKEN_BK_TRANSPARENT, m_Transparent)
 	);
-	fprintf(pO, "%s%s\n",
+	csOut.Format( 
+		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, CLexer::Tokens::FONT_WEIGHT, m_fontWeight)
+		CFileParser::SaveUINTValue(s, 64, TOKEN_FONT_WEIGHT, m_fontWeight)
 	);
-	fprintf(pO, "%s)\n",IndentString);
+	csOut.Format(
+		_T("%hs)\n"),
+		IndentString
+	);
 	delete[]s;
 	delete[] IndentString2;
 	delete[] IndentString;
@@ -1266,28 +1359,35 @@ void SRectHoleAttributes::SaveSettings(SRectHoleAttributes* pAttrib)
 	GETAPP.WriteProfileStringW(_T("RECTHOLE"), _T("WIDTH"), csString);
 }
 
-CLexer::Tokens SRectHoleAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRectHoleAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_HOLERECT, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERECT, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1341,28 +1441,35 @@ void SRoundHoleAttributes::SaveSettings(SRoundHoleAttributes* pAttrib)
 	GETAPP.WriteProfileStringW(_T("ROUNDHOLE"), _T("RADIUS"), csString);
 }
 
-CLexer::Tokens SRoundHoleAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRoundHoleAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_HOLERND, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERND, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1424,7 +1531,7 @@ void SRndHole1FlatAttributes::SaveSettings(SRndHole1FlatAttributes* pAttrib)
 }
 
 void SRndHole1FlatAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -1432,28 +1539,35 @@ void SRndHole1FlatAttributes::Save(
 
 }
 
-CLexer::Tokens SRndHole1FlatAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRndHole1FlatAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_HOLERND1F, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERND1F, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1516,7 +1630,7 @@ void SRndHole2FlatAttributes::SaveSettings(SRndHole2FlatAttributes* pAttrib)
 }
 
 void SRndHole2FlatAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flagsr
 )
@@ -1524,28 +1638,35 @@ void SRndHole2FlatAttributes::Save(
 
 }
 
-CLexer::Tokens SRndHole2FlatAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRndHole2FlatAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_HOLERND2F, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile,TOKEN_ATTRIB_HOLERND2F, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1557,7 +1678,7 @@ CLexer::Tokens SRndHole2FlatAttributes::Parse(
 //------------------- Grid Attributes ---------------------------------
 
 void SGridAttributes::Save(
-	FILE* pO,				//File to print to
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -1565,28 +1686,35 @@ void SGridAttributes::Save(
 
 }
 
-CLexer::Tokens SGridAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SGridAttributes::Parse(
+	CFile* pcfInFile, 
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_GRID, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_GRID, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1664,8 +1792,8 @@ void SGridAttributes::SaveSettings(SGridAttributes* pAttrib)
 
 //------------------- Rulers -----------------------------
 
-void SRullerAttributes::Save(
-	FILE* pO,				//File to print to
+void SRulerAttributes::Save(
+	CFile* pcfFile,				//File to print to
 	int Indent,				//Indent in spaces from left margin 
 	int flags
 )
@@ -1673,28 +1801,35 @@ void SRullerAttributes::Save(
 
 }
 
-CLexer::Tokens SRullerAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SRulerAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_RULERS, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RULERS, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
+		case TOKEN_LINE_WIDTH:
+			break;
+		case TOKEN_LINE_COLOR:
+			break;;
+		case TOKEN_SELECTED_COLOR:
+			break;
 		default:
 			//--------------------------------------
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;
@@ -1703,7 +1838,7 @@ CLexer::Tokens SRullerAttributes::Parse(
 	return Token;
 }
 
-void SRullerAttributes::LoadSettings(SRullerAttributes* pAttrib)
+void SRulerAttributes::LoadSettings(SRulerAttributes* pAttrib)
 {
 	//------------------------------------------------
 	// LoadSetting
@@ -1737,7 +1872,7 @@ void SRullerAttributes::LoadSettings(SRullerAttributes* pAttrib)
 
 }
 
-void SRullerAttributes::SaveSettings(SRullerAttributes* pAttrib)
+void SRulerAttributes::SaveSettings(SRulerAttributes* pAttrib)
 {
 	//------------------------------------------------
 	// SaveSettings
@@ -1768,7 +1903,7 @@ void SRullerAttributes::SaveSettings(SRullerAttributes* pAttrib)
 //------------- Point Attributes -------------------------
 
 void SPointAttributes::Save(
-	FILE* pO, 
+	CFile* pcfFile, 
 	int Indent, 
 	int flags
 ) 
@@ -1778,19 +1913,22 @@ void SPointAttributes::Save(
 	char* s1 = new char[64];
 	char* s2 = new char[64];
 	char* s3 = new char[64];
+	CString csOut;
 
-	fprintf(pO, "%s%s{\n",
-		GETAPP.IndentString(pIndent,Indent,'_'),
-		CLexer::TokenLookup(CLexer::Tokens::ATTRIB_POINT)
+	csOut.Format( 
+		_T("%hs%hs{\n"),
+		GETAPP.IndentString(pIndent, 128,Indent,' '),
+		CFileParser::TokenLookup(TOKEN_ATTRIB_POINT)
 	);
-	GETAPP.IndentString(pIndent2, Indent + 2, ' ');
-	fprintf(pO, "%s%s\n%s%s\n%s%s\n%s}\n",
+	GETAPP.IndentString(pIndent2, 128, Indent + 2, ' ');
+	csOut.Format( 
+		_T("%hs%hs\n%hs%hs\n%hs%hs\n%hs}\n"),
 		pIndent2,
-		CFileParser::SaveColor(s1,64,CLexer::Tokens::LINE_COLOR, m_colorLine),
+		CFileParser::SaveColor(s1,64,TOKEN_LINE_COLOR, m_colorLine),
 		pIndent2,
-		CFileParser::SaveColor(s2,64,CLexer::Tokens::SELECTED_COLOR,m_colorSelected),
+		CFileParser::SaveColor(s2,64,TOKEN_SELECTED_COLOR,m_colorSelected),
 		pIndent2,
-		CFileParser::SaveIntValue(s3, 64, CLexer::Tokens::SELECTED_UNITS, m_SelectedObjectUnits),
+		CFileParser::SaveIntValue(s3, 64, TOKEN_SELECTED_UNITS, m_SelectedObjectUnits),
 		pIndent
 	);
 	delete[] s3;
@@ -1800,30 +1938,31 @@ void SPointAttributes::Save(
 	delete[] pIndent;
 }
 
-CLexer::Tokens SPointAttributes::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int SPointAttributes::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(CLexer::Tokens::ATTRIB_POINT, Token);
-	Token = pParser->Expect(CLexer::Tokens('{'), Token);
+	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_POINT, Token);
+	Token = pParser->Expect(pcfInFile, int('{'), Token);
 	while (Loop)
 	{
 		switch (Token)
 		{
-		case CLexer::Tokens::LINE_COLOR:
-			Token = pParser->Color(Token, m_colorLine, Token);
+		case TOKEN_LINE_COLOR:
+			Token = pParser->Color(pcfInFile, Token, m_colorLine, Token);
 			break;
-		case CLexer::Tokens::SELECTED_COLOR:
-			Token = pParser->Color(Token, m_colorSelected, Token);
+		case TOKEN_SELECTED_COLOR:
+			Token = pParser->Color(pcfInFile, Token, m_colorSelected, Token);
 			break;
-		case CLexer::Tokens::SELECTED_UNITS:
-			Token = pParser->IntValue(Token, m_SelectedObjectUnits, Token);
+		case TOKEN_SELECTED_UNITS:
+			Token = pParser->IntValue(pcfInFile, Token, m_SelectedObjectUnits, Token);
 			break;
-		case CLexer::Tokens('}'):
-			Token = pParser->Expect(CLexer::Tokens('}'), Token);
+		case int('}'):
+			Token = pParser->Expect(pcfInFile, int('}'), Token);
 			Loop = FALSE;
 			break;
 		default:
@@ -1831,10 +1970,10 @@ CLexer::Tokens SPointAttributes::Parse(
 			// Houston, we have a syntax error
 			//--------------------------------------
 			Exception.ErrorString.Format(
-				_T("Error::Line %d  Column %d\nUnExpected Token: %s\n"),
-				pParser->GetLexer()->GetLine(),
-				pParser->GetLexer()->GetCol(),
-				CString(pParser->GetLexer()->TokenLookup(Token)).GetBuffer()
+				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
+				pParser->GetLine(),
+				pParser->GetCol(),
+				pParser->TokenLookup(Token)
 			);
 			throw(Exception);
 			break;

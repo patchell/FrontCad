@@ -56,10 +56,11 @@ public:
 		Result = CDoubleSize(dCX / x, dCY / x);
 		return Result;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
 	double Magnitude() {
 		return sqrt(dCX * dCX + dCY * dCY);

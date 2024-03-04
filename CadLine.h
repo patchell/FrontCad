@@ -16,18 +16,17 @@ protected:
 	inline static BOOL m_RenderEnable = TRUE;
 	double m_Length;
 	SLineAttributes m_Attrib;
-public://public methodes
+public://public methods
 	CCadLine();
 	CCadLine(CCadLine &line);
 	virtual ~CCadLine();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::LINE; }
+	virtual int GetDefaultToken() { return TOKEN_LINE; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
-	virtual BOOL PointInThisObject(
-		DOUBLEPOINT point
-	);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject* pExcludeObject,
@@ -36,17 +35,30 @@ public://public methodes
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -55,25 +67,25 @@ public://public methodes
 		CCadPoint* pPtRtAgl, 
 		CCadPoint* pPtP1, 
 		CCadPoint* P2
-	);
+	) const;
 	virtual void ProcessZoom(CScale& InchesPerPixel);
-	virtual int EditProperties(void);
+	virtual int EditProperties();
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	//-------------------------------------
 	//attribute Methods
 	//-------------------------------------
-	SLineAttributes* GePtrTotAttributes() { return &m_Attrib; }
+	SLineAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	SLineAttributes& GetAttributes() { return m_Attrib; }
-	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth; }
 	void CopyAttributesTo(SLineAttributes* pAtr);
 	void CopyAttributesFrom(SLineAttributes* pAtr);
 	//--------------------------------------------------
 	// Line Length
 	//--------------------------------------------------
-	double GetLength() { return m_Length; }
+	double GetLength() const { return m_Length; }
 	void SetLength(double l) { m_Length = l; }
 	//--------------------------------------------------
 	// Static Functions

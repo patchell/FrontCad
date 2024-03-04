@@ -11,10 +11,17 @@ IMPLEMENT_DYNCREATE(CBaseDocument, CDocument)
 CBaseDocument::CBaseDocument()
 {
 	m_pDocView = 0;
+	m_pDocObject = 0;
+
 }
 
 CBaseDocument::~CBaseDocument()
 {
+}
+
+void CBaseDocument::SetFileName(CString& csFileName)
+{
+	m_csFileName = csFileName;
 }
 
 void CBaseDocument::UnSelectAll(UINT nKinds)
@@ -91,7 +98,7 @@ int CBaseDocument::CopyToClipBoard()
 		if (pObj->IsSelected())
 		{
 			++Count;
-			GETAPP.GetClipBoard()->AddObjectAtTail(pObj->CopyObject());
+			GETAPP.GetClipBoard()->AddObjectAtTail(pObj->Copy());
 		}
 		pObj = pObj->GetNext();
 	}
@@ -106,7 +113,7 @@ int CBaseDocument::PasteFromClipBoard()
 	while (pObj)
 	{
 		++Count;
-		GetDocObject()->AddObjectAtTail(pObj->CopyObject());
+		GetDocObject()->AddObjectAtTail(pObj->Copy());
 		pObj = pObj->GetNext();
 	}
 	return Count;

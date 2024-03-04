@@ -13,10 +13,12 @@ public:
 	CCadOrigin();
 	virtual ~CCadOrigin();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ORG; }
+	virtual int GetDefaultToken() { return TOKEN_ORG; }
 	virtual void Move(CDoubleSize Diff);
 	virtual DOUBLEPOINT GetCenterPoint();
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -26,17 +28,29 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
-	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -49,9 +63,9 @@ public:
 	void CopyAttributesFrom(SOriginAttributes* pAttrb);
 	virtual int EditProperties();
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
-	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	//--------------------------------------------
 	static void RenderEnable(int e) { m_RenderEnable = e; }

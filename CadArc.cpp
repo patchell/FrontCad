@@ -58,7 +58,11 @@ void CCadArc::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadArc::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser)
+void CCadArc::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -70,15 +74,38 @@ void CCadArc::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, CFile
 	//--------------------------------------------------
 	char* pIndentString1 = new char[256];
 
-//	fprintf(pO, "%s%s(%s(%8.3lf,%8.3lf),%s(%8.3lf,%8.3lf))\n",
-//		GETAPP.MkIndentString(pIndentString1, Indent, ' '),
-//		CLexer::TokenLookup(CLexer::Tokens::ARC),
-//		CLexer::TokenLookup(CLexer::Tokens::POINT),
-//		m_pointStart.dX, m_pointStart.dY,
-//		CLexer::TokenLookup(CLexer::Tokens::POINT),
-//		m_pointEnd.dX, m_pointEnd.dY
-//	);
-	GetAttributes().Save(pO,Indent+2,flags);
+	///------------------------------------------
+	/// Save
+	///		This function is called whenever the
+	/// user saves a document of library.
+	///
+	/// parameter:
+	///		pO.....pointer to Output File Stream
+	///------------------------------------------
+	char* IndentString = new char[256];
+	char* s1 = new char[1024];
+	int BuffLen;
+	CString csOut;
+
+	GETAPP.IndentString(IndentString, 256, Indent, ' ');
+	csOut.Format(
+		_T("%hs%hs(\n"),
+		IndentString,
+		GETAPP.ConvertCStringToChar(s1, this->GetTypeString())
+	);
+	BuffLen = sprintf_s(s1, 1024, "%hs", GETAPP.ConvertCStringToChar(s1, csOut));
+	pcfFile->Write(s1, BuffLen);
+	FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1)->Save(pcfFile, TOKEN_POINT, Indent + 2);
+	FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2)->Save(pcfFile, TOKEN_POINT, Indent + 2);
+	FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0)->Save(pcfFile, TOKEN_POINT, Indent + 2);
+	FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0)->Save(pcfFile, TOKEN_POINT, Indent + 2);
+	FindObject(ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0)->Save(pcfFile, TOKEN_POINT, Indent + 2);
+	GetAttributes().Save(pcfFile,Indent+2,flags);
+	csOut.Format( _T("%hs)"), IndentString);
+	BuffLen = sprintf_s(s1, 1024, "%hs", GETAPP.ConvertCStringToChar(s1, csOut));
+	pcfFile->Write(s1, BuffLen);
+	delete[] s1;
+	delete[] IndentString;
 }
 
 void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
@@ -101,9 +128,6 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.dSX);
-		if (Lw < 1)
-			Lw = 1;
 		ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
 		ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
 		ObjStart.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
@@ -114,7 +138,10 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 		switch (mode.PaintMode)
 		{
 		case MODE::ObjectPaintMode::FINAL:
-			if(IsSelected())
+			Lw = GETAPP.RoundDoubleToInt(GetLineWidth() * Scale.dSX);
+			if (Lw < 1)
+				Lw = 1;
+			if (IsSelected())
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			else
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
@@ -124,7 +151,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			break;
 		case MODE::ObjectPaintMode::SKETCH:
 			pBrushOld = pDC->SelectObject(&brushFill);
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			ObjP1.pCadPoint->ToPixelRect(ObjP2.pCadPoint, pDC, LLHC, Scale);
 			ObjP1.pCadPoint->ToPixelEllipse(ObjP2.pCadPoint, pDC, LLHC, Scale);
@@ -132,7 +159,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			pDC->SelectObject(pOldPen);
 			break;
 		case MODE::ObjectPaintMode::ARCSTART:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			pBrushOld = pDC->SelectObject(&brushFill);
 			ObjP1.pCadPoint->ToPixelEllipse(ObjP2.pCadPoint, pDC, LLHC, Scale);
@@ -142,7 +169,7 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			pDC->SelectObject(pOldPen);
 			break;
 		case MODE::ObjectPaintMode::ARCEND:
-			penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			ObjP1.pCadPoint->ToPixelArc(
 				ObjP2.pCadPoint,
@@ -158,6 +185,11 @@ void CCadArc::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			break;
 		}
 	}
+}
+
+BOOL CCadArc::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 BOOL CCadArc::PointInThisObject(DOUBLEPOINT point)
@@ -232,7 +264,7 @@ int CCadArc::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -265,7 +297,7 @@ int CCadArc::PointInObjectAndSelect(
 }
 
 
-CString& CCadArc::GetTypeString(void)
+CString& CCadArc::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -285,7 +317,7 @@ CString& CCadArc::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadArc::CopyObject(void)
+CCadObject * CCadArc::Copy()
 {
 	//--------------------------------------------------
 	// CopyObject
@@ -296,6 +328,7 @@ CCadObject * CCadArc::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CADObjectTypes newObj;
+
 	newObj.pCadArc = new CCadArc;
 	newObj.pCadArc->Create(GetParent(), CCadObject::SubTypes::DEFAULT);
 	CCadObject::CopyObject(newObj.pCadObject);
@@ -303,11 +336,16 @@ CCadObject * CCadArc::CopyObject(void)
 	return newObj.pCadObject;
 }
 
+void CCadArc::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadArc*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
 CDoubleSize CCadArc::GetSize()
 {
 	//--------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -325,10 +363,11 @@ CDoubleSize CCadArc::GetSize()
 	return size;
 }
 
-CLexer::Tokens CCadArc::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadArc::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -582,7 +621,7 @@ CDoubleSize CCadArc::SlopeIsOneAt(double Asquared, double Bsquared)
 	return CDoubleSize(x, y);
 }
 
-int CCadArc::EditProperties(void)
+int CCadArc::EditProperties()
 {
 	int Id;
 	CDlgArcProperties Dlg;

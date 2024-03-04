@@ -5,6 +5,7 @@ class CFrontCadView;
 
 class CBaseDocument : public CDocument
 {
+	CString m_csFileName;
 	CString csDocName;
 	CFrontCadView* m_pDocView;
 	//------------- Drawing --------------------
@@ -14,6 +15,10 @@ class CBaseDocument : public CDocument
 public:
 	CBaseDocument();
 	virtual ~CBaseDocument();
+	//---------------------------------
+	//---------------------------------
+	void SetFileName(CString& csName);
+	CString& GetFileName() {return m_csFileName;}
 	//---------------------------------
 	// Selection
 	//---------------------------------

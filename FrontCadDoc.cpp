@@ -28,7 +28,7 @@ BOOL CFrontCadDoc::OnNewDocument()
 	BOOL rV = FALSE;
 
 	csName.Format(_T("FrontCadDoc%d"), ++NewFileCount);
-	csTitle.Format(_T("New FrontCad Drawuing"));
+	csTitle.Format(_T("New FrontCad Drawing"));
 	Dlg.SetDialogTitle(csTitle);
 	Dlg.SetDocumentName(csName);
 	Dlg.SetPaperSizeX(m_PaperSize.dCX);
@@ -78,11 +78,18 @@ void CFrontCadDoc::Dump(CDumpContext& dc) const
 
 void CFrontCadDoc::Serialize(CArchive& ar)
 {
-	CLexer::Tokens Token;
+	CFile* file;
+	CString csFname;
+
+	printf("Serialize\n");
 
 	if (ar.IsStoring())
 	{
-		// TODO: add storing code here
+		file = ar.GetFile();
+		csFname = file->GetFilePath();
+		SetFileName(csFname);
+		MessageBoxW(NULL, csFname, _T("Save"), MB_OK);
+		GetDrawing()->Save(file, 0, 0);
 	}
 	else
 	{
@@ -91,19 +98,10 @@ void CFrontCadDoc::Serialize(CArchive& ar)
 		//-----------------------------
 		CFileParser Parser;
 
-		CFileDialog Dlg(
-			TRUE, 
-			_T("frontCad"), 
-			NULL, 
-			6UL,
-			_T("*.frontCad"),
-			NULL,
-			0,
-			1
-		);
+		file = ar.GetFile();
+		MessageBoxW(NULL, file->GetFilePath(), _T("Load"), MB_OK);
 		CString FileName;
-		FileName = Dlg.GetPathName();
-		Parser.Create(FileName);
+//		Parser.Create(FileName);
 	}
 }
 #endif
@@ -131,7 +129,7 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	//		p......point of interest
 	//		ppSelList...pointer to an array of selected objects
 	//		n.....maximum number of objects to check for
-	//		nKinds..what kind of objects are inlcuded in list
+	//		nKinds..what kind of objects are included in list
 	//	returns:
 	//		number of objects that are under the point
 	//--------------------------------------------

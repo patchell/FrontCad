@@ -56,6 +56,11 @@ BOOL CCadRect::Create(CCadObject* pParent, CCadObject::SubTypes Type)
 		pPoint->Create(pParent, CCadObject::SubTypes::ROTATION_POINT);
 		AddObjectAtTail(pPoint);
 		break;
+	case CCadObject::SubTypes::RECT_FROM_CENTER:
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, CCadObject::SubTypes::ROTATION_POINT);
+		AddObjectAtTail(pPoint);
+		break;;
 	case CCadObject::SubTypes::DEFAULT:
 		break;
 	}
@@ -194,7 +199,8 @@ void CCadRect::Recalc34(double h)
 	// Recalc34
 	// 
 	// Recalculate Points P3, P4 based on the
-	// line defined by P1 and P2
+	// line defined by P1 and P2 with height
+	// 'h'
 	//--------------------------------------
 	double m;
 	CADObjectTypes ObjP1, ObjP2, ObjP3, ObjP4;
@@ -248,13 +254,25 @@ void CCadRect::Recalc234()
 
 void CCadRect::ReCalcCenter()
 {
+	//----------------------------------------
+	// ReCalcCenter
+	//	Calculate the center point of the
+	// Rectangle.
+	//----------------------------------------
 	CADObjectTypes ObjCenter;
 	CADObjectTypes ObjP1, ObjP3;
 
-	ObjCenter.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
+	ObjCenter.pCadObject = FindObject(
+		ObjectType::POINT, 
+		CCadObject::SubTypes::CENTERPOINT,
+		0
+	);
 	ObjP1.pCadObject = GetVertex(1);
 	ObjP3.pCadObject = GetVertex(3);
-	ObjCenter.pCadPoint->CenterPoint(ObjP1.pCadPoint, ObjP3.pCadPoint);
+	ObjCenter.pCadPoint->CenterPoint(
+		ObjP1.pCadPoint, 
+		ObjP3.pCadPoint
+	);
 }
 
 void CCadRect::SetAllPoints(DOUBLEPOINT p)
@@ -289,7 +307,11 @@ void CCadRect::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadRect::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadRect::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -301,28 +323,40 @@ void CCadRect::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 	//--------------------------------------------------
 	char* psIndent = new char[256];
 	CADObjectTypes Obj;
+	CString csOut;
 
-	;
 	Obj.pCadObject = GetHead();
-	fprintf(pO, "%s%s(\n",
-		GETAPP.IndentString(psIndent, Indent, ' '),
-		CLexer::TokenLookup(CLexer::Tokens::RECT)
+	csOut.Format( 
+		_T("%hs%hs(\n"),
+		(GETAPP.IndentString(psIndent, 256, Indent, ' ')),
+		(CFileParser::TokenLookup(TOKEN_RECT))
 	);
-	fprintf(pO, "%s%s(\n",
+	csOut.Format( 
+		_T("%hs%hs(\n"),
 		psIndent,
-		CLexer::TokenLookup(Token)
+		CFileParser::TokenLookup(TOKEN_RECT)
 	);
 	while (Obj.pCadObject)
 	{
 		if (Obj.pCadObject->GetType() == ObjectType::POINT)
-			Obj.pCadPoint->Save(pO, CLexer::Tokens::POINT, Indent + 1, flags);
+			Obj.pCadPoint->Save(pcfFile, Indent + 1, flags);
 		Obj.pCadObject = Obj.pCadObject->GetNext();
 	}
-	fprintf(pO, "%s)\n", psIndent);
+	csOut.Format( 
+		_T("%hs)\n"),
+		psIndent
+	);
 
 
-	GetAttributes().Save(pO, Indent + 2, flags);
-	fprintf(pO, "%s}\n", psIndent);
+	GetAttributes().Save(
+		pcfFile,
+		Indent + 2, 
+		flags
+	);
+	csOut.Format( 
+		_T("%hs}\n"),
+		psIndent
+	);
 	delete []psIndent;
 }
 
@@ -386,6 +420,7 @@ void CCadRect::Draw(
 				//-------------------------------------
 				// Just a regular ortoganol Rectangle
 				//-------------------------------------
+			case ObjectDrawState::PLACE_LBUTTON_UP:
 			case ObjectDrawState::PLACE_LBUTTON_DOWN:
 				DrawRect(
 					pDC,
@@ -410,7 +445,7 @@ void CCadRect::Draw(
 				//-------- Rect Width/Height/Rotate --------
 				// 
 				// State machine for drawing a rotated
-				// rectangle defined by a base and hiegth
+				// rectangle defined by a base and height
 				//------------------------------------------
 			case ObjectDrawState::RECT_HWR_START_DRAWING:
 				break;
@@ -443,56 +478,50 @@ void CCadRect::Draw(
 	}	//end of if render
 }
 
+CCadPoint* CCadRect::GetVertex(UINT Vertex, BOOL bRotate)
+{
+	CADObjectTypes Obj, Piv, Rot;
+
+	if (bRotate)
+	{
+		Piv.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT, 
+			CCadObject::SubTypes::PIVOTPOINT, 
+			SUBSUBTYPE_ANY
+		);
+		Rot.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT,
+			CCadObject::SubTypes::ROTATION_POINT,
+			SUBSUBTYPE_ANY
+		);
+	}
+	else
+		Obj.pCadObject = CCadObject::GetVertex(Vertex);
+	return Obj.pCadPoint;
+}
 
 void CCadRect::DrawRect(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale, BOOL bFill)
 {
+	CPoint* ptArray = new CPoint[4];
 	int i;
-	CADObjectTypes Obj;
 
 	for (i = 0; i < 4; ++i)
+		ptArray[i] = GetVertex(i + 1)->ToPixelPoint(LLHC, Scale);
+	switch (GetSubType())
 	{
-		if (i == 0)
-		{
-			Obj.pCadObject = FindObject(
-				ObjectType::POINT,
-				CCadObject::SubTypes::VERTEX,
-				i + 1);
-			if (Obj.pCadObject)
-				Obj.pCadPoint->MoveTo(pDC, LLHC, Scale);
-			else
-				goto exit;	//error
-		}
-		else
-		{
-			Obj.pCadObject = FindObject(
-				ObjectType::POINT,
-				CCadObject::SubTypes::VERTEX,
-				i + 1
-			);
-			if (Obj.pCadObject)
-			{
-				Obj.pCadPoint->LineTo(pDC, LLHC, Scale);
-				if (mode.PaintMode != MODE::ObjectPaintMode::FINAL)
-					Obj.pCadPoint->Draw(pDC, mode, LLHC, Scale);
-			}
-			else
-				goto exit;	//error
-		}
-	}	//end of for loop
-	Obj.pCadObject = FindObject(
-		ObjectType::POINT,
-		CCadObject::SubTypes::VERTEX,
-		1
-	);
-	if (Obj.pCadObject)
-	{
-		Obj.pCadPoint->LineTo(pDC, LLHC, Scale);
-		if (mode.PaintMode != MODE::ObjectPaintMode::FINAL)
-			Obj.pCadPoint->Draw(pDC, mode, LLHC, Scale);
+	case CCadObject::SubTypes::DEFAULT:
+		pDC->Polygon(ptArray, 4);
+		break;
+	case CCadObject::SubTypes::RECT_ROTATED:
+		pDC->Polygon(ptArray, 4);
+		break;
+	case CCadObject::SubTypes::RECT_BASE_DEFINED:
+		pDC->Polygon(ptArray, 4);
+		break;
+	case CCadObject::SubTypes::RECT_FROM_CENTER:
+		pDC->Polygon(ptArray, 4);
+		break;
 	}
-
-exit:
-	return;
 }
 
 void CCadRect::FillRect(
@@ -545,6 +574,11 @@ CCadPoint* CCadRect::GetRectPoints(CCadPoint** ppPointDest, int n)
 	return ppPointDest[0];
 }
 
+BOOL CCadRect::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadRect::PointInThisObject(DOUBLEPOINT point)
 {
 	DOUBLEPOINT pointsRect[4];
@@ -588,7 +622,7 @@ int CCadRect::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -620,7 +654,7 @@ int CCadRect::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadRect::GetTypeString(void)
+CString& CCadRect::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -658,10 +692,10 @@ CString& CCadRect::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadRect::CopyObject(void)
+CCadObject * CCadRect::Copy()
 {
 	//---------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy.
 	// This Method DOES not make a true copy in
@@ -672,15 +706,21 @@ CCadObject * CCadRect::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadRect *pRect = new CCadRect;
-	*pRect = *this;
+	pRect->Create(GetParent(), GetSubType());
+	pRect->CopyObject(pRect);
 	return pRect;
+}
+
+void CCadRect::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadRect*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 CDoubleSize CCadRect::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -742,10 +782,11 @@ void CCadRect::SetHeight(double Height)
 	Obj.pCadPoint->SetY(Yref + Height);
 }
 
-CLexer::Tokens CCadRect::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadRect::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -761,11 +802,11 @@ CLexer::Tokens CCadRect::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pParser->Expect(Token, CLexer::Tokens::RECT);
-	Token = pParser->Expect(Token, CLexer::Tokens('('));
-//	Token = ???.CadRect(CLexer::Tokens::RECT, *this, Token);
-	Token = GetAttributes().Parse(Token, pParser);
-	Token = pParser->Expect(Token, CLexer::Tokens(')') );
+	Token = pParser->Expect(pcfInFile, Token, TOKEN_RECT);
+	Token = pParser->Expect(pcfInFile, Token, int('('));
+//	Token = ???.CadRect(TOKEN_RECT, *this, Token);
+	Token = GetAttributes().Parse(pcfInFile, Token, pParser);
+	Token = pParser->Expect(pcfInFile, Token, int(')') );
 	return Token;
 }
 
@@ -921,48 +962,75 @@ ObjectDrawState CCadRect::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------- Rect Width/Height/Rotate --------
 	// 
 	// State machine for drawing a rotated
-	// rectangle defined by a base and hiegth
+	// rectangle defined by a base and height
 	//------------------------------------------
 	case ObjectDrawState::RECT_HWR_START_DRAWING:
+		DrawState = ObjectDrawState::RECT_HWR_PIVOT_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_HWR_PIVOT_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_HWR_PIVOT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_HWR_BASE_FIRST_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_HWR_BASE_SECOND_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_HWR_HIEGTH_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_HWR_START_DRAWING;
 		break;
 	//---------------------------------------------
 	// Draw a Rectangle form the center
 	//---------------------------------------------
 	case ObjectDrawState::RECT_CENT_START_DRAWING:
-		break;
-	case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_DOWN:
-		break;
-	case ObjectDrawState::RECT_CENT_PIVOT_MOUSE_UP:
+		m_CurrentAttributes.CopyFrom(&m_LastAttributes);
+		CopyAttributesFrom(&m_CurrentAttributes);
+		GETAPP.UpdateStatusBar(_T("Rectangle:Place Pivot Point"));
+		DrawState = ObjectDrawState::RECT_CENT_CENTER_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_CENT_CENTER_MOUSE_DOWN:
+		SetAllPoints(MousePos);
+		DrawState = ObjectDrawState::RECT_CENT_CENTER_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_CENT_CENTER_MOUSE_UP:
+		ObjCenter.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT,
+			CCadObject::SubTypes::CENTERPOINT,
+			SUBSUBTYPE_ANY
+		);
+		ObjCenter.pCadPoint->SetPoint(MousePos);
+		DrawState = ObjectDrawState::RECT_CENT_SECPMD_POINT_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_CENT_SECPMD_POINT_MOUSE_DOWN:
+		DrawState = ObjectDrawState::RECT_CENT_SECOND_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_CENT_SECOND_POINT_MOUSE_UP:
+		ObjP1.pCadObject = GetVertex(1);
+		ObjP1.pCadPoint->SetPoint(MousePos);
+		Recalc234();
+		DrawState = ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_DOWN;
 		break;
 	case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_DOWN:
+		
+		DrawState = ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_UP;
 		break;
 	case ObjectDrawState::RECT_CENT_ROTATION_POINT_MOUSE_UP:
+		DrawState = ObjectDrawState::RECT_CENT_START_DRAWING;
 		break;
 	}
+	SetCurrentDrawState(DrawState);
 	return DrawState;
 }
 
@@ -1009,7 +1077,7 @@ ObjectDrawState CCadRect::MouseMove(ObjectDrawState DrawState)
 		//-------- Rect Width/Height/Rotate --------
 		// 
 		// State machine for drawing a rotated
-		// rectangle defined by a base and hiegth
+		// rectangle defined by a base and height
 		//------------------------------------------
 	case ObjectDrawState::RECT_HWR_START_DRAWING:
 		break;

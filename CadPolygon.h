@@ -16,10 +16,11 @@ public:
 	CCadPolygon();
 	virtual ~CCadPolygon();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type = CCadObject::SubTypes::DEFAULT);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::POLY; }
+	virtual int GetDefaultToken() { return TOKEN_POLY; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	BOOL GetPoints(DOUBLEPOINT** pPoints);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -29,19 +30,13 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject* CopyObject(void);
 	BOOL GetMinMaxXY(double& MinX, double& MaxX, double& MinY, double& MaxY);
 	virtual CDoubleSize GetSize();
-	UINT GetNumVerticies() { return m_NumVertices; }
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
-	);
+	UINT GetNumVertices() const { return m_NumVertices; }
 	//---------------------------------------
-	// Other methodes
+	// Other methods
 	//---------------------------------------
 	CCadPoint *AddPoint(DOUBLEPOINT Point);
 	BOOL PointEnclosed(CCadPoint p);
@@ -50,19 +45,30 @@ public:
 	//---------------------------------------------
 	BOOL DrawPolygon(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	CCadPoint* CalculateCenterPoint();
-	void FillPolygon(
-		COLORREF colorBoarder,
-		COLORREF colorFill,
-		CDC* pDC, 
-		MODE mode, 
-		DOUBLEPOINT& LLHC, 
-		CScale& Scale
-	);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	COLORREF CreateTheBrush(MODE mode, CBrush* brushFill);
 	COLORREF CreateThePen(MODE mode, CPen* pen, int Lw);
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -75,11 +81,11 @@ public:
 	//-----------------------------------------
 	SPolyAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	SPolyAttributes& GetAttributes() { return m_Attrib; }
-	COLORREF GetLineColor(void) { GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	COLORREF GetFillColor(void) { GetAttributes().m_colorFill; }
+	COLORREF GetFillColor() { GetAttributes().m_colorFill; }
 	void SetFillColor(COLORREF c) { GetAttributes().m_colorFill = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	UINT GetTransparent(){ return GetAttributes().m_TransparentFill; }
 	void SetTransparent(UINT t) { GetAttributes().m_TransparentFill = t; }

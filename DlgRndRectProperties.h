@@ -26,8 +26,7 @@ public:
 	afx_msg void OnStnClickedStaticFillcolor();
 	afx_msg void OnStnClickedStaticLinecolor();
 	afx_msg void OnBnClickedCheckRndrectNofill();
-	void SetRndRect(CCadRndRect* pCRR) { m_pRndRect = pCRR; }
-
+	void SetRndRect(CCadRndRect* pRect) { m_pRndRect = pRect; }
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_ROUNDEDRECT_PROPERTIES };
 #endif

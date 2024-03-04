@@ -43,7 +43,7 @@ class CRulerInfo
 	CSize m_szClient;
 	//--------------------------------
 	BOOL m_Show;
-	SRullerAttributes m_Attributes;
+	SRulerAttributes m_Attributes;
 	//--------------------------------
 	BOOL m_RulersReady;
 public:
@@ -66,8 +66,8 @@ public:
 	//-------------------------------
 	// Ruler Attributes
 	//-------------------------------
-	SRullerAttributes& GetAttributes() { return m_Attributes; }
-	SRullerAttributes* GetPtrToAttributes() { return &m_Attributes; }
+	SRulerAttributes& GetAttributes() { return m_Attributes; }
+	SRulerAttributes* GetPtrToAttributes() { return &m_Attributes; }
 	//----------------- Tick Marks ------------------------------
 	void SetTickLength(int TL) { GetAttributes().m_TickLength = TL; }
 	int GetTickeLength() { return GetAttributes().m_TickLength; }

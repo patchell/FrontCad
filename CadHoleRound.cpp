@@ -45,7 +45,11 @@ void CCadHoleRound::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadHoleRound::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadHoleRound::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -113,6 +117,11 @@ void CCadHoleRound::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadHoleRound::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadHoleRound::PointInThisObject(DOUBLEPOINT point)
 {
 	return 0;
@@ -137,7 +146,7 @@ int CCadHoleRound::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -195,7 +204,7 @@ CString& CCadHoleRound::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadHoleRound::CopyObject(void)
+CCadObject * CCadHoleRound::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -211,10 +220,16 @@ CCadObject * CCadHoleRound::CopyObject(void)
 	return pHR;
 }
 
-CLexer::Tokens CCadHoleRound::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadHoleRound::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadHoleRound*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadHoleRound::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -359,7 +374,7 @@ ObjectDrawState CCadHoleRound::MouseMove(ObjectDrawState DrawState)
 	return DrawState;
 }
 
-int CCadHoleRound::EditProperties(void)
+int CCadHoleRound::EditProperties()
 {
 	int Id;
 	CDlgRoundHoleProp Dlg;

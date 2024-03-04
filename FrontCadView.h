@@ -42,7 +42,6 @@ class CFrontCadView : public CChildViewBase
 	//----------------Keyboard/Mouse------------------------
 	BOOL m_ControlKeyDown;	//true when control key is pushed
 	BOOL m_ShiftKeyDown;	// true when shift key is pushed
-	BOOL m_AltKeyDown;		// Alt key is down
 	BOOL m_R_KeyDown;		//The R key is pressed
 	DOUBLEPOINT m_CurMousePos;	//mouse position raw, screen units
 	DOUBLEPOINT m_LastMousePos;
@@ -68,7 +67,6 @@ class CFrontCadView : public CChildViewBase
 	CFrontCadChildFrame* m_pParentFrame;
 	//----------------------------------
 	CCadObject** m_ppObjList;
-	UINT nNumOfObjListItems;
 	int nLastItemIndex;
 	DECLARE_DYNCREATE(CFrontCadView)
 protected:
@@ -93,7 +91,6 @@ public:
 	//---------------------------------------------
 	BOOL IsControlKeyDown() { return m_ControlKeyDown; }
 	BOOL IsShiftKeyDown() { return m_ShiftKeyDown; }
-	BOOL IsAltKeyDown() { return m_AltKeyDown; }
 	BOOL IsR_KeyDown() { return m_R_KeyDown; }
 	//-------
 	BOOL IsLeftMouseButtonDown() { return m_LeftMouseButtonDown; }
@@ -203,7 +200,7 @@ public:
 	CFrontCadDoc* GetDocument() {
 		return (CFrontCadDoc*)CChildViewBase::GetDocument();
 	}
-	CDoubleSize GetDocSize(void) { 
+	CDoubleSize GetDocSize() { 
 		return GetDocument()->GetDocSize();
 	}
 	void SetDocSize(CDoubleSize sZ) { 
@@ -234,7 +231,7 @@ public:
 	afx_msg void OnUpdateDrawEllipse(CCmdUI* pCmdUI);
 	afx_msg void OnDrawLine();
 	afx_msg void OnUpdateDrawLine(CCmdUI* pCmdUI);
-	afx_msg void OnLineLinefixedlen();
+	afx_msg void OnLineFixedLength();
 	afx_msg void OnUpdateLineLinefixedlen(CCmdUI* pCmdUI);
 	afx_msg void OnLinePolyline();
 	afx_msg void OnUpdateLinePolyline(CCmdUI* pCmdUI);
@@ -250,9 +247,9 @@ public:
 	afx_msg void OnUpdateDrawRectangularhole(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateRectFromCenter(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRectangleFromCenter();
-	afx_msg void OnDrawRotatedrectangle();
+	afx_msg void OnDrawRotatedRectangle();
 	afx_msg	void OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI);
-	afx_msg void OnDrawRoundedrectangle();
+	afx_msg void OnDrawRoundedRectangle();
 	afx_msg void OnUpdateDrawRoundedrectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRoundhole();
 	afx_msg void OnUpdateDrawRoundhole(CCmdUI* pCmdUI);

@@ -13,11 +13,12 @@ public:
 	CCadArrow();
 	virtual ~CCadArrow();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARROW; }
+	virtual int GetDefaultToken() { return TOKEN_ARROW; }
 	virtual void Move(CDoubleSize Diff);
 	virtual CDoubleSize GetSize();
-	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT pPoint,
@@ -27,16 +28,29 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject* CopyObject(void);
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,
-		CFileParser* pParser,
-		CLexer::Tokens TypeToken = CLexer::Tokens::ARROW
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -46,15 +60,15 @@ public:
 	//----------------------------------
 	virtual int EditProperties();
 	SArrowAttributes& GetAttributes() { return m_Attrib; }
-	SArrowAttributes* GetAttributesPointer() { return &m_Attrib; }
+	SArrowAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	void CopyAttributesTo(SArrowAttributes* pAttrb);
 	void CopyAttributesFrom(SArrowAttributes* pAttrb);
 	void ApplyParameters(double L1, double L2, double W);
-	COLORREF GetLineColor(void) { GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c){ GetAttributes().m_colorLine = c; }
-	COLORREF GetFillColor(void) { GetAttributes().m_colorFill; }
+	COLORREF GetFillColor() { GetAttributes().m_colorFill; }
 	void SetFillColor(COLORREF c) { GetAttributes().m_colorFill = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double v) { GetAttributes().m_LineWidth = v; }
 	double GetL1();
 	double GetL2();

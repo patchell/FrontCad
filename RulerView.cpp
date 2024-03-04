@@ -490,7 +490,7 @@ void CRulerView::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
 	printf("\n");
-	printf("RulerView::OnSize  %s:%d type=%d cx=%d cy=%d\n", 
+	printf("RulerView::OnSize  %hs:%d type=%d cx=%d cy=%d\n", 
 		(m_rulerType == RT_HORIZONTAL) ? "Horizontal" : "Vertical",
 		m_rulerType,
 		nType,
@@ -504,7 +504,7 @@ void CRulerView::OnSize(UINT nType, int cx, int cy)
 void CRulerView::OnSizing(UINT fwSide, LPRECT pRect)
 {
 	CWnd::OnSizing(fwSide, pRect);
-	printf("RulerView::OnSizing %s\n", (m_rulerType==RT_HORIZONTAL)?"Horizontal":"Vertical");
+	printf("RulerView::OnSizing %hs\n", (m_rulerType==RT_HORIZONTAL)?"Horizontal":"Vertical");
 	printf(" fwSide=%d\n", fwSide);
 	// TODO: Add your message handler code here
 }

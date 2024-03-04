@@ -14,7 +14,7 @@ public:
 	virtual ~CChildFrameBase();
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual CChildViewBase* GetView() { return 0; };
-	//Linked List Methodes
+	//Linked List Methods
 	inline CChildFrameBase* GetNext() { return m_pNext; }
 	inline void SetNext(CChildFrameBase* pCF) { m_pNext = pCF; }
 	inline CChildFrameBase* GetPrev() { return m_pPrev; }

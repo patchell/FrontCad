@@ -56,7 +56,11 @@ void CCadRndRect::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadRndRect::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadRndRect::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -86,6 +90,7 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	CADObjectTypes ObjP1, ObjP2, ObjCornerRadius;
 	CRect rect;
 	int Lw;
+	DOUBLEPOINT dpZero = { 0.0,0.0 };
 
 	if (IsRenderEnabled())
 	{
@@ -103,16 +108,24 @@ void CCadRndRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			ObjP1.pCadPoint->ToPixelPoint(LLHC, Scale),
 			ObjP2.pCadPoint->ToPixelPoint(LLHC, Scale)
 		);
+		ObjP1.pCadPoint->GetPoint().Print(LLHC, Scale.dSX, Scale.dSY, "P1", FALSE);
+		ObjP2.pCadPoint->GetPoint().Print(LLHC, Scale.dSX, Scale.dSY, "P2", FALSE);
+		ObjCornerRadius.pCadPoint->GetPoint().Print(dpZero, Scale.dSX, Scale.dSY, "Radius", FALSE);
 		switch (mode.PaintMode)
 		{
 		case MODE::ObjectPaintMode::FINAL:
 		case MODE::ObjectPaintMode::SKETCH:
-			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(LLHC,Scale));
+			pDC->RoundRect(&rect, ObjCornerRadius.pCadPoint->ToPixelPoint(dpZero,Scale));
 			break;
 		}
 		pDC->SelectObject(pOldBr);
 		pDC->SelectObject(pOldPen);
 	}
+}
+
+BOOL CCadRndRect::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 BOOL CCadRndRect::PointInThisObject(DOUBLEPOINT point)
@@ -139,7 +152,7 @@ int CCadRndRect::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -171,7 +184,7 @@ int CCadRndRect::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadRndRect::GetTypeString(void)
+CString& CCadRndRect::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -194,7 +207,7 @@ CString& CCadRndRect::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadRndRect::CopyObject(void)
+CCadObject * CCadRndRect::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -210,11 +223,16 @@ CCadObject * CCadRndRect::CopyObject(void)
 	return pCR;
 }
 
+void CCadRndRect::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadRndRect*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
 CDoubleSize CCadRndRect::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -225,15 +243,16 @@ CDoubleSize CCadRndRect::GetSize()
 
 	ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
 	ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
-	CX = abs(ObjP2.pCadPoint->GetX() - ObjP1.pCadPoint->GetX());
-	CY = abs(ObjP2.pCadPoint->GetY() - ObjP1.pCadPoint->GetY());
+	CX = fabs(ObjP2.pCadPoint->GetX() - ObjP1.pCadPoint->GetX());
+	CY = fabs(ObjP2.pCadPoint->GetY() - ObjP1.pCadPoint->GetY());
 	return CDoubleSize(CX,CY);
 }
 
-CLexer::Tokens CCadRndRect::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadRndRect::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -285,6 +304,7 @@ int CCadRndRect::EditProperties()
 {
 	int Id;
 	CDlgRndRectProperties Dlg;
+
 	Dlg.SetRndRect(this);
 	Id = Dlg.DoModal();
 	return Id;
@@ -305,7 +325,8 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes Obj;
+	CADObjectTypes Obj, P1, R;
+	double x, y;
 
 	switch (DrawState)
 	{
@@ -359,12 +380,18 @@ ObjectDrawState CCadRndRect::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_RADIUS_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_RADIUS_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CORNER_RADIUS, 0);
-		Obj.pCadPoint->SetPoint(MousePos);
+		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
+		R.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CORNER_RADIUS, 0);
+		x = MousePos.dX - P1.pCadPoint->GetX();
+		y = MousePos.dY - P1.pCadPoint->GetY();
+		R.pCadPoint->SetPoint(x, y);
 		GETVIEW->EnableAutoScroll(FALSE);
 		GetParent()->AddObjectAtTail(this);
-		GETVIEW->SetObjectTypes(new CCadRndRect);
+		Obj.pCadRndRect = new CCadRndRect;
+		Obj.pCadRndRect->Create(GetParent(), SubTypes::DEFAULT);
+		GETVIEW->SetObjectTypes(Obj.pCadObject);
 		GETAPP.UpdateStatusBar(_T("Rounded Rectangle:Place First Point"));
+		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETVIEW->Invalidate();
 		break;
 	}
@@ -388,19 +415,28 @@ ObjectDrawState CCadRndRect::MouseMove(ObjectDrawState DrawState)
 	//		Next Draw State
 	//-------------------------------------------------------
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes Obj;
+	CADObjectTypes P1,P2,R;
+	double x, y;
+
+	P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
+	P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
+	R.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CORNER_RADIUS, 0);
 
 	switch (DrawState)
 	{
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
-		Obj.pCadPoint->SetPoint(MousePos);
+		P1.pCadPoint->SetPoint(MousePos);
+		P2.pCadPoint->SetPoint(MousePos);
+		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
-		Obj.pCadPoint->SetPoint(MousePos);
+		P2.pCadPoint->SetPoint(MousePos);
+		break;
 	case ObjectDrawState::PLACE_RADIUS_LBUTTON_DOWN:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CORNER_RADIUS, 0);
-		Obj.pCadPoint->SetPoint(MousePos);
+		x = MousePos.dX - P1.pCadPoint->GetX();
+		y = MousePos.dY - P1.pCadPoint->GetY();
+		R.pCadPoint->SetPoint(
+			 DOUBLEPOINT(x,y)
+		);
 		break;
 	}
 	GETVIEW->Invalidate();

@@ -19,7 +19,7 @@ public:
 	CCadPoint(DOUBLEPOINT dp, SubTypes Sub, UINT SubSub);
 	~CCadPoint();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::POINT; }
+	virtual int GetDefaultToken() { return TOKEN_POINT; }
 	void SetID(int ID) { m_PointID = ID; }
 	int GetID() { return m_PointID; }
 	virtual CString& GetObjDescription();
@@ -48,6 +48,8 @@ public:
 	//------------------------------------
 	BOOL IsPointOnTarget(DOUBLEPOINT point);
 	virtual void Move(CDoubleSize Diff);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p, 
@@ -57,11 +59,24 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CCadObject* CopyObject();
 	//----------- Paint to Screen Ops ----------------------
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	void MoveTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
 	void LineTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
+	void MoveTo(
+		CDC* pDC, 
+		DOUBLEPOINT& LLHC, 
+		CScale& Scale, 
+		CCadPoint* pPivot, 
+		CCadPoint* pRotation
+	);
+	void LineTo(
+		CDC* pDC, 
+		DOUBLEPOINT& LLHC, 
+		CScale& Scale, 
+		CCadPoint* pPivot, 
+		CCadPoint* pRotation
+	);
 	void LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
 	void LineFromHereToThere(CDoubleSize There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
 	void LineFromHereToThere(CCadPoint* pThere, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale);
@@ -73,20 +88,38 @@ public:
 		CScale& Scale
 	);
 	CPoint ToPixelPoint(DOUBLEPOINT& LLHC, CScale& Scale);
-	//---------- Load/ Save --------------------
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+	CPoint ToPixelPointWithRotation(
+		DOUBLEPOINT& LLHC, 
+		CScale& Scale,
+		CCadPoint* pPivot,
+		CCadPoint* pRotation
 	);
-	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	//---------- Attributes --------------------
 	void CopyAttributesTo(SPointAttributes* pAttrb);
 	void CopyAttributesFrom(SPointAttributes* pAttrb);
 	SPointAttributes& GetAttributes() { return m_Attributes; }
 	SPointAttributes* GetPtrToAttributes() { return &m_Attributes; }
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);

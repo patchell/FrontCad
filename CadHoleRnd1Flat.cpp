@@ -52,7 +52,11 @@ void CCadHoleRnd1Flat::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadHoleRnd1Flat::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadHoleRnd1Flat::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -161,6 +165,11 @@ void CCadHoleRnd1Flat::SolveIntersection()
 	ObjEnd.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + sqrt(Radius * Radius - FlatDist * FlatDist));
 }
 
+BOOL CCadHoleRnd1Flat::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadHoleRnd1Flat::PointInThisObject(DOUBLEPOINT point)
 {
 	return 0;
@@ -185,7 +194,7 @@ int CCadHoleRnd1Flat::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -217,7 +226,7 @@ int CCadHoleRnd1Flat::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadHoleRnd1Flat::GetTypeString(void)
+CString& CCadHoleRnd1Flat::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -237,7 +246,7 @@ CString& CCadHoleRnd1Flat::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadHoleRnd1Flat::CopyObject(void)
+CCadObject * CCadHoleRnd1Flat::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -252,10 +261,16 @@ CCadObject * CCadHoleRnd1Flat::CopyObject(void)
 	return pHR1F;
 }
 
-CLexer::Tokens CCadHoleRnd1Flat::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadHoleRnd1Flat::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadHoleRnd1Flat*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadHoleRnd1Flat::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -440,7 +455,7 @@ void CCadHoleRnd1Flat::Print(const char* pTitle)
 	ObjStart.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, SUBSUBTYPE_ANY);
 	ObjEnd.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, SUBSUBTYPE_ANY);
 
-	printf("%s%s  LW=%5.3lf  Flat=%6.3lf  Rad=%7.3lf\n", 
+	printf("%hs%hs  LW=%5.3lf  Flat=%6.3lf  Rad=%7.3lf\n", 
 		pTitle, 
 		GETAPP.ConvertCStringToChar(s, GetName()),
 		GetAttributes().m_LineWidth,

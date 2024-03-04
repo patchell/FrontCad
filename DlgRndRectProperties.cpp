@@ -45,9 +45,9 @@ BOOL CDlgRndRectProperties::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	m_Edit_RadiusX.SetDecimalPlaces(3);
-	m_Edit_RadiusX.SetValue(m_pRndRect->GetAttributes().m_dszCornerRadius.ToCSize().cx);
+	m_Edit_RadiusX.SetDoubleValue(m_pRndRect->GetAttributes().m_dszCornerRadius.dCX);
 	m_Edit_RadiusY.SetDecimalPlaces(3);
-	m_Edit_RadiusY.SetValue(m_pRndRect->GetAttributes().m_dszCornerRadius.ToCSize().cy);
+	m_Edit_RadiusY.SetDoubleValue(m_pRndRect->GetAttributes().m_dszCornerRadius.dCY);
 	m_Edit_LineWidth.SetDecimalPlaces(3);
 	m_Edit_LineWidth.SetDoubleValue(m_pRndRect->GetAttributes().m_LineWidth);
 	m_Static_LineColor.SetColor(m_pRndRect->GetAttributes().m_colorLine);
@@ -68,10 +68,10 @@ void CDlgRndRectProperties::OnOK()
 	{
 		case IDOK:
 			m_pRndRect->GetAttributes().m_colorLine = m_Static_LineColor.GetColor();
-			m_pRndRect->GetAttributes().m_dszCornerRadius = CDoubleSize(m_Edit_RadiusX.GetDoubleValue(), m_Edit_RadiusY.GetDoubleValue());
 			m_pRndRect->GetAttributes().m_TransparentFill = m_Check_NoFill.GetCheck();
 			m_pRndRect->GetAttributes().m_colorFill = m_Static_FillColor.GetColor();
 			m_pRndRect->GetAttributes().m_LineWidth = m_Edit_LineWidth.GetDoubleValue();
+			m_pRndRect->GetAttributes().m_dszCornerRadius = CDoubleSize(m_Edit_RadiusX.GetDoubleValue(), m_Edit_RadiusY.GetDoubleValue());
 			CDialog::OnOK();
 			break;
 	}

@@ -43,6 +43,9 @@ BOOL CCadDrawing::Create(CCadObject* pParent, CCadObject::SubTypes type)
 	return TRUE;
 }
 
+// this is a test
+// this is a test
+//
 void CCadDrawing::Draw(CDC *pDC, MODE mode, DOUBLEPOINT ULHC, CScale Scale)
 {
 	///-----------------------------------------
@@ -91,14 +94,20 @@ void CCadDrawing::Print(CDC *pDC, MODE mode, DOUBLEPOINT ULHC, CScale Scale)
 	}
 }
 
-CLexer::Tokens CCadDrawing::Parse(CLexer::Tokens LookAHeadToken, CFileParser* pParser)
+int CCadDrawing::Parse(
+	CFile* pcfInFile,
+	int LookAHeadToken, 
+	CFileParser* pParser,
+	int TypeToken // Token type to save object as
+)
 {
     return LookAHeadToken;
 }
 
 
-CLexer::Tokens CCadDrawing::DrawObjects(
-	CLexer::Tokens LookAHeadToken, 
+int CCadDrawing::DrawObjects(
+	CFile* pcfFile,
+	int LookAHeadToken, 
 	CFileParser* pParser, 
 	CCadObject* pParent
 )
@@ -111,106 +120,106 @@ CLexer::Tokens CCadDrawing::DrawObjects(
 	{
 		switch (LookAHeadToken)
 		{
-		case CLexer::Tokens::DIMENSION:
+		case TOKEN_DIMENSION:
 			DrawingObjects.pCadDimension = new CCadDimension;
 			DrawingObjects.pCadDimension->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadDimension->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadDimension->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::ORG:
+		case TOKEN_ORG:
 			DrawingObjects.pCadOrigin = new CCadOrigin;
 			DrawingObjects.pCadOrigin->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadOrigin->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadOrigin->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::TEXT:
+		case TOKEN_TEXT:
 			DrawingObjects.pCadText = new CCadText;
 			DrawingObjects.pCadText->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadText->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadText->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::ARC:
+		case TOKEN_ARC:
 			DrawingObjects.pCadArc = new CCadArc;
 			DrawingObjects.pCadArc->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadArc->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadArc->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::ARC_CENTER:
+		case TOKEN_ARC_CENTER:
 			DrawingObjects.pCadArcCent = new CCadArcCent;
 			DrawingObjects.pCadArcCent->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadArcCent->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadArcCent->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::CIRCLE:
+		case TOKEN_CIRCLE:
 			DrawingObjects.pCadElispe = new CCadEllipse;
 			DrawingObjects.pCadElispe->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadElispe->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadElispe->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::RECT:
+		case TOKEN_RECT:
 			DrawingObjects.pCadRect = new CCadRect;
 			DrawingObjects.pCadRect->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadRect->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadRect->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::RNDRECT:
+		case TOKEN_RNDRECT:
 			DrawingObjects.pCadRndRect = new CCadRndRect;
 			DrawingObjects.pCadRndRect->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadRndRect->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadRndRect->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::POLY:
+		case TOKEN_POLY:
 			DrawingObjects.pCadPolygon = new CCadPolygon;
 			DrawingObjects.pCadPolygon->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadPolygon->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadPolygon->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::LINE:
+		case TOKEN_LINE:
 			DrawingObjects.pCadLine = new CCadLine;
 			DrawingObjects.pCadLine->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadLine->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadLine->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::HOLERND:
+		case TOKEN_HOLERND:
 			DrawingObjects.pCadHoleRound = new CCadHoleRound;
 			DrawingObjects.pCadHoleRect->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadHoleRound->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadHoleRound->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::HOLERECT:
+		case TOKEN_HOLERECT:
 			DrawingObjects.pCadHoleRect = new CCadHoleRect;
 			DrawingObjects.pCadHoleRect->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadHoleRect->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadHoleRect->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::HOLE_1FLAT:
+		case TOKEN_HOLE_1FLAT:
 			DrawingObjects.pCadHoleRnd1Flat = new CCadHoleRnd1Flat;
 			DrawingObjects.pCadHoleRnd1Flat->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadHoleRnd1Flat->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadHoleRnd1Flat->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::HOLE_2FLAT:
+		case TOKEN_HOLE_2FLAT:
 			DrawingObjects.pCadHoleRnd2Flat = new CCadHoleRnd2Flat;
 			DrawingObjects.pCadHoleRnd2Flat->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadHoleRnd2Flat->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadHoleRnd2Flat->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::LIBPART:
+		case TOKEN_LIBPART:
 			DrawingObjects.pCadLibPart = new CCadLibPart;
 			DrawingObjects.pCadLibPart->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadLibPart->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadLibPart->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::BITMAP:
+		case TOKEN_BITMAP:
 			DrawingObjects.pCadBitmap = new CCadBitmap;
 			DrawingObjects.pCadBitmap->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadBitmap->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadBitmap->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
-		case CLexer::Tokens::ARROW:
+		case TOKEN_ARROW:
 			DrawingObjects.pCadArrow = new CCadArrow;
 			DrawingObjects.pCadArrow->Create(this, CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = DrawingObjects.pCadArrow->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = DrawingObjects.pCadArrow->Parse(pcfFile, LookAHeadToken, pParser);
 			pParent->AddObjectAtTail(DrawingObjects.pCadObject);
 			break;
 		case '}':
@@ -221,7 +230,11 @@ CLexer::Tokens CCadDrawing::DrawObjects(
 	return LookAHeadToken;
 }
 
-void CCadDrawing::Save(FILE* pO, int Indent)
+void CCadDrawing::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//-------------------------------------------
 	//	Save
@@ -233,21 +246,40 @@ void CCadDrawing::Save(FILE* pO, int Indent)
 	//-------------------------------------------
 	char* s = new char[256];
 	char* s1 = new char[64];
+	char* sO = new char[2048];
+	CString csOut;
 
-	CCadObject* pCO = GetHead();;
-	fprintf(pO, "%sDRAWFILE( %s )\n%s{\n",
-		theApp.IndentString(s, 256, Indent),
-		CFileParser::SaveColor(s1, 64, CLexer::Tokens::BACKGROUND_COLOR, GetBkColor()),
+	CCadObject* pCO = GetHead();
+	csOut.Format( _T("%sDRAWFILE( %hs,%hs )\n%hs{\n"),
+		GETAPP.IndentString(s, 256, Indent,' '),
+		CFileParser::SaveColor(s1, 64, TOKEN_BACKGROUND_COLOR, GetBkColor()),
 		s
 	);
+	GETAPP.ConvertCStringToChar(sO, csOut);
+	pcfFile->Write(sO, strlen(sO));
 	while (pCO)
 	{
-		pCO->Save(pO, CLexer::Tokens::DEFAULT,  Indent + 4);
+		pCO->Save(pcfFile, TOKEN_DEFAULT,  Indent + 4);
 		pCO = pCO->GetNext();
 	}
-	fprintf(pO, "%s}\n", s);
+	csOut.Format( _T("%hs}\n"), s);
 	delete[]s1;
 	delete[]s;
+}
+
+CCadObject* CCadDrawing::Copy()
+{
+	return nullptr;
+}
+
+void CCadDrawing::CopyAttributes(CCadObject* pToObj)
+{
+//	((CCadDrawing*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+BOOL CCadDrawing::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 int CCadDrawing::CheckSelected(DOUBLEPOINT p, CCadObject **ppSelList, int n, int flag)
@@ -265,7 +297,7 @@ int CCadDrawing::CheckSelected(DOUBLEPOINT p, CCadObject **ppSelList, int n, int
 	//		p......point of interest
 	//		ppSelList...pointer to an array of selected objects
 	//		n.....maximum number of objects to check for
-	//		flag..what kind of objects are inlcuded in list
+	//		flag..what kind of objects are included in list
 	//				0-All Objects
 	//				1-Unselected Objects
 	//				2-Selected Objects
@@ -336,7 +368,7 @@ CCadLibPart * CCadDrawing::CreatePartFromSelected(CString& csName)
 		{
 			if (pObj->IsSelected())
 			{
-				pNewObject = pObj->CopyObject();
+				pNewObject = pObj->Copy();
 				pPart->AddObjectAtTail(pNewObject);
 			}
 			pObj = pObj->GetNext();

@@ -39,7 +39,8 @@ public:
 		RECT_ROTATED,
 		ROUNDEDRECT,
 		TEXT,
-		CLIPBOARD
+		CLIPBOARD,
+		ANY
 	};
 private:
 	struct TypeKindXREF {
@@ -83,9 +84,11 @@ public:
 		ANY,				//0
 		DEFAULT,			//1
 		RECT_ROTATED,		//2
-		RECT_BASE_DEFINED,//3
+		RECT_BASE_DEFINED,	//3
 		RECT_FROM_CENTER,
-		LINE_FIXED_LEN,	//4
+		LINE_FIXED_LEN_HYPOTENUS,	//4
+		LINE_FIXED_LEN_NEAREST_OBJECT,
+		ENCLOSING_SHAPE,
 		//--- Arc/Ellipse ---
 		RECTSHAPE,		//5
 		STARTPOINT,		//6
@@ -114,7 +117,8 @@ public:
 		ROTATION_POINT,	//25
 		VERTEX,			//26
 		RIGHTANGLE_VERTEX,	//27
-		REFERENCE_POINT		//28
+		REFERENCE_POINT,		//28
+		END_OF_SUBTYPES
 	};
 private:
 	struct SubTypeTable {
@@ -127,18 +131,24 @@ private:
 			m_SubType = ST;
 			m_csName = csN;
 		}
+		static CString& LookupSubType(SubTypes SType);
+		static char* LookupSubType(char* s, int n, SubTypes SType);
+		static SubTypes LookupSubTypeString(const char* pName);
+		static SubTypes LookupSubTypeString(CString& csName);
 	};
 
 	static inline SubTypeTable SubTypeStringsLUT[] = {
 		{SubTypes::ANY,_T("ANY")},				//0
-		{SubTypes::DEFAULT, _T("DEFAULT")},			//1
+		{SubTypes::DEFAULT,_T("DEFAULT")},			//1
 		{SubTypes::RECT_ROTATED,_T("RECT_ROTATED")},		//2
 		{SubTypes::RECT_BASE_DEFINED,_T("RECT_BASE_DEFINED")},//3
-		{SubTypes::LINE_FIXED_LEN, _T("LINE_FIXED_LEN")},	//4
+		{SubTypes::LINE_FIXED_LEN_HYPOTENUS,_T("LINE_FIXED_LEN_HYPOTENUS")},	//4
+		{SubTypes::LINE_FIXED_LEN_NEAREST_OBJECT,_T("LINE_FIXED_LEN_NEAREST_OBJECT")},
+		{SubTypes::ENCLOSING_SHAPE,_T("ENCLOSING_SHAPE")},
 		//--- Arc/Ellipse ---
-		{SubTypes::RECTSHAPE, _T("RECTSHAPE")},		//5
-		{SubTypes::STARTPOINT, _T("STARTPOINT")},		//6
-		{SubTypes::ENDPOINT, _T("ENDPOINT")},			//7
+		{SubTypes::RECTSHAPE,_T("RECTSHAPE")},		//5
+		{SubTypes::STARTPOINT,_T("STARTPOINT")},		//6
+		{SubTypes::ENDPOINT,_T("ENDPOINT")},			//7
 		//--- Arrow ---
 		{SubTypes::ARROW_TIP,_T("ARROW_TIP")},		//8
 		{SubTypes::ARROW_END,_T("ARROW_END")},		//9
@@ -190,7 +200,7 @@ private:
 	CCadObject* m_pTail;	//Tail of main list of drawing objects
 	UINT m_nTotalObjects;
 	//------------------------------------
-	// Parrent Objects
+	// Parent Objects
 	//------------------------------------
 	CCadObject* m_pParentObject;
 	CCadObject* m_pOrigin;
@@ -225,7 +235,7 @@ public:
 	virtual void SetOrigin(CCadObject* pOrg) { m_pOrigin = pOrg; }
 	virtual CCadObject* GetOrigin() { return m_pOrigin; }
 	UINT GetId() { return m_Id; }
-	ObjectType GetType(void) { return m_Type; }
+	ObjectType GetType() { return m_Type; }
 	void SetType(ObjectType type) { m_Type = type; }
 	SubTypes GetSubType() { return m_SubType; }
 	void SetSubType(SubTypes subtype) { m_SubType = subtype; }
@@ -246,14 +256,15 @@ public:
 	// load and save files
 	//------------------------------------
 	virtual void Save(
-		FILE* pO, 
-		CLexer::Tokens Token, 
+		CFile* pcfFile,
 		int Indent, 
 		int flags = 0
 	) {}
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,
-		CFileParser* pParser
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,
+		CFileParser* pParser,
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	)
 	{
 		return Token;
@@ -265,8 +276,10 @@ public:
 	//------------------------------------------
 	// Get things about the object
 	//------------------------------------------
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::BASE_OBJ; }
-	virtual BOOL PointInThisObject(DOUBLEPOINT point) { return FALSE; }
+	virtual int GetDefaultToken() { return TOKEN_BASE_OBJ; }
+	virtual BOOL PointInThisObject(DOUBLEPOINT point);
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p) = 0;
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject* pExcludeObject,
@@ -290,19 +303,28 @@ public:
 	CString& GetName() { return m_csName; }
 	void SetName(CString& csName) { m_csName = csName; }
 	CString& GetDescription() { return m_csDescription; }
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	CString& GetSubTypeString(SubTypes SubTypeEnum);
 	char* GetSubTypeString(char* pDest, SubTypes SubTypeEnum);
 	char* GetCharSubTypeString(char* pDest, SubTypes SubTypeEnum);
 	virtual CString& GetObjDescription();
-	void CopyObject(CCadObject* pObjDestination);
-	virtual CCadObject* CopyObject() { return NULL; }
 	virtual CDoubleSize GetSize() { 
 		return CDoubleSize(0.0, 0.0);
 	};
-	virtual CCadObject* GetVertex(UINT VertexNumber);
+	virtual CCadObject* GetVertex(
+		UINT VertexNumber, 
+		BOOL bRotated = FALSE
+	);
+	//--------------------------------------------
+	// Copy this object to another methods
+	//--------------------------------------------
+	virtual CCadObject* Copy() = 0 { return NULL; }
+protected:
+	virtual void CopyAttributes(CCadObject* pToObj) = 0;
+	void CopyObject(CCadObject* pObjDestination);
+public:
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState) { return DrawState; }
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState) { return DrawState; }
@@ -310,7 +332,7 @@ public:
 	//--------------------------------------------------------
 	// Methods for managing object properites
 	//--------------------------------------------------------
-	virtual int EditProperties(void) { return IDCANCEL; }
+	virtual int EditProperties() { return IDCANCEL; }
 	//------------------------------------------
 	// Linked List Methods
 	// -----------------------------------------
@@ -332,10 +354,13 @@ public:
 	virtual CCadObject* RemoveObjectFromTail();
 	virtual void RemoveAndDestroyAll();
 	virtual CCadObject* DeleteObject(CCadObject* pObj);
+	BOOL IsSameType(ObjectType Type);
+	BOOL IsSameSubType(SubTypes SubType);
+	BOOL IsSameSubSubType(UINT SubSubType);
 	virtual CCadObject* FindObject(ObjectType Type, SubTypes SubType, UINT SubSubType);
 	//-------- Selected Objects ----------------
-	virtual BOOL IsSelected(void) const { return m_Selected; }
-	virtual BOOL IsNotSelected(void) const { return !m_Selected; }
+	virtual BOOL IsSelected() const { return m_Selected; }
+	virtual BOOL IsNotSelected() const { return !m_Selected; }
 	virtual void SetSelected(BOOL Flag) { m_Selected = Flag; }
 	virtual void RemoveAndDestroySelectedObjects();
 	int GetTotalNumberOfSelectedItems();

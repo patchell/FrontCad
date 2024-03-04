@@ -65,7 +65,11 @@ void CCadHoleRnd2Flat::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadHoleRnd2Flat::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadHoleRnd2Flat::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -207,6 +211,11 @@ void CCadHoleRnd2Flat::SolveIntersection()
 	ObjEnd2.pCadPoint->SetY(ObjCenter.pCadPoint->GetY() + Yoff);
 }
 
+BOOL CCadHoleRnd2Flat::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 int CCadHoleRnd2Flat::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject* pExcludeObject,
@@ -226,7 +235,7 @@ int CCadHoleRnd2Flat::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -258,7 +267,7 @@ int CCadHoleRnd2Flat::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadHoleRnd2Flat::GetTypeString(void)
+CString& CCadHoleRnd2Flat::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -278,10 +287,10 @@ CString& CCadHoleRnd2Flat::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadHoleRnd2Flat::CopyObject(void)
+CCadObject * CCadHoleRnd2Flat::Copy()
 {
 	//---------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -289,15 +298,21 @@ CCadObject * CCadHoleRnd2Flat::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadHoleRnd2Flat* pHR2F = new CCadHoleRnd2Flat;
+	pHR2F->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pHR2F);
 	return pHR2F;
+}
+
+void CCadHoleRnd2Flat::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadHoleRnd2Flat*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 CDoubleSize CCadHoleRnd2Flat::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -307,10 +322,11 @@ CDoubleSize CCadHoleRnd2Flat::GetSize()
 	return CDoubleSize(Radius,Radius);
 }
 
-CLexer::Tokens CCadHoleRnd2Flat::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadHoleRnd2Flat::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------

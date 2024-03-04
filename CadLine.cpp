@@ -19,7 +19,7 @@ CCadLine::CCadLine(CCadLine &line) :CCadObject(ObjectType::LINE)
 	CCadPoint* pCP = (CCadPoint*)line.GetHead();
 	while (pCP)
 	{
-		AddObjectAtTail(pCP->CopyObject());
+		AddObjectAtTail(pCP->Copy());
 		pCP = (CCadPoint * )pCP->GetNext();
 	}
 }
@@ -47,6 +47,12 @@ BOOL CCadLine::Create(CCadObject* pParent, SubTypes type)
 	pRect = new CCadRect;
 	pRect->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
 	AddObjectAtTail(pRect);
+	if (type == SubTypes::LINE_FIXED_LEN_HYPOTENUS)
+	{
+		pPoint = new CCadPoint;
+		pPoint->Create(pParent, CCadObject::SubTypes::RIGHTANGLE_VERTEX);
+		AddObjectAtTail(pPoint);
+	}
 	m_Length = 0.0;
 	return TRUE;
 }
@@ -67,7 +73,11 @@ void CCadLine::Move(CDoubleSize Diff)
 }
 
 
-void CCadLine::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadLine::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -79,17 +89,11 @@ void CCadLine::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
 	//--------------------------------------------------
 	char* pIndent = new char[256];
 
-	fprintf(pO, "%s%s(%s(%8.3lf,%8.3lf),%s(%8.3lf,%8.3lf))",
-		GETAPP.IndentString(pIndent,Indent, ' '),
-		CLexer::TokenLookup(CLexer::Tokens::LINE),
-		CLexer::TokenLookup(CLexer::Tokens::POINT),
-		((CCadPoint*)GetHead())->GetX(),
-		((CCadPoint*)GetHead())->GetY(),
-		CLexer::TokenLookup(CLexer::Tokens::POINT),
-		((CCadPoint*)GetHead()->GetNext())->GetX(),
-		((CCadPoint*)GetHead()->GetNext())->GetY()
-	);
-	GetAttributes().Save(pO, Indent + 1, flags);
+	GETAPP.IndentString(pIndent, 256, Indent, ' ');
+	FindObject(ObjectType::POINT,SubTypes::VERTEX,1)->Save(pcfFile,TOKEN_POINT,Indent);
+	FindObject(ObjectType::POINT, SubTypes::VERTEX, 2)->Save(pcfFile, TOKEN_POINT, Indent);
+	FindObject(ObjectType::RECT, SubTypes::RECTSHAPE,0)->Save(pcfFile, TOKEN_RECT, Indent);
+	GetAttributes().Save(pcfFile, Indent + 2, flags);
 	delete[] pIndent;
 }
 
@@ -146,6 +150,7 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 				pObj.pCadPoint->MoveTo(pDC, LLHC, Scale);
 				pObj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
 				pObj.pCadPoint->LineTo(pDC, LLHC, Scale);
+				break; //TODO Huh
 			case ObjectDrawState::PLACE_LBUTTON_DOWN:
 				pObj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
 				pObj.pCadPoint->MoveTo(pDC, LLHC, Scale);
@@ -169,6 +174,11 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			pObj.pCadObject = pObj.pCadObject->GetNext();
 		}
 	}	//end of if(rederEnabled)
+}
+
+BOOL CCadLine::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
@@ -200,7 +210,7 @@ int CCadLine::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -233,7 +243,7 @@ int CCadLine::PointInObjectAndSelect(
 }
 
 
-CString& CCadLine::GetTypeString(void)
+CString& CCadLine::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -271,7 +281,7 @@ CString& CCadLine::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadLine::CopyObject(void)
+CCadObject * CCadLine::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -284,9 +294,14 @@ CCadObject * CCadLine::CopyObject(void)
 	CADObjectTypes newObj;
 	newObj.pCadLine = new CCadLine;
 	CCadObject::CopyObject(newObj.pCadObject);
-	newObj.pCadLine->CopyAttributesFrom(GePtrTotAttributes());
+	newObj.pCadLine->CopyAttributesFrom(GetPtrToAttributes());
 	newObj.pCadLine->m_Length = m_Length;
 	return newObj.pCadObject;
+}
+
+void CCadLine::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadLine*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 
@@ -294,7 +309,7 @@ CDoubleSize CCadLine::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -315,13 +330,14 @@ CDoubleSize CCadLine::GetSize()
 		2
 	);
 	P2 = DOUBLEPOINT(*pPoint);
-	return CDoubleSize(abs(P1.dX - P2.dX), abs(P1.dY - P2.dY));
+	return CDoubleSize(fabs(P1.dX - P2.dX), fabs(P1.dY - P2.dY));
 }
 
-CLexer::Tokens CCadLine::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadLine::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken // Token type to save object as
+	int TypeToken // Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -337,13 +353,13 @@ CLexer::Tokens CCadLine::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pParser->Expect(Token, TypeToken);
-	Token = pParser->Expect(Token, CLexer::Tokens('('));
-//	Token = pLex->Point(CLexer::Tokens::POINT, m_Line.GetPoint(LinePoint::P1), Token);
-	Token = pParser->Expect(Token, CLexer::Tokens(','));
-//	Token = pLex->Point(CLexer::Tokens::POINT, m_Line.GetPoint(LinePoint::P2), Token);
-	Token = pParser->Expect(Token, CLexer::Tokens(')'));
-	Token = GetAttributes().Parse(Token, pParser);
+	Token = pParser->Expect(pcfInFile, Token, TypeToken);
+	Token = pParser->Expect(pcfInFile, Token, int('('));
+//	Token = pLex->Point(TOKEN_POINT, m_Line.GetPoint(LinePoint::P1), Token);
+	Token = pParser->Expect(pcfInFile, Token, int(','));
+//	Token = pLex->Point(TOKEN_POINT, m_Line.GetPoint(LinePoint::P2), Token);
+	Token = pParser->Expect(pcfInFile, Token, int(')'));
+	Token = GetAttributes().Parse(pcfInFile, Token, pParser);
 	return Token;
 }
 
@@ -437,7 +453,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		);
 		ObjP1.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
-		GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
+		GETAPP.UpdateStatusBar(_T("Line:Place Second Point"));
 		SetCurrentDrawState(DrawState);
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
@@ -468,7 +484,7 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		// that the best way to proceed
 		// was to draw a right triangle
 		// with a known Hypotenuse
-		// so the proceedure will be to
+		// so the procedure will be to
 		// select the point where the
 		// right angle is, the second
 		// point will be the BASE of
@@ -557,8 +573,8 @@ ObjectDrawState CCadLine::ProcessDrawMode(ObjectDrawState DrawState)
 		);
 		//-------------------------------------------------
 		// What we do now is calculate the 
-		// position of P2 from thehypoteneus, which is the
-		// legnth of the fixed line, and the distance from
+		// position of P2 from the hypotenuse, which is the
+		// length of the fixed line, and the distance from
 		// the point where the right angle is, to P1
 		// from the position
 		//-------------------------------------------------
@@ -661,7 +677,7 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 					CCadPoint* pCP = (CCadPoint*)pSnapedObject;
 					ObjP1.pCadPoint->SetPoint(pCP->GetPoint());
 					DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
-					GETAPP.UpdateStatusBar(_T("Line:Place Second Popint"));
+					GETAPP.UpdateStatusBar(_T("Line:Place Second Point"));
 				}
 			}
 			else
@@ -733,11 +749,11 @@ ObjectDrawState CCadLine::MouseMove(ObjectDrawState DrawState)
 }
 
 BOOL CCadLine::CalcFixedPoint(
-	DOUBLEPOINT MousePos,	//current mopuse position
+	DOUBLEPOINT MousePos,	//current mouse position
 	CCadPoint* pPtRtAgl,	//where the right angle is
 	CCadPoint* pPtP1,		// P1 of the Line
 	CCadPoint* pPtP2		// P2 of the Line
-)
+) const
 {
 	//------------------------------------------
 	// CalcFixedPoint
@@ -745,7 +761,7 @@ BOOL CCadLine::CalcFixedPoint(
 	// 1. Does P1 == RtAngle , then rotate around P1
 	// 2. else
 	// 3. Slope of R1->P1
-	// 4. Slope Orthoganol to R1-> P1
+	// 4. Slope Orthogonal to R1-> P1
 	// 5. Length of R1->P2
 	// 6. Point on Line R1->P2 intersected by P1->P2
 	//
@@ -814,7 +830,7 @@ BOOL CCadLine::CalcFixedPoint(
 				break;
 			case SLOPE_NOT_ORTHOGONAL:
 				//--------------------------------------
-				//somewhre in between slope
+				//somewhere in between slope
 				//--------------------------------------
 				// Find Slope of the line
 				//--------------------------------------
@@ -835,7 +851,7 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 {
 	//-------------------------------------
 	// ProcessZoom
-	// Makes changes nessesary when the
+	// Makes changes necessary when the
 	// drawing is zoomed, in this case,
 	// recalculate the enclosing
 	// rectangle
@@ -883,7 +899,7 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	((CCadPoint*)ObjRect.pCadRect->GetVertex(4))->SetPoint(p2.Reflect(ObjP2.pCadPoint, POINT_REFLECT_BOTH));
 }
 
-int CCadLine::EditProperties(void)
+int CCadLine::EditProperties()
 {
 	CDlgLineAttributes Dlg;
 	int Id;

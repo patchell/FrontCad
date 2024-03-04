@@ -10,6 +10,7 @@ IMPLEMENT_DYNCREATE(CFrontCadView, CChildViewBase)
 
 CFrontCadView::CFrontCadView()
 {
+	memset(&m_TrackMouseEvent, 0, sizeof(TRACKMOUSEEVENT));
 	m_pParentFrame = 0;
 	m_ObjectEnables = 0;	//all objects disabled
 	m_ControlKeyDown = FALSE;
@@ -20,6 +21,7 @@ CFrontCadView::CFrontCadView()
 	m_MouseLeftWindow = FALSE;
 	m_MouseLocation = MouseIsHere::NOWHERE;
 	m_AutoScrollTimerId = TIMER_ID_AUTOSCROLL;
+	m_LeftMouseButtonDown = FALSE;
 	m_MouseLButtonHeldDownId = TIMER_ID_LBUTTON_DOWN;;
 	m_MouseLButtonHeldDown = FALSE;
 	memset(&m_HScrollInfo, 0, sizeof(SCROLLINFO));
@@ -79,11 +81,11 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_COMMAND(ID_LINE_RECTANGLE, &CFrontCadView::OnDrawRectangle)
 	ON_COMMAND(ID_HOLE_SQUAREHOLE, &CFrontCadView::OnDrawRectangularhole)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnUpdateDrawRectangularhole)
-	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedrectangle)
+	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedRectangle)
 	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedrectangle)
 	ON_COMMAND(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnDrawRectangleFromCenter)
 	ON_UPDATE_COMMAND_UI(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnUpdateRectFromCenter)
-	ON_COMMAND(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnDrawRoundedrectangle)
+	ON_COMMAND(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnDrawRoundedRectangle)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnUpdateDrawRoundedrectangle)
 	ON_COMMAND(ID_HOLE_ROUNDHOLE, &CFrontCadView::OnDrawRoundhole)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_ROUNDHOLE, &CFrontCadView::OnUpdateDrawRoundhole)
@@ -127,7 +129,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_ZOOMOUT, &CFrontCadView::OnUpdateViewZoomout)
 	ON_COMMAND(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnDrawPlaceBitmap)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_PLACEBITMAP, &CFrontCadView::OnUpdateDrawPlacebitmap)
-	ON_COMMAND(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnLineLinefixedlen)
+	ON_COMMAND(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnLineFixedLength)
 	ON_UPDATE_COMMAND_UI(ID_LINE_LINEFIXEDLEN, &CFrontCadView::OnUpdateLineLinefixedlen)
 	ON_COMMAND(ID_LINE_POLYLINE, &CFrontCadView::OnLinePolyline)
 	ON_UPDATE_COMMAND_UI(ID_LINE_POLYLINE, &CFrontCadView::OnUpdateLinePolyline)
@@ -622,7 +624,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 		break;
 	case DrawingMode::SELECTREGION:		// LButton Up
 		break;
-	default:	//this is where the bulk of the operations occure
+	default:	//this is where the bulk of the operations occur
 				//such as drawing objects
 		if (m_CadObj.pCadObject) m_DrawState = m_CadObj.pCadObject->ProcessDrawMode(m_DrawState);
 		break;
@@ -635,7 +637,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	///----------------------------------------------
 	/// OnMouseMove
 	///
-	///     This fuction implements the methodes
+	///     This fuction implements the methods
 	/// that handle the mouse moving in a cad drawing
 	///
 	/// parameters:
@@ -900,7 +902,7 @@ void CFrontCadView::OnDrawEllipse()
 	pE = new CCadEllipse;
 	pE->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
 	SetObjectTypes(pE);
-	GETAPP.UpdateStatusBar(_T("Ellispe Place 1st Point of Defining Rectangle"));
+	GETAPP.UpdateStatusBar(_T("Ellipse Place 1st Point of Defining Rectangle"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
 }
 
@@ -929,7 +931,7 @@ void CFrontCadView::OnDrawLine()
 }
 
 
-void CFrontCadView::OnLineLinefixedlen()
+void CFrontCadView::OnLineFixedLength()
 {
 	CCadLine* pL;
 
@@ -940,7 +942,7 @@ void CFrontCadView::OnLineLinefixedlen()
 	}
 	SetDrawMode(DrawingMode::LINE);
 	pL = new CCadLine;
-	pL->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::DEFAULT);
+	pL->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::LINE_FIXED_LEN_HYPOTENUS);
 	SetObjectTypes(pL);
 	GETAPP.UpdateStatusBar(_T("Line:Place First Point"));
 	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING_LINE_FIXED_LEN);
@@ -1117,8 +1119,7 @@ void CFrontCadView::OnUpdateDrawRectangularhole(CCmdUI* pCmdUI)
 	pCmdUI->Enable(1);
 }
 
-
-void CFrontCadView::OnDrawRotatedrectangle()
+void CFrontCadView::OnDrawRotatedRectangle()
 {
 	CCadRect* pR;
 
@@ -1132,7 +1133,7 @@ void CFrontCadView::OnDrawRotatedrectangle()
 	pR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::RECT_ROTATED);;
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
-	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::RECT_HWR_START_DRAWING);
 }
 
 void CFrontCadView::OnDrawRectangleFromCenter()
@@ -1149,7 +1150,7 @@ void CFrontCadView::OnDrawRectangleFromCenter()
 	pR->Create(GetDocument()->GetDrawing(), CCadObject::SubTypes::RECT_FROM_CENTER);
 	SetObjectTypes(pR);
 	GETAPP.UpdateStatusBar(_T("Rectangle:Place 1st Point"));
-	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::START_DRAWING);
+	m_DrawState = GetObjectTypes().pCadObject->ProcessDrawMode(ObjectDrawState::RECT_CENT_START_DRAWING);
 }
 
 void CFrontCadView::OnUpdateRectFromCenter(CCmdUI* pCmdUI)
@@ -1163,7 +1164,7 @@ void CFrontCadView::OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI)
 }
 
 
-void CFrontCadView::OnDrawRoundedrectangle()
+void CFrontCadView::OnDrawRoundedRectangle()
 {
 	CCadRndRect* pRR;
 
@@ -1699,7 +1700,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 		OnDrawRectangle();
 		break;
 	case ID_CM_PLACE_ROUNDED_RECT:	// OnContextMenu
-		OnDrawRoundedrectangle();
+		OnDrawRoundedRectangle();
 		break;
 	case ID_CM_PLACE_TEXT:	// OnContextMenu
 		OnDrawText();
@@ -2403,7 +2404,7 @@ void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 	if (GetGrid().ZoomIn())	// did a zoom?
 	{
 		NextScale = GetGrid().GetInchesPerPixel();
-		pointNewLLHC = point.LLHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
+		pointNewLLHC = point.LLHC_FromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		//---------------------------------
 		// Clean up LLHC ie Snap
 		//--------------------------------
@@ -2445,7 +2446,7 @@ void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 	if (GetGrid().ZoomOut())	// did a zoom
 	{
 		NextScale = GetGrid().GetInchesPerPixel();
-		pointNewLLHC = point.LLHCfromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
+		pointNewLLHC = point.LLHC_FromPixelPoint(p, NextScale.GetScaleX(), NextScale.GetScaleY());
 		pointNewLLHC.Snap(GetGrid().GetSnapGrid(), TRUE);
 		GetRulerInfo().SetUpperLeft(pointNewLLHC);
 		//--------------------------------

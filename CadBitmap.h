@@ -17,10 +17,11 @@ public:
 	CCadBitmap();
 	virtual ~CCadBitmap();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::BITMAP; }
+	virtual int GetDefaultToken() { return TOKEN_BITMAP; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -30,23 +31,36 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
-	);
-	//----------- Attribute Methodes ------------------
+	//----------- Attribute Methods ------------------
 	SBitmapAttributes& GetAttributes() { return m_Attributes; }
 	SBitmapAttributes* GetPtrToAttributes() { return &m_Attributes; }
 	void CopyAttributesTo(SBitmapAttributes* pAttrib);
 	void CopyAttributesFrom(SBitmapAttributes* pAttrib);
 	BOOL IsAspectRationMaintained() { return GetAttributes().m_MaintainAspectRatio; }
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);

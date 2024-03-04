@@ -52,7 +52,7 @@ class CFrontCadApp : public CWinApp
 	SRndHole1FlatAttributes m_RoundHole1FlatAttributes;
 	SRndHole2FlatAttributes m_RoundHole2FlatsAttributes;
 	SGridAttributes m_GridAttributes;
-	SRullerAttributes m_RulerAttributes;
+	SRulerAttributes m_RulerAttributes;
 	SPointAttributes m_PointAttributes;
 	double Pi;
 public:
@@ -69,11 +69,11 @@ public:
 	void* GetObjectDefaultAttributes(CCadObject::ObjectType ObjectType);
 	afx_msg void OnFileOpen();
 	//------------------------------------------
-	// General utility methodes
+	// General utility methods
 	// -----------------------------------------
-	// String Methodes
+	// String Methods
 	//-----------------------------------------
-	char* IndentString(char* pDest, int count, int c = ' ');
+	char* IndentString(char* pDest, int destSize, int count, int c);
 	char* ConvertCStringToChar(char* cpDest, CString& csSource);
 	//-----------------------------------------
 	// Math Methods
@@ -132,7 +132,6 @@ public:
 	//-----------------------------------------
 	// Polygon Methods
 	//-----------------------------------------
-
 	void GetPolyMinMax(
 		DOUBLEPOINT* pPoly, 
 		int n, 
@@ -142,7 +141,15 @@ public:
 		double& MaxY
 	);
 	void ShiftDoublePointArray(CCadPoint* pdptPoints, UINT nPoints, UINT Direction);
-	CPoint* MakeCPointPolygonFromDOUBLEPOINTS(
+	CPoint* MakeCPointArray(
+		CPoint* dest,
+		CCadPoint* src,
+		int n,
+		DOUBLEPOINT& LLHC,
+		CScale& Scale
+	);
+
+	CPoint* MakeCPointArray(
 		CPoint* dest, 
 		DOUBLEPOINT*src,
 		int n,
@@ -204,10 +211,10 @@ public:
 	SRndHole1FlatAttributes* GetRoundHole1FlatAttributes(){ return &m_RoundHole1FlatAttributes;}
 	SRndHole2FlatAttributes* GetRoundHole2FlatAttributes(){ return &m_RoundHole2FlatsAttributes;}
 	SGridAttributes* GetGridAttributes() { return &m_GridAttributes; }
-	SRullerAttributes* GetRulerAttributes() { return &m_RulerAttributes; }
+	SRulerAttributes* GetRulerAttributes() { return &m_RulerAttributes; }
 	SPointAttributes*  GetPointAttributes() { return &m_PointAttributes; }
 	//--------------------------------------ClipBoard-----------------------
-	CClipboard* GetClipBoard(void) { return &m_ClipBoard; }
+	CClipboard* GetClipBoard() { return &m_ClipBoard; }
 	//--------------------------------------Debug---------------------------
 	CString& DrawStateToString(ObjectDrawState State)
 	{

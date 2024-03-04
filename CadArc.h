@@ -15,10 +15,11 @@ public:
 	CCadArc();
 	virtual ~CCadArc();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARC; }
+	virtual int GetDefaultToken() { return TOKEN_ARC; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -28,17 +29,30 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
+	virtual void Save(
+		CFile* pcfFile, 
+		int Indent, 
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -49,14 +63,14 @@ public:
 	//----------------------------------------
 	// Attribute Methods
 	//----------------------------------------
-	virtual int EditProperties(void);
+	virtual int EditProperties();
 	void CopyAttributesTo(SArcAttributes* pAttrb);
 	void CopyAttributesFrom(SArcAttributes* pAttrb);
 	SArcAttributes& GetAttributes() { return m_Attrb; }
 	SArcAttributes* GetPtrToAttributes() { return &m_Attrb; }
-	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(double w) { GetAttributes().m_LineWidth = w; }
 	//--------------------------------------------
 	static BOOL NeedsAttributes() {

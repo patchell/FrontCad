@@ -107,7 +107,7 @@ BOOL CCadPoint::IsPointOnTarget(DOUBLEPOINT point)
 	distance = Difference.Magnitude();
 	if (distance < GETVIEW->GetGrid().GetSnapGrid().Magnitude())
 		Result = TRUE;
-//	sprintf_s(s, 256, "Is the Point Hovered Over? --%s", Result ? "Yes" : "NO!");
+//	sprintf_s(s, 256, "Is the Point Hovered Over? --%hs", Result ? "Yes" : "NO!");
 //	Print(s);
 	delete[] s;
 	return Result;
@@ -117,6 +117,11 @@ void CCadPoint::Move(CDoubleSize Diff)
 {
 	dX += Diff.dCX;
 	dY += Diff.dCY;
+}
+
+BOOL CCadPoint::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 BOOL CCadPoint::PointInThisObject(DOUBLEPOINT point)
@@ -146,7 +151,7 @@ int CCadPoint::PointInObjectAndSelect(
 	//	p...........point to check at
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//	flag........Determines what sort of objects selected
 	//
 	// return value:
@@ -176,7 +181,7 @@ int CCadPoint::PointInObjectAndSelect(
 	return index;
 }
 
-CCadObject* CCadPoint::CopyObject()
+CCadObject* CCadPoint::Copy()
 {
 	CCadPoint* pCP;
 
@@ -185,6 +190,11 @@ CCadObject* CCadPoint::CopyObject()
 	pCP->SetY(dY);
 	pCP->CopyAttributesFrom(GetPtrToAttributes());
 	return pCP;
+}
+
+void CCadPoint::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadPoint*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 void CCadPoint::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
@@ -236,6 +246,16 @@ void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 	pDC->LineTo(ToPixelPoint(LLHC, Scale));
 }
 
+void CCadPoint::MoveTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale, CCadPoint* pPivot, CCadPoint* pRotation)
+{
+	pDC->MoveTo(ToPixelPointWithRotation(LLHC, Scale, pPivot, pRotation));
+}
+
+void CCadPoint::LineTo(CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale, CCadPoint* pPivot, CCadPoint* pRotation)
+{
+	pDC->LineTo(ToPixelPointWithRotation(LLHC, Scale, pPivot, pRotation));
+}
+
 void CCadPoint::LineFromHereToThere(DOUBLEPOINT There, CDC* pDC, DOUBLEPOINT& LLHC, CScale& Scale)
 {
 	pDC->MoveTo(ToPixelPoint(LLHC, Scale));
@@ -280,17 +300,59 @@ CPoint CCadPoint::ToPixelPoint(DOUBLEPOINT& LLHC, CScale& Scale)
 	return CPoint(dp);
 }
 
-CLexer::Tokens CCadPoint::Parse(
-	CLexer::Tokens Token, 
+CPoint CCadPoint::ToPixelPointWithRotation(
+	DOUBLEPOINT& LLHC, 
+	CScale& Scale, 
+	CCadPoint* pPivot, 
+	CCadPoint* pRotation
+)
+{
+	CDoubleSize cdsRot;
+	double Angle;
+	DOUBLEPOINT dpP;
+	double dx, dy;
+	CPoint ptPoint;
+	
+	cdsRot = *pRotation - *pRotation;
+	Angle = cdsRot.Angle(DOUBLESIZE_RADIANS);
+	dx = cos(Angle);
+	dy = sin(Angle);
+	dx += 2 * dX - pRotation->dX;
+	dy += 2 * dY - pRotation->dY;
+	return CPoint(CCadPoint(dx,dy).ToPixelPoint(LLHC,Scale));
+}
+
+int CCadPoint::Parse(
+	CFile* pcfInFile,
+	int Token,
 	CFileParser* pParser, 
-	CLexer::Tokens TypeToken
+	int TypeToken
 )
 {
 	return Token;
 }
 
-void CCadPoint::Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadPoint::Save(CFile* pcfFile, int Indent, int flags)
 {
+	char* pcBuffer = new char[1024];
+	char* pcIndent = new char[256];
+	char* pS1 = new char[64];
+	char* pS2 = new char[256];
+	char* pS3 = new char[64];
+	int n;
+
+	GETAPP.IndentString(pcIndent, 256, Indent, ' ');
+	n = sprintf_s(pcBuffer, 1024,
+		"%hs%hs(%hs,%hs,%hs:%d){\n",
+		pcIndent,
+		CFileParser::TokenLookup(TOKEN_POINT),
+		CFileParser::SaveDoubleValue(pS1,64,dX),	//X coordinate
+		CFileParser::SaveDoubleValue(pS2,64,dY),	//Y coordinate
+		GetSubTypeString(pS3, GetSubType()),
+		GetSubSubType()
+	);
+	pcfFile->Write(pcBuffer, n);
+	delete[] pcBuffer;
 }
 
 void CCadPoint::CopyAttributesTo(SPointAttributes* pAttrb)
@@ -420,7 +482,7 @@ void CCadPoint::ToPixelRect(double w_half, double h_half, CRect& rect, DOUBLEPOI
 	// 
 	// Parameters:
 	// w_half.......half of the width
-	// h_half.......half of the hiegth
+	// h_half.......half of the height
 	// rect.........reference to where to put CRect
 	// LLHC.........coordinate of the uper left corner of view
 	// Scale........Pixels per Inch
@@ -979,7 +1041,7 @@ double CCadPoint::DistanceTo(CCadPoint* pP)
 void CCadPoint::Print(const char* s)
 {
 	char* temp = new char[256];
-	printf("%s::X=%7.3lf, Y=%7.3lf SubType:%s  ID=%d\n", 
+	printf("%hs::X=%7.3lf, Y=%7.3lf SubType:%hs  ID=%d\n", 
 		s, 
 		dX, 
 		dY,

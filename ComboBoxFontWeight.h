@@ -13,7 +13,7 @@ public:
 	CComboBoxFontWeight();
 	virtual ~CComboBoxFontWeight();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
-	int GetFontWeight(void);
+	int GetFontWeight();
 	void Init();
 	void SetFontWeight(int w);
 	void SetupMessaging(CWnd *pW,int Wmsg,int Smsg);

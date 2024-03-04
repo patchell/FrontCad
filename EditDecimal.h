@@ -20,9 +20,9 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	void SetupMessaging(CWnd* pWdest, WindowsMsg WMsg, WMarrowSubMsg SubMsg);
 	void SetDecimalPlaces(int p);
-	int GetDecimalPlaces(void);
+	int GetDecimalPlaces();
 	void SetValue(int v);
-	int GetValue(void);
+	int GetValue();
 	void SetDoubleValue(double v);
 	double GetDoubleValue();
 protected:

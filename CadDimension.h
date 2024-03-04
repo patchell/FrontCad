@@ -13,11 +13,12 @@ class CCadDimension:public CCadObject
 public:
 	CCadDimension();
 	virtual ~CCadDimension();
-	virtual void OnCreate(void);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::DIMENSION; }
+	virtual void OnCreate();
+	virtual int GetDefaultToken() { return TOKEN_DIMENSION; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual BOOL PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -27,26 +28,40 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
 	virtual CPoint ScalePoint(CPoint p, int Scale, int ScaleDiv);
-	virtual CCadObject * CopyObject(void);
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
-	);
 	void CopyAttributesFrom(SCadDimAttributes *pAttrib);
 	void CopyAttributesTo(SCadDimAttributes* pAttrib);
 	int EditProperties();
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
 	//----------------------------------------------------
 	//----------------------------------------------------
 	SCadDimAttributes& GetAttributes() { return m_DimensionAttributes; }
+	SCadDimAttributes* GetPtrToAttributes() { return &m_DimensionAttributes; }
 	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	COLORREF GetTextColor() { return GetAttributes().m_colorText; }
 	COLORREF GetTextBkColor() { return GetAttributes().m_colorBKG; }

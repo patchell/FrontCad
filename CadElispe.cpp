@@ -3,7 +3,7 @@
 
 CCadEllipse::CCadEllipse():CCadObject(ObjectType::ELIPSE)
 {
-	GetName().Format(_T("Elipse_%d"), ++m_ElipseCount);
+	GetName().Format(_T("Ellipse_%d"), ++m_ElipseCount);
 	if (NeedsAttributes())
 	{
 		ClearNeedsAttributes();
@@ -53,7 +53,11 @@ void CCadEllipse::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadEllipse::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadEllipse::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -132,6 +136,11 @@ void CCadEllipse::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadEllipse::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadEllipse::PointInThisObject(DOUBLEPOINT point)
 {
 	BOOL rV = FALSE;
@@ -166,7 +175,7 @@ int CCadEllipse::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -199,7 +208,7 @@ int CCadEllipse::PointInObjectAndSelect(
 }
 
 
-CString& CCadEllipse::GetTypeString(void)
+CString& CCadEllipse::GetTypeString()
 {
 	//----------------------------------------------
 	// GetTypeString
@@ -219,10 +228,10 @@ CString& CCadEllipse::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadEllipse::CopyObject(void)
+CCadObject * CCadEllipse::Copy()
 {
 	//-----------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -230,15 +239,21 @@ CCadObject * CCadEllipse::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadEllipse *pCE = new CCadEllipse;
-	*pCE = *this;
+	pCE->Create(GetParent(), GetSubType());
+	CopyObject(pCE);
 	return pCE;
+}
+
+void CCadEllipse::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadEllipse*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 CDoubleSize CCadEllipse::GetSize()
 {
 	//---------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -250,10 +265,11 @@ CDoubleSize CCadEllipse::GetSize()
 	return Obj.pCadRect->GetSize();
 }
 
-CLexer::Tokens CCadEllipse::Parse(
-	CLexer::Tokens Token, 
+int CCadEllipse::Parse(
+	CFile* pcfInFile,
+	int Token,
 	CFileParser* pParser,
-	CLexer::Tokens TypeToken
+	int TypeToken
 )
 {
 	//--------------------------------------------

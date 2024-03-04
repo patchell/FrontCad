@@ -18,17 +18,18 @@ struct SArcAttributes
 		m_colorLine = pAttributes->m_colorLine;
 		m_colorSelected = pAttributes->m_colorSelected;
 	}
-	void CopyTo(SArcAttributes* pAttributes) {
+	void CopyTo(SArcAttributes* pAttributes) const {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -53,17 +54,18 @@ struct SArcCenterAttributes
 		m_colorLine = pAttributes->m_colorLine;
 		m_colorSelected = pAttributes->m_colorSelected;
 	}
-	void CopyTo(SArcCenterAttributes* pAttributes) {
+	void CopyTo(SArcCenterAttributes* pAttributes) const {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -104,7 +106,7 @@ struct SArrowAttributes {
 		for(int i = 0;i<4;++i)
 			m_aArrowShape[i] = pAttributes->m_aArrowShape[i];
 	}
-	void CopyTo(SArrowAttributes* pAttributes) {
+	void CopyTo(SArrowAttributes* pAttributes) const {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
@@ -112,12 +114,13 @@ struct SArrowAttributes {
 		for (int i = 0; i < 4; ++i)
 			pAttributes->m_aArrowShape[i] = m_aArrowShape[i];
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -137,16 +140,17 @@ struct SBitmapAttributes {
 		m_MaintainAspectRatio = pAttrib->m_MaintainAspectRatio;
 		m_BitmapSize = pAttrib->m_BitmapSize;
 	}
-	void CopyTo(SBitmapAttributes* pAttrib) {
+	void CopyTo(SBitmapAttributes* pAttrib) const {
 		pAttrib->m_MaintainAspectRatio = m_MaintainAspectRatio;
 		pAttrib->m_BitmapSize = m_BitmapSize;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -163,7 +167,7 @@ struct SCadDimAttributes {
 	};
 	COLORREF m_colorLine;
 	COLORREF m_colorText;
-	COLORREF m_colorBKG;	//text backhround color
+	COLORREF m_colorBKG;	//text background color
 	double m_TextHeight;
 	double m_LineWidth;
 	double m_ExtLineGap;
@@ -197,7 +201,7 @@ struct SCadDimAttributes {
 			sizeof(DOUBLEPOINT) * 4
 		);
 	}
-	void CopyTo(SCadDimAttributes* pAttributes) {
+	void CopyTo(SCadDimAttributes* pAttributes) const {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorText = m_colorText;
@@ -212,12 +216,13 @@ struct SCadDimAttributes {
 			sizeof(DOUBLEPOINT) * 4
 		);
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -225,7 +230,7 @@ struct SCadDimAttributes {
 	static void SaveSettings(SCadDimAttributes* pAttrb);
 };
 
-//------------ Elipse Attributes -----------------------
+//------------ Ellipse Attributes -----------------------
 
 struct SEllipseAttributes {
 
@@ -248,19 +253,20 @@ struct SEllipseAttributes {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 	}
-	void CopyTo(SEllipseAttributes* pAttributes) {
+	void CopyTo(SEllipseAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorLineSelected = m_colorLineSelected;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -296,7 +302,7 @@ struct SLineAttributes {
 		m_P2_SNAP_POINT = pAttributes->m_P2_SNAP_POINT;
 		m_P2_FIXED_LEN_SNAP_LINE = pAttributes->m_P2_FIXED_LEN_SNAP_LINE;
 	}
-	void CopyTo(SLineAttributes* pAttributes) {
+	void CopyTo(SLineAttributes* pAttributes) const  {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
@@ -305,12 +311,13 @@ struct SLineAttributes {
 		pAttributes->m_P2_SNAP_POINT = m_P2_SNAP_POINT;
 		pAttributes->m_P2_FIXED_LEN_SNAP_LINE = m_P2_FIXED_LEN_SNAP_LINE;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -337,18 +344,19 @@ struct SOriginAttributes {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_Radius = pAttributes->m_Radius;
 	}
-	void CopyTo(SOriginAttributes* pAttributes) {
+	void CopyTo(SOriginAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_Radius = m_Radius;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO,
+		CFile* pcfFile,
 		int Indent,
 		int flags
 	);
@@ -378,19 +386,20 @@ struct SPolyAttributes {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 	}
-	void CopyTo(SPolyAttributes* pAttributes) {
+	void CopyTo(SPolyAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -420,18 +429,19 @@ struct SRectAttributes {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_TransparentFill = pAttributes->m_TransparentFill;
 	}
-	void CopyTo(SRectAttributes* pAttributes) {
+	void CopyTo(SRectAttributes* pAttributes)const  {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO,
+		CFile* pcfFile,
 		int Indent,
 		int flags
 	);
@@ -464,7 +474,7 @@ struct SRoundedRectAttributes {
 		m_TransparentFill = pAttributes->m_TransparentFill;
 		m_dszCornerRadius = pAttributes->m_dszCornerRadius;
 	}
-	void CopyTo(SRoundedRectAttributes* pAttributes) {
+	void CopyTo(SRoundedRectAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorFill = m_colorFill;
 		pAttributes->m_colorLineSelected = m_colorLineSelected;
@@ -472,12 +482,13 @@ struct SRoundedRectAttributes {
 		pAttributes->m_TransparentFill = m_TransparentFill;
 		pAttributes->m_dszCornerRadius = m_dszCornerRadius;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -518,7 +529,7 @@ struct STextAttributes {
 		m_Transparent = pAttributes->m_Transparent;
 		m_fontWeight = pAttributes->m_fontWeight;
 	}
-	void CopyTo(STextAttributes* pAttributes) {
+	void CopyTo(STextAttributes* pAttributes) const {
 		pAttributes->m_csFontName = m_csFontName;
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorBK = m_colorBK;
@@ -529,12 +540,13 @@ struct STextAttributes {
 		pAttributes->m_Transparent = m_Transparent;
 		pAttributes->m_fontWeight = m_fontWeight;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -564,19 +576,20 @@ struct SRectHoleAttributes {
 		m_HoleHeight = pAttributes->m_HoleHeight;
 		m_HoleWidth = pAttributes->m_HoleWidth;
 	}
-	void CopyTo(SRectHoleAttributes* pAttributes) {
+	void CopyTo(SRectHoleAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleHeight = m_HoleHeight;
 		pAttributes->m_HoleWidth = m_HoleWidth;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -602,18 +615,19 @@ struct SRoundHoleAttributes {
 		m_LineWidth = pAttributes->m_LineWidth;
 		m_HoleRadius = pAttributes->m_HoleRadius;
 	}
-	void CopyTo(SRoundHoleAttributes* pAttributes) {
+	void CopyTo(SRoundHoleAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleRadius = m_HoleRadius;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO,
+		CFile* pcfFile,
 		int Indent,
 		int flags
 	);
@@ -642,19 +656,20 @@ struct SRndHole1FlatAttributes {
 		m_HoleRadius = pAttributes->m_HoleRadius;
 		m_FlatDistanceFromCenter = pAttributes->m_FlatDistanceFromCenter;
 	}
-	void CopyTo(SRndHole1FlatAttributes* pAttributes) {
+	void CopyTo(SRndHole1FlatAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -685,19 +700,20 @@ struct SRndHole2FlatAttributes
 		m_HoleRadius = pAttributes->m_HoleRadius;
 		m_FlatDistanceFromCenter = pAttributes->m_FlatDistanceFromCenter;
 	}
-	void CopyTo(SRndHole2FlatAttributes* pAttributes) {
+	void CopyTo(SRndHole2FlatAttributes* pAttributes) const {
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -737,7 +753,7 @@ struct SGridAttributes {
 		m_SnapGridSpacing = pAttributes->m_SnapGridSpacing;
 		m_MajorGridSpacing = pAttributes->m_MajorGridSpacing;
 	}
-	void CopyTo(SGridAttributes* pAttributes) {
+	void CopyTo(SGridAttributes* pAttributes) const {
 		pAttributes->m_colorSnapLine = m_colorSnapLine;
 		pAttributes->m_colorHalfGrid = m_colorHalfGrid;
 		pAttributes->m_colorMajorLine = m_colorMajorLine;
@@ -748,12 +764,13 @@ struct SGridAttributes {
 		pAttributes->m_SnapGridSpacing = m_SnapGridSpacing;
 		pAttributes->m_MajorGridSpacing = m_MajorGridSpacing;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
@@ -762,7 +779,7 @@ struct SGridAttributes {
 };
 
 //------------------ Rulers ----------------------
-struct SRullerAttributes {
+struct SRulerAttributes {
 	int m_RulerSize;
 	//---------------------------
 	// Font
@@ -791,7 +808,7 @@ struct SRullerAttributes {
 	//---------------------------
 	COLORREF m_colorCursor;
 	COLORREF m_colorCorner;
-	SRullerAttributes() {
+	SRulerAttributes() {
 		m_RulerSize = RULER_SIZE;
 		m_TickLength = RULER_SNAP_TICK_LEN;
 		m_MajTickLength = RULER_MAJOR_TICK_LEN;
@@ -806,7 +823,7 @@ struct SRullerAttributes {
 		m_colorText = RGB(255, 255, 255);
 		m_colorCorner = RGB(0, 255, 0);
 	}
-	void CopyFrom(SRullerAttributes* pAttributes) {
+	void CopyFrom(SRulerAttributes* pAttributes) {
 		m_RulerSize = pAttributes->m_RulerSize;
 		m_TickLength = pAttributes->m_TickLength;
 		m_HalfTickLength = pAttributes->m_HalfTickLength;
@@ -820,7 +837,7 @@ struct SRullerAttributes {
 		m_colorText = pAttributes->m_colorText;
 		m_colorCorner = pAttributes->m_colorCorner;
 	}
-	void CopyTo(SRullerAttributes* pAttributes) {
+	void CopyTo(SRulerAttributes* pAttributes) const {
 		pAttributes->m_RulerSize = m_RulerSize;
 		pAttributes->m_TickLength = m_TickLength;
 		pAttributes->m_HalfTickLength = m_HalfTickLength;
@@ -834,17 +851,18 @@ struct SRullerAttributes {
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorCorner = m_colorCorner;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);
-	static void LoadSettings(SRullerAttributes* pAttrb);
-	static void SaveSettings(SRullerAttributes* pAttrb);
+	static void LoadSettings(SRulerAttributes* pAttrb);
+	static void SaveSettings(SRulerAttributes* pAttrb);
 };
 
 //------------- Points ----------------------
@@ -867,17 +885,18 @@ struct SPointAttributes
 		m_colorSelected = pAttrib->m_colorSelected;
 		m_SelectedObjectUnits = pAttrib->m_SelectedObjectUnits;
 	}
-	void CopyTo(SPointAttributes* pAttrib) {
+	void CopyTo(SPointAttributes* pAttrib) const {
 		pAttrib->m_colorLine = m_colorLine;
 		pAttrib->m_colorSelected = m_colorSelected;
 		pAttrib->m_SelectedObjectUnits = m_SelectedObjectUnits;
 	}
-	CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
+	int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
 		CFileParser* pParser	// pointer to parser
 	);
 	void Save(
-		FILE* pO, 
+		CFile* pcfFile, 
 		int Indent, 
 		int flags
 	);

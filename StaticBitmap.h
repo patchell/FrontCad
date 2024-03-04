@@ -13,7 +13,7 @@ public:
 	CStaticBitmap();
 	virtual ~CStaticBitmap();
 	void SetColor(COLORREF c){m_Color = c;Invalidate();}
-	COLORREF GetColor(void){return m_Color;}
+	COLORREF GetColor(){return m_Color;}
 	// Generated message map Methods
 protected:
 	afx_msg void OnPaint();

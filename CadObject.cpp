@@ -135,7 +135,7 @@ int CCadObject::CheckSelected(DOUBLEPOINT p, CCadObject** ppSelList, int& n, int
 	//		p......point of interest
 	//		ppSelList...pointer to an array of selected objects
 	//		n.....maximum number of objects to check for
-	//		flag..what kind of objects are inlcuded in list
+	//		flag..what kind of objects are included in list
 	//				0-All Objects
 	//				1-Unselected Objects
 	//				2-Selected Objects
@@ -224,8 +224,8 @@ int CCadObject::Print(int Indent)
 	pObj = GetHead();
 	csType = GetTypeString();
 	csSubType = GetSubTypeString(GetSubType());
-	printf("%s%s SubType:%s SubSubType:%d\n", 
-		GETAPP.IndentString(sI, Indent++),
+	printf("%hs%hs SubType:%hs SubSubType:%d\n", 
+		GETAPP.IndentString(sI, 256,Indent+ 1, ' '),
 		GETAPP.ConvertCStringToChar(s, csType),
 		GETAPP.ConvertCStringToChar(s1, csSubType),
 		GetSubSubType()
@@ -279,6 +279,27 @@ void CCadObject::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	//--------------------------------------------------
 }
 
+BOOL CCadObject::PointInThisObject(DOUBLEPOINT point)
+{
+	CCadObject* pObj;
+	BOOL rV = FALSE;
+
+	if (GetSubType() != SubTypes::ENCLOSING_SHAPE)
+	{
+		//---------------------------------------
+		// the ENCLOSING_SHAPE can only be one
+		// level up. so if this ain't it, and
+		// there is nothing in the subtypes,
+		// then we are SOL
+		//---------------------------------------
+		pObj = FindObject(ObjectType::ANY, SubTypes::ENCLOSING_SHAPE, SUBSUBTYPE_ANY);
+	}
+	else 
+		pObj = this;
+
+	return rV;
+}
+
 int CCadObject::PointInObjectAndSelect(
 	DOUBLEPOINT p, 
 	CCadObject* pExcludeObject,
@@ -297,7 +318,7 @@ int CCadObject::PointInObjectAndSelect(
 	//	p...........point to check at
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//	nKinds........Determines what sort of objects selected
 	//
 	// return value:
@@ -331,7 +352,7 @@ int CCadObject::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadObject::GetTypeString(void)
+CString& CCadObject::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -345,31 +366,6 @@ CString& CCadObject::GetTypeString(void)
 	return csTypeName;
 }
 
-CString& CCadObject::GetSubTypeString(SubTypes SubTypeEnum)
-{
-	int i;
-	BOOL Loop = TRUE;
-
-	for (i = 0; Loop && SubTypeStringsLUT[i].m_SubType > SubTypes::NONE; ++i)
-	{
-		if (SubTypeEnum == SubTypeStringsLUT[i].m_SubType)
-		{
-			Loop = FALSE;
-		}
-	}
-	return SubTypeStringsLUT[i].m_csName;
-}
-
-char* CCadObject::GetSubTypeString(char* pDest, SubTypes SubTypeEnum)
-{
-	return GETAPP.ConvertCStringToChar(pDest, GetSubTypeString(SubTypeEnum));;
-}
-
-char* CCadObject::GetCharSubTypeString(char* pDest, SubTypes SubTypeEnum)
-{
-	CString csST = GetSubTypeString(SubTypeEnum);
-	return GETAPP.ConvertCStringToChar(pDest, csST);
-}
 
 CString& CCadObject::GetObjDescription()
 {
@@ -377,11 +373,11 @@ CString& CCadObject::GetObjDescription()
 	return m_csDescription;
 }
 
-void CCadObject::CopyObject(CCadObject* pObjCopy)
+void CCadObject::CopyObject(CCadObject* pToObjCopy)
 {
 	//--------------------------------------------------
 	// CopyObject
-	//	Creates a copy of this and returns a pointer
+	//	Copy data from this object into anaother object
 	// to the copy
 	// parameters:
 	//
@@ -391,29 +387,50 @@ void CCadObject::CopyObject(CCadObject* pObjCopy)
 	CCadObject* pObj;
 	CCadObject* pNew;
 
-	pObjCopy->m_Type = m_Type;
-	pObjCopy->m_SubType = m_SubType;
-	pObjCopy->m_SubSubType = m_SubSubType;
-	pObjCopy->m_Selected = m_Selected;
-	pObjCopy->m_pParentObject = m_pParentObject;
+	pToObjCopy->m_Type = m_Type;
+	pToObjCopy->m_SubType = m_SubType;
+	pToObjCopy->m_SubSubType = m_SubSubType;
+	pToObjCopy->m_Selected = m_Selected;
+	pToObjCopy->m_pParentObject = m_pParentObject;
 	//------------------------------
 	// copy children
 	//------------------------------
 	pObj = GetHead();
 	while (pObj)
 	{
-		pNew = pObj->CopyObject();
-		pObjCopy->AddObjectAtTail(pNew);
+		pNew = pObj->Copy();
+		pToObjCopy->AddObjectAtTail(pNew);
 		pObj = pObj->GetNext();
 	}
+	CopyAttributes(pToObjCopy);
 }
 
-CCadObject* CCadObject::GetVertex(UINT VertexNumber)
+CCadObject* CCadObject::GetVertex(
+	UINT Vertex,	//subsub type, Vertex ID
+	BOOL bRotate)
 {
-	CCadObject* pObj;
+	CADObjectTypes Obj, Piv, Rot;
 
-	pObj = FindObject(ObjectType::POINT, SubTypes::VERTEX, VertexNumber);
-	return pObj;
+	if (bRotate)
+	{
+		Piv.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT,
+			CCadObject::SubTypes::PIVOTPOINT,
+			SUBSUBTYPE_ANY
+		);
+		Rot.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT,
+			CCadObject::SubTypes::ROTATION_POINT,
+			SUBSUBTYPE_ANY
+		);
+	}
+	else
+		Obj.pCadObject = FindObject(
+			CCadObject::ObjectType::POINT,
+			CCadObject::SubTypes::VERTEX,
+			Vertex
+		);
+	return Obj.pCadObject;
 }
 
 
@@ -523,6 +540,39 @@ CCadObject* CCadObject::DeleteObject(CCadObject* pObj)
 	return pObjNext;			// Return the next object
 }
 
+BOOL CCadObject::IsSameType(ObjectType Type)
+{
+	BOOL rV = FALSE;
+
+	if (Type == GetType())
+		rV = TRUE;
+	else if (Type == ObjectType::ANY)
+		rV = TRUE;
+	return rV;
+}
+
+BOOL CCadObject::IsSameSubType(SubTypes SubType)
+{
+	BOOL rV = FALSE;
+
+	if (SubType == GetSubType())
+		rV = TRUE;
+	else if (SubType == SubTypes::ANY)
+		rV = TRUE;
+	return rV;
+}
+
+BOOL CCadObject::IsSameSubSubType(UINT SubSubType)
+{
+	BOOL rV = FALSE;
+
+	if (SubSubType == GetSubSubType())
+		rV = TRUE;
+	else if (SubSubType == SUBSUBTYPE_ANY)
+		rV = TRUE;
+	return rV;
+}
+
 CCadObject* CCadObject::FindObject(ObjectType Type, SubTypes SubType, UINT SubSubType)
 {
 	// Is this the real one?
@@ -533,9 +583,10 @@ CCadObject* CCadObject::FindObject(ObjectType Type, SubTypes SubType, UINT SubSu
 	pObj = GetHead();
 	while (pObj && bLoop)
 	{
-		if (pObj->m_Type == Type &&
-			pObj->m_SubType == SubType &&
-			SubSubType == pObj->m_SubSubType)
+		if (pObj->IsSameType(Type) &&
+			pObj->IsSameSubType(SubType) &&
+			pObj->IsSameSubSubType(SubSubType)
+		)
 		{
 			bLoop = FALSE;
 			pResult = pObj;
@@ -575,5 +626,62 @@ int CCadObject::GetTotalNumberOfSelectedItems()
 	return rV;
 }
 
+CString& CCadObject::SubTypeTable::LookupSubType(SubTypes SType)
+{
+	int i;
+	BOOL Loop = TRUE;
 
+	for (i = 0; Loop && SubTypeStringsLUT[i].m_SubType > SubTypes::NONE; ++i)
+	{
+		if (SType == SubTypeStringsLUT[i].m_SubType)
+		{
+			Loop = FALSE;
+		}
+	}
+	return SubTypeStringsLUT[i].m_csName;
+}
+
+char* CCadObject::SubTypeTable::LookupSubType(char* s, int n, SubTypes SType)
+{
+	return GETAPP.ConvertCStringToChar(s, LookupSubType(SType));
+}
+
+CCadObject::SubTypes CCadObject::SubTypeTable::LookupSubTypeString(const char* pName)
+{
+	CString csName = CString(pName);
+	return LookupSubTypeString(csName);
+}
+
+CCadObject::SubTypes CCadObject::SubTypeTable::LookupSubTypeString(CString& csName)
+{
+	SubTypes rV = SubTypes();
+	int i;
+	BOOL Loop = TRUE;
+
+	for (i = 0; Loop && (SubTypeStringsLUT[i].m_SubType != SubTypes::END_OF_SUBTYPES); ++i)
+	{
+		if (SubTypeStringsLUT[i].m_csName.Compare(csName))
+		{
+			Loop = FALSE;
+			rV = SubTypeStringsLUT[i].m_SubType;
+		}
+	}
+	return rV;
+}
+
+CString& CCadObject::GetSubTypeString(SubTypes SubTypeEnum)
+{
+	return SubTypeStringsLUT->LookupSubType(SubTypeEnum);
+}
+
+char* CCadObject::GetSubTypeString(char* pDest, SubTypes SubTypeEnum)
+{
+	return GETAPP.ConvertCStringToChar(pDest, GetSubTypeString(SubTypeEnum));;
+}
+
+char* CCadObject::GetCharSubTypeString(char* pDest, SubTypes SubTypeEnum)
+{
+	//TODO: fill in code
+	return nullptr;
+}
 

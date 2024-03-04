@@ -285,7 +285,7 @@ void CFrontCadApp::LoadSettings()
 	SRndHole1FlatAttributes::LoadSettings(&m_RoundHole1FlatAttributes);
 	SRndHole2FlatAttributes::LoadSettings(&m_RoundHole2FlatsAttributes);
 	SGridAttributes::LoadSettings(&m_GridAttributes);
-	SRullerAttributes::LoadSettings(&m_RulerAttributes);
+	SRulerAttributes::LoadSettings(&m_RulerAttributes);
 	SPointAttributes::LoadSettings(&m_PointAttributes);
 }
 
@@ -307,7 +307,7 @@ void CFrontCadApp::SaveSettings()
 	SRndHole1FlatAttributes::SaveSettings(&m_RoundHole1FlatAttributes);
 	SRndHole2FlatAttributes::SaveSettings(&m_RoundHole2FlatsAttributes);
 	SGridAttributes::SaveSettings(&m_GridAttributes);
-	SRullerAttributes::SaveSettings(&m_RulerAttributes);
+	SRulerAttributes::SaveSettings(&m_RulerAttributes);
 	SPointAttributes::SaveSettings(&m_PointAttributes);
 }
 
@@ -379,7 +379,12 @@ void* CFrontCadApp::GetObjectDefaultAttributes(CCadObject::ObjectType ObjectType
 // String Methods
 //----------------------------------------------
 
-char * CFrontCadApp::IndentString(char *pDest, int count, int c)
+char * CFrontCadApp::IndentString(
+	char *pDest, 
+	int destSize,  
+	int count, 
+	int c
+)
 {
 	//-----------------------------------------
 	// IndentString
@@ -387,6 +392,7 @@ char * CFrontCadApp::IndentString(char *pDest, int count, int c)
 	// that is generally used in saving files.
 	//	parameters:
 	// pDest......Destination of indent string
+	// destSize...Max size of destination
 	// count......How much of an indent
 	// c..........character to use in string
 	//	returns:
@@ -395,6 +401,13 @@ char * CFrontCadApp::IndentString(char *pDest, int count, int c)
 
 	int i;
 
+	if (destSize >= count)
+		MessageBoxW(
+			NULL,
+			_T("Indent String"),
+			_T("ERROR"),
+			MB_OK | MB_ICONWARNING
+		);
 	for (i = 0; i < count; ++i)
 		pDest[i] = c;
 	pDest[i] = 0;
@@ -814,8 +827,25 @@ void CFrontCadApp::ShiftDoublePointArray(CCadPoint* pdptPoints, UINT nPoints, UI
 	}
 }
 
+CPoint* CFrontCadApp::MakeCPointArray(
+	CPoint* dest, 
+	CCadPoint* src, 
+	int n, 
+	DOUBLEPOINT& LLHC, 
+	CScale& Scale
+)
+{
+	int i;
 
-CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
+	for (i = 0; i < n; ++i)
+	{
+		dest[i] = src[i].ToPixelPoint(LLHC, Scale);
+	}
+	return dest;
+}
+
+
+CPoint* CFrontCadApp::MakeCPointArray(
 	CPoint* dest,
 	DOUBLEPOINT* src,
 	int n,
@@ -827,13 +857,13 @@ CPoint* CFrontCadApp::MakeCPointPolygonFromDOUBLEPOINTS(
 
 	for (i = 0; i < n; ++i)
 	{
-		dest[i] = CPoint((LLHC + src[i]) * Scale);
+		dest[i] = src[i].ToPixelPoint(LLHC, Scale.dSX, Scale.dSY);
 	}
 	return dest;
 }
 
 //--------------------------------------
-//  General Elipse Methods
+//  General Ellipse Methods
 //--------------------------------------
 BOOL CFrontCadApp::PointInEllipse(
 	double A,	// Major Axis

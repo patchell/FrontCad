@@ -9,7 +9,7 @@ struct SCALE {
 		dSY = 0.0;
 	}
 	void Print(const char* s) {
-		printf("%s (dSX,dSY)=(%7.3lf,%7.3lf)\n", s, dSX, dSY);
+		printf("%hs (dSX,dSY)=(%7.3lf,%7.3lf)\n", s, dSX, dSY);
 	}
 } ;
 
@@ -76,17 +76,18 @@ struct DOUBLEPOINT {
 		return DOUBLEPOINT(-dX, -dY);
 	}
 	CPoint ToPixelPoint(DOUBLEPOINT& LLHC, double cX, double cY);
-	DOUBLEPOINT LLHCfromPixelPoint(CPoint point, double cX, double cY);
+	DOUBLEPOINT LLHC_FromPixelPoint(CPoint point, double cX, double cY);
 	void Print(const char* s) {
-		printf("%s:POINT(%7.3lf,%7.3lf\n", s, dX, dY);
+		printf("%hs:POINT(%7.3lf,%7.3lf\n", s, dX, dY);
 	}
 	DOUBLEPOINT Raw(CPoint p, DOUBLEPOINT& LLHC, SCALE Scale);
-	double YIntercept(double m) {
+	double YIntercept(double m) const {
 		double b;
 
 		b = dY - m * dX;
 		return b;
 	}
+	void Print(DOUBLEPOINT& LLHC, double cX, double cY, const char* s, BOOL NewLine);
 };	//end of class DOUBLEPOINT
 
 //---------------------------------------

@@ -13,7 +13,7 @@ CCadDimension::CCadDimension():CCadObject(ObjectType::DIMENSION)
 	CopyAttributesFrom(&m_CurrentAttributes);
 }
 
-void CCadDimension::OnCreate(void)
+void CCadDimension::OnCreate()
 {
 	++CCadDimension::m_DimensionCount;
 	GetName().Format(_T("Dimension_%d"), m_DimensionCount);
@@ -38,7 +38,7 @@ void CCadDimension::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadDimension::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadDimension::Save(CFile* pcfFile, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -77,6 +77,11 @@ void CCadDimension::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadDimension::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadDimension::PointInThisObject(DOUBLEPOINT point)
 {
 	return 0;
@@ -101,7 +106,7 @@ int CCadDimension::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -133,7 +138,7 @@ int CCadDimension::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadDimension::GetTypeString(void)
+CString& CCadDimension::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -163,10 +168,10 @@ CPoint CCadDimension::ScalePoint(CPoint p, int Scale, int ScaleDiv)
 	return CPoint();
 }
 
-CCadObject * CCadDimension::CopyObject(void)
+CCadObject * CCadDimension::Copy()
 {
 	//--------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -174,14 +179,21 @@ CCadObject * CCadDimension::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadDimension *pCD = new CCadDimension;
-	*pCD = *this;
+	pCD->Create(GetParent(), GetSubType());
+	CopyObject(pCD);
 	return pCD;
 }
 
-CLexer::Tokens CCadDimension::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadDimension::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadDimension*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadDimension::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken // Token type to save object as
+	int TypeToken // Token type to save object as
 )
 {
 	//--------------------------------------------------

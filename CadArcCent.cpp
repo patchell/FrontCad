@@ -59,7 +59,11 @@ void CCadArcCent::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadArcCent::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser)
+void CCadArcCent::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -71,16 +75,17 @@ void CCadArcCent::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags, C
 	//--------------------------------------------------
 	char* TempString = new char[256];
 	char* s = new char[256];
+	CString csOut;
 
-	fprintf(pO, "%s%s(\n",
-		GETAPP.IndentString(s, Indent),
-		CLexer::TokenLookup(CLexer::Tokens::ARC_CENTER)
+	csOut.Format( _T("%hs%hs(\n"),
+		GETAPP.IndentString(s, 256, Indent,' '),
+		CFileParser::TokenLookup(TOKEN_ARC_CENTER)
 	);
-//	m_rectShape.Save(pO, CLexer::Tokens::SHAPE, Indent + 1, flags);
-//	GetCenter()->Save(pO, CLexer::Tokens::CENTER, Indent + 1, flags);
-//	GetStartPoint().Save(pO, CLexer::Tokens::START, Indent + 1, flags);
-//	GetEndPoint().Save(pO, CLexer::Tokens::END, Indent + 1, flags);
-	GetAttributes().Save(pO, Indent + 2, flags);
+//	m_rectShape.Save(pO, TOKEN_SHAPE, Indent + 1, flags);
+//	GetCenter()->Save(pO, TOKEN_CENTER, Indent + 1, flags);
+//	GetStartPoint().Save(pO, TOKEN_START, Indent + 1, flags);
+//	GetEndPoint().Save(pO, TOKEN_END, Indent + 1, flags);
+	GetAttributes().Save(pcfFile, Indent + 2, flags);
 	delete[] s;
 	delete[] TempString;
 }
@@ -99,6 +104,7 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	// return value:none
 	//--------------------------------------------------
 	CPen *pOldPen, penLine;
+	CBrush brushFill, * pBrushOld;
 	CRect rect;
 	CADObjectTypes P1, P2, PC, PS, PE;
 	int Lw;
@@ -110,18 +116,19 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 		PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		PS.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
 		PE.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0);
+		brushFill.CreateStockObject(NULL_BRUSH);
 		rect.SetRect(
 			P1.pCadPoint->ToPixelPoint(LLHC, Scale),
 			P2.pCadPoint->ToPixelPoint(LLHC, Scale)
 		);
-		Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
-		if (Lw < 1)
-			Lw = 1;
 
 		switch (mode.PaintMode)
 		{
 		case MODE::ObjectPaintMode::FINAL:
-			if(IsSelected())
+			Lw = GETAPP.RoundDoubleToInt(GetAttributes().m_LineWidth * Scale.GetScaleX());
+			if (Lw < 1)
+				Lw = 1;
+			if (IsSelected())
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorSelected);
 			else
 				penLine.CreatePen(PS_SOLID, Lw, GetAttributes().m_colorLine);
@@ -129,17 +136,21 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			pDC->Arc(
 				&rect, 
 				PS.pCadPoint->ToPixelPoint(LLHC,Scale), 
-				PS.pCadPoint->ToPixelPoint(LLHC, Scale)
+				PE.pCadPoint->ToPixelPoint(LLHC, Scale)
 			);
 			pDC->SelectObject(pOldPen);
 			break;
 		case MODE::ObjectPaintMode::SKETCH:
+			pBrushOld = pDC->SelectObject(&brushFill);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Rectangle(&rect);
 			pDC->Ellipse(&rect);
 			pDC->SelectObject(pOldPen);
 			break;
 		case MODE::ObjectPaintMode::ARCSTART:
+			pBrushOld = pDC->SelectObject(&brushFill);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Ellipse(&rect);
 			pDC->MoveTo(PC.pCadPoint->ToPixelPoint(LLHC,Scale));
@@ -147,11 +158,13 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			pDC->SelectObject(pOldPen);
 			break;
 		case MODE::ObjectPaintMode::ARCEND:
+			pBrushOld = pDC->SelectObject(&brushFill);
+			penLine.CreatePen(PS_SOLID, 1, GetAttributes().m_colorSelected);
 			pOldPen = pDC->SelectObject(&penLine);
 			pDC->Arc(
 				&rect,
 				PS.pCadPoint->ToPixelPoint(LLHC, Scale),
-				PS.pCadPoint->ToPixelPoint(LLHC, Scale)
+				PE.pCadPoint->ToPixelPoint(LLHC, Scale)
 			);
 			pDC->MoveTo(PC.pCadPoint->ToPixelPoint(LLHC,Scale));
 			pDC->LineTo(PE.pCadPoint->ToPixelPoint(LLHC,Scale));
@@ -159,6 +172,11 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 			break;
 		}
 	}
+}
+
+BOOL CCadArcCent::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
 }
 
 BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
@@ -257,7 +275,7 @@ int CCadArcCent::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -289,7 +307,7 @@ int CCadArcCent::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadArcCent::GetTypeString(void)
+CString& CCadArcCent::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -312,10 +330,10 @@ CString& CCadArcCent::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadArcCent::CopyObject(void)
+CCadObject * CCadArcCent::Copy()
 {
 	//--------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -327,14 +345,19 @@ CCadObject * CCadArcCent::CopyObject(void)
 	newObj.pCadArcCent = new CCadArcCent;
 	newObj.pCadArcCent->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(newObj.pCadObject);
-	newObj.pCadArcCent->CopyAttributesFrom(GetPtrToAttributes());
 	return newObj.pCadObject;
 }
 
-CLexer::Tokens CCadArcCent::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadArcCent::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadArcCent*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadArcCent::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -398,7 +421,7 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 	//-------------------------------------------------------
 	UINT Id;
 	DOUBLEPOINT MousePos = GETVIEW->GetCurrentMousePosition();
-	CADObjectTypes P1, P2, PC, PS, PE;
+	CADObjectTypes P1, P2, PC, PS, PE, pArc;
 
 	switch (DrawState)
 	{
@@ -456,7 +479,7 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		GETAPP.UpdateStatusBar(_T("ARC CENTERED:Locate Start of Arc"));
 		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
-		break;
+		DrawState = ObjectDrawState::ARCSTART_LBUTTON_UP;		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_UP:
 		PS.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
 		PS.pCadPoint->SetPoint(MousePos);
@@ -470,7 +493,9 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		PE.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0);
 		PE.pCadPoint->SetPoint(MousePos);
 		GetParent()->AddObjectAtTail(this);
-		GETVIEW->SetObjectTypes(new CCadArcCent);
+		pArc.pCadArcCent = new CCadArcCent;
+		GETVIEW->SetObjectTypes(pArc.pCadObject);
+		pArc.pCadArc->Create(GetParent(), CCadObject::SubTypes::DEFAULT);
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC CENTERED:Locate Center Point of Arc"));
 		GETVIEW->Invalidate();

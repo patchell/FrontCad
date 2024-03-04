@@ -45,7 +45,11 @@ void CCadHoleRect::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadHoleRect::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadHoleRect::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -111,6 +115,11 @@ void CCadHoleRect::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadHoleRect::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadHoleRect::PointInThisObject(DOUBLEPOINT point)
 {
 	CADObjectTypes Obj;
@@ -139,7 +148,7 @@ int CCadHoleRect::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -171,7 +180,7 @@ int CCadHoleRect::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadHoleRect::GetTypeString(void)
+CString& CCadHoleRect::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -191,10 +200,10 @@ CString& CCadHoleRect::GetObjDescription()
 	return GetObjDescription();
 }
 
-CCadObject * CCadHoleRect::CopyObject(void)
+CCadObject * CCadHoleRect::Copy()
 {
 	//---------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -203,9 +212,14 @@ CCadObject * CCadHoleRect::CopyObject(void)
 	//--------------------------------------------------
 	CADObjectTypes newObj;
 	newObj.pCadHoleRect = new CCadHoleRect;
-	CCadObject::CopyObject(newObj.pCadObject);
-	newObj.pCadHoleRect->CopyAttributesFrom(GetPtrToAttributes());
+	newObj.pCadHoleRect->Create(GetParent(), GetSubType());
+	CopyObject(newObj.pCadObject);
 	return newObj.pCadObject;
+}
+
+void CCadHoleRect::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadHoleRect*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 
@@ -213,7 +227,7 @@ CDoubleSize CCadHoleRect::GetSize()
 {
 	//---------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -222,10 +236,11 @@ CDoubleSize CCadHoleRect::GetSize()
 	return CSize();
 }
 
-CLexer::Tokens CCadHoleRect::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadHoleRect::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------

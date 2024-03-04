@@ -57,7 +57,7 @@ void CCadArrow::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadArrow::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadArrow::Save(CFile* pcfFile, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -132,6 +132,11 @@ void CCadArrow::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadArrow::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadArrow::PointInThisObject(DOUBLEPOINT point)
 {
 	DOUBLEPOINT Points[4];
@@ -169,7 +174,7 @@ int CCadArrow::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -201,7 +206,7 @@ int CCadArrow::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadArrow::GetTypeString(void)
+CString& CCadArrow::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -221,7 +226,7 @@ CString& CCadArrow::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadArrow::CopyObject(void)
+CCadObject * CCadArrow::Copy()
 {
 	//--------------------------------------------------
 	// CopyObject
@@ -235,6 +240,11 @@ CCadObject * CCadArrow::CopyObject(void)
 	pArrow->Create(GetParent(), GetSubType());
 	CCadObject::CopyObject(pArrow);
 	return pArrow;
+}
+
+void CCadArrow::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadArrow*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 CDoubleSize CCadArrow::GetSize()
@@ -254,10 +264,11 @@ CDoubleSize CCadArrow::GetSize()
 }
 
 
-CLexer::Tokens CCadArrow::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadArrow::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------

@@ -13,31 +13,41 @@ BOOL CCadLibrary::Create()
 	return 0;
 }
 
-CLexer::Tokens CCadLibrary::Parse(CLexer::Tokens LookAHeadToken, CFileParser* pParser)
+BOOL CCadLibrary::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
+int CCadLibrary::Parse(
+	CFile* pcfInFile,
+	int LookAHeadToken,	// Lookahead Token
+	CFileParser* pParser,	// pointer to parser
+	int TypeToken // Token type to save object as
+)
 {
 	BOOL Loop = TRUE;
 	CString csStr;
 	CCadLibPart* pPart = 0;
 
-	LookAHeadToken = pParser->Expect(CLexer::Tokens::LIBFILE, LookAHeadToken);
-	LookAHeadToken = pParser->Expect(CLexer::Tokens('('), LookAHeadToken);
-	csStr = CString(pParser->GetLexer()->GetLexBuff());
+	LookAHeadToken = pParser->Expect(pcfInFile, TOKEN_LIBFILE, LookAHeadToken);
+	LookAHeadToken = pParser->Expect(pcfInFile, int('('), LookAHeadToken);
+	csStr = CString(pParser->GetLexBuff());
 	SetName(csStr);
-	LookAHeadToken = pParser->Expect(CLexer::Tokens::STRING, LookAHeadToken);
-	LookAHeadToken = pParser->Expect(CLexer::Tokens(')'), LookAHeadToken);
-	LookAHeadToken = pParser->Expect(CLexer::Tokens('{'), LookAHeadToken);
+	LookAHeadToken = pParser->Expect(pcfInFile, TOKEN_STRING, LookAHeadToken);
+	LookAHeadToken = pParser->Expect(pcfInFile, int(')'), LookAHeadToken);
+	LookAHeadToken = pParser->Expect(pcfInFile, int('{'), LookAHeadToken);
 	while (Loop)
 	{
 		switch (LookAHeadToken)
 		{
-		case CLexer::Tokens::LIBPART:
+		case TOKEN_LIBPART:
 			pPart = new CCadLibPart;
 			pPart->Create(this,CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = pPart->Parse(LookAHeadToken, pParser);
+			LookAHeadToken = pPart->Parse(pcfInFile, LookAHeadToken, pParser);
 			AddObjectAtTail(pPart);
 			break;
-		case CLexer::Tokens('}'):
-			LookAHeadToken = pParser->Expect(CLexer::Tokens('}'), LookAHeadToken);
+		case int('}'):
+			LookAHeadToken = pParser->Expect(pcfInFile, int('}'), LookAHeadToken);
 			Loop = FALSE;
 			break;
 		default:
@@ -47,6 +57,20 @@ CLexer::Tokens CCadLibrary::Parse(CLexer::Tokens LookAHeadToken, CFileParser* pP
 	return LookAHeadToken;
 }
 
-void CCadLibrary::Save(FILE* pO, int Indent)
+void CCadLibrary::Save(
+	CFile* pcfFile,
+	int Indent, 
+	int flags
+)
 {
+}
+
+CCadObject* CCadLibrary::Copy()
+{
+	return nullptr;
+}
+
+void CCadLibrary::CopyAttributes(CCadObject* pToObj)
+{
+//	((CCadLibrary*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }

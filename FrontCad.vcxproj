@@ -247,7 +247,6 @@
     <ClInclude Include="FrontCadView.h" />
     <ClInclude Include="FrontCadDefines.h" />
     <ClInclude Include="Grid.h" />
-    <ClInclude Include="Lexer.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MyBitmap.h" />
     <ClInclude Include="MyEvent.h" />
@@ -327,7 +326,6 @@
     <ClCompile Include="FrontCadDoc.cpp" />
     <ClCompile Include="FrontCadView.cpp" />
     <ClCompile Include="Grid.cpp" />
-    <ClCompile Include="Lexer.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MyBitmap.cpp" />
     <ClCompile Include="MyEvent.cpp" />

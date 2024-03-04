@@ -13,11 +13,12 @@ public:
 	CCadArcCent();
 	virtual ~CCadArcCent();
 	BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::ARC_CENTER; }
+	virtual int GetDefaultToken() { return TOKEN_ARC_CENTER; }
 	virtual CString& GetObjDescription();
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags, CFileParser* pParser);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
+	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -27,15 +28,28 @@ public:
 		int n,
 		UINT nKinds
 	);
-	CString& GetTypeString(void);
-	virtual CCadObject* CopyObject(void);
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,
-		CFileParser* pParser,
-		CLexer::Tokens TypeToken = CLexer::Tokens::ARC_CENTER
+	CString& GetTypeString();
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
 	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -55,9 +69,9 @@ public:
 	void CopyAttributesFrom(SArcCenterAttributes* pAttrb);
 	SArcCenterAttributes& GetAttributes() { return m_Attrb; }
 	SArcCenterAttributes* GetPtrToAttributes() { return &m_Attrb; }
-	COLORREF GetLineColor(void) { return GetAttributes().m_colorLine; }
+	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF c) { GetAttributes().m_colorLine = c; }
-	double GetLineWidth(void) { return GetAttributes().m_LineWidth; }
+	double GetLineWidth() { return GetAttributes().m_LineWidth; }
 	void SetLineWidth(int w) { GetAttributes().m_LineWidth; }
 	//--------------------------------------------
 	//  Static Methods

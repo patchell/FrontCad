@@ -83,3 +83,8 @@ have been in a turmoil.  Hopefully, progress will be a little more consistance.
 June 27, 2023
 Made a lot of major changes.  Sort of rolled back the scope a bit.
 It should be noted that the exe crashes on startup.  Fix it soon...
+
+March 3, 2024
+It has been a while since I worked on this.  Got some more
+drawing functionality, fixed or disabled spelling errors, and am continuing
+to get things in place to start saving and loading files.

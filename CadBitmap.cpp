@@ -53,7 +53,7 @@ void CCadBitmap::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadBitmap::Save(FILE* pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadBitmap::Save(CFile * pcfFile, int Indent, int flags)
 {
 	//--------------------------------------------------
 	// Save
@@ -131,6 +131,11 @@ void CCadBitmap::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadBitmap::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadBitmap::PointInThisObject(DOUBLEPOINT point)
 {
 	BOOL rV;
@@ -160,7 +165,7 @@ int CCadBitmap::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -192,7 +197,7 @@ int CCadBitmap::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadBitmap::GetTypeString(void)
+CString& CCadBitmap::GetTypeString()
 {
 	//--------------------------------------------------
 	// GetTypeString
@@ -212,10 +217,10 @@ CString& CCadBitmap::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadBitmap::CopyObject(void)
+CCadObject * CCadBitmap::Copy()
 {
 	//--------------------------------------------------
-	// CopyObject
+	// Copy
 	//	Creates a copy of this and returns a pointer
 	// to the copy
 	// parameters:
@@ -223,9 +228,14 @@ CCadObject * CCadBitmap::CopyObject(void)
 	// return value:a new copy of this
 	//--------------------------------------------------
 	CCadBitmap *pBM = new CCadBitmap;
-	*pBM = *this;
-	pBM->CopyAttributesFrom(&m_LastAttributes);
+	pBM->Create(GetParent(), GetSubType());
+	CopyObject(pBM);
 	return pBM ;
+}
+
+void CCadBitmap::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadBitmap*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
 
@@ -233,7 +243,7 @@ CDoubleSize CCadBitmap::GetSize()
 {
 	//--------------------------------------------------
 	// GetSize
-	//	Get the size of the object.  Reutrns the size
+	//	Get the size of the object.  Returns the size
 	// of the enclosing rectangle.
 	// parameters:
 	//
@@ -246,10 +256,11 @@ CDoubleSize CCadBitmap::GetSize()
 	return Obj.pCadRect->GetSize();
 }
 
-CLexer::Tokens CCadBitmap::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CCadBitmap::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------

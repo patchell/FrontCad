@@ -10,10 +10,11 @@ CDoubleSize::CDoubleSize(CSize szSize)
     dCY = InchesY;
 }
 
-CLexer::Tokens CDoubleSize::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+int CDoubleSize::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
      return Token;

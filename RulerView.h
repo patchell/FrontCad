@@ -23,7 +23,7 @@ public:
 	CRulerInfo* GetRulersInfo() { return m_pRulerInfo; }
 	BOOL IsBackGroundValid(CSize czClient);
 	void SetRulerType(UINT rulerType = RT_HORIZONTAL);
-	int GetRulerType(void) { return m_rulerType; }
+	int GetRulerType() { return m_rulerType; }
 	CFont& GetFont() { return m_Font; }
 	//----------------------------------------
 	//	Draw Methods

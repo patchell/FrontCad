@@ -20,11 +20,12 @@ public:
 	CCadHoleRnd2Flat();
 	virtual ~CCadHoleRnd2Flat();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual CLexer::Tokens GetDefaultToken() { return CLexer::Tokens::HOLE_2FLAT; }
+	virtual int GetDefaultToken() { return TOKEN_HOLE_2FLAT; }
 	virtual void Move(CDoubleSize Diff);
-	virtual void Save(FILE * pO, CLexer::Tokens Token, int Indent = 0, int flags = 0);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	void SolveIntersection();
+	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
+	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
@@ -34,19 +35,32 @@ public:
 		int n,
 		UINT nKinds
 	);
-	virtual CString& GetTypeString(void);
+	virtual CString& GetTypeString();
 	virtual CString& GetObjDescription();
-	virtual CCadObject * CopyObject(void);
 	virtual CDoubleSize GetSize();
-	virtual CLexer::Tokens Parse(
-		CLexer::Tokens Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		CLexer::Tokens TypeToken = CLexer::Tokens::DEFAULT // Token type to save object as
-	);
 	void CopyAttributesTo(SRndHole2FlatAttributes *pAttrb);
 	void CopyAttributesFrom(SRndHole2FlatAttributes *pAttrb);
+	//--------------------------------------------
+	// Parse (LoaD) and Save Methods
+	//--------------------------------------------
+	virtual int Parse(
+		CFile* pcfInFile,
+		int Token,	// Lookahead Token
+		CFileParser* pParser,	// pointer to parser
+		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	);
+	virtual void Save(
+		CFile* pcfFile,
+		int Indent,
+		int flags
+	);
+	//--------------------------------------------
+	// Copy Object Methods
+	//--------------------------------------------
+	virtual CCadObject* Copy();
+	virtual void CopyAttributes(CCadObject* pToObj);
 	//---------------------------------------------
-	// Draw Object Methodes
+	// Draw Object Methods
 	//---------------------------------------------
 	virtual ObjectDrawState ProcessDrawMode(ObjectDrawState DrawState);
 	virtual ObjectDrawState MouseMove(ObjectDrawState DrawState);
@@ -56,6 +70,7 @@ public:
 	virtual int EditProperties();
 	void CreateThePen(MODE mode, CPen* pen, int Lw);
 	SRndHole2FlatAttributes& GetAttributes() { return m_Attrib; }
+	SRndHole2FlatAttributes* GetPtrToAttributes() { return &m_Attrib; }
 	COLORREF GetLineColor() { return GetAttributes().m_colorLine; }
 	void SetLineColor(COLORREF color) { GetAttributes().m_colorLine = color; }
 	double GetLineWidth() { return GetAttributes().m_LineWidth; }

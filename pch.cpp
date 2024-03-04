@@ -22,10 +22,19 @@ DOUBLEPOINT DOUBLEPOINT::Raw(
 	return *this;
 }
 
-DOUBLEPOINT DOUBLEPOINT::LLHCfromPixelPoint(CPoint point, double cX, double cY)
+void DOUBLEPOINT::Print(DOUBLEPOINT& LLHC, double cX, double cY, const char* s, BOOL NewLine)
+{
+	CPoint p;
+
+	p = ToPixelPoint(LLHC, cX, cY);
+	printf("%hs(%d, %d)", s, p.x, p.y);
+	if (NewLine) printf("\n");
+}
+
+DOUBLEPOINT DOUBLEPOINT::LLHC_FromPixelPoint(CPoint point, double cX, double cY)
 {
 	//--------------------------------------------------
-	// LLHCfromPixelPoint
+	// LLHC_FromPixelPoint
 	// Does the oposite of ToPixel Point. "this" defines
 	// the double point value where the point of
 	// interest is.

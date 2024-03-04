@@ -53,7 +53,11 @@ DOUBLEPOINT CCadOrigin::GetCenterPoint()
 	return DOUBLEPOINT(*Obj.pCadPoint);
 }
 
-void CCadOrigin::Save(FILE * pO, CLexer::Tokens Token, int Indent, int flags)
+void CCadOrigin::Save(
+	CFile* pcfFile,
+	int Indent,
+	int flags
+)
 {
 	//---------------------------------------------------
 	// Save
@@ -134,6 +138,11 @@ void CCadOrigin::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	}
 }
 
+BOOL CCadOrigin::IsPointEnclosed(DOUBLEPOINT p)
+{
+	return 0;
+}
+
 BOOL CCadOrigin::PointInThisObject(DOUBLEPOINT point)
 {
 	return 0;
@@ -158,7 +167,7 @@ int CCadOrigin::PointInObjectAndSelect(
 	//	Offset......Offset of drawing
 	//	ppSelList...pointer to list of selected objects
 	//	index.......current index into the selection list
-	//	n...........Total number of spaces in slection list
+	//	n...........Total number of spaces in selection list
 	//
 	// return value:
 	//	returns true if point is within object
@@ -190,7 +199,7 @@ int CCadOrigin::PointInObjectAndSelect(
 	return index;
 }
 
-CString& CCadOrigin::GetTypeString(void)
+CString& CCadOrigin::GetTypeString()
 {
 	//---------------------------------------------------
 	// GetTypeString
@@ -213,7 +222,7 @@ CString& CCadOrigin::GetObjDescription()
 	return GetDescription();
 }
 
-CCadObject * CCadOrigin::CopyObject(void)
+CCadObject * CCadOrigin::Copy()
 {
 	//---------------------------------------------------
 	// CopyObject
@@ -229,10 +238,16 @@ CCadObject * CCadOrigin::CopyObject(void)
 	return pCO;
 }
 
-CLexer::Tokens CCadOrigin::Parse(
-	CLexer::Tokens Token,	// Lookahead Token
+void CCadOrigin::CopyAttributes(CCadObject* pToObj)
+{
+	((CCadOrigin*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
+}
+
+int CCadOrigin::Parse(
+	CFile* pcfInFile,
+	int Token,	// Lookahead Token
 	CFileParser* pParser,	// pointer to parser
-	CLexer::Tokens TypeToken// Token type to save object as
+	int TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
