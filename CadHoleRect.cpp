@@ -30,6 +30,10 @@ BOOL CCadHoleRect::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadHoleRect::UpdateEnclosure()
+{
+}
+
 void CCadHoleRect::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -47,8 +51,7 @@ void CCadHoleRect::Move(CDoubleSize Diff)
 
 void CCadHoleRect::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -124,7 +127,7 @@ BOOL CCadHoleRect::PointInThisObject(DOUBLEPOINT point)
 {
 	CADObjectTypes Obj;
 	BOOL rV;
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -236,11 +239,9 @@ CDoubleSize CCadHoleRect::GetSize()
 	return CSize();
 }
 
-int CCadHoleRect::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadHoleRect::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -256,7 +257,6 @@ int CCadHoleRect::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadHoleRect::CopyAttributesTo(SRectHoleAttributes * pAttrib)

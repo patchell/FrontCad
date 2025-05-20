@@ -37,6 +37,10 @@ BOOL CCadHoleRnd1Flat::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadHoleRnd1Flat::UpdateEnclosure()
+{
+}
+
 void CCadHoleRnd1Flat::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -54,8 +58,7 @@ void CCadHoleRnd1Flat::Move(CDoubleSize Diff)
 
 void CCadHoleRnd1Flat::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -266,11 +269,9 @@ void CCadHoleRnd1Flat::CopyAttributes(CCadObject* pToObj)
 	((CCadHoleRnd1Flat*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
-int CCadHoleRnd1Flat::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadHoleRnd1Flat::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -286,7 +287,6 @@ int CCadHoleRnd1Flat::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadHoleRnd1Flat::CopyAttributesTo(SRndHole1FlatAttributes *pAttrib)

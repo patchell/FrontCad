@@ -4,9 +4,9 @@ class CClipboard : public CCadObject
 {
 public:
 	CClipboard();
-	~CClipboard();
+	virtual ~CClipboard();
+	virtual void UpdateEnclosure();
 	void RemoveAndDestroyALL();
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p) {
 		return FALSE;
 	}

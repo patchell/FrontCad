@@ -82,7 +82,7 @@ BEGIN_MESSAGE_MAP(CFrontCadView, CChildViewBase)
 	ON_COMMAND(ID_HOLE_SQUAREHOLE, &CFrontCadView::OnDrawRectangularhole)
 	ON_UPDATE_COMMAND_UI(ID_DRAW_RECTANGULARHOLE, &CFrontCadView::OnUpdateDrawRectangularhole)
 	ON_COMMAND(ID_LINE_ROTATEDRECT, &CFrontCadView::OnDrawRotatedRectangle)
-	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedrectangle)
+	ON_UPDATE_COMMAND_UI(ID_LINE_ROTATEDRECT, &CFrontCadView::OnUpdateDrawRotatedRectangle)
 	ON_COMMAND(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnDrawRectangleFromCenter)
 	ON_UPDATE_COMMAND_UI(ID_LINE_RECTFROMCENTER,&CFrontCadView::OnUpdateRectFromCenter)
 	ON_COMMAND(ID_DRAW_ROUNDEDRECTANGLE, &CFrontCadView::OnDrawRoundedRectangle)
@@ -150,85 +150,90 @@ void CFrontCadView::OnDraw(CDC* pDC)
 	CDC memDC;
 	CRect rectClient;
 	CBitmap memDCbitmap;
-	CBitmap* pOldbm;
-	CFrontCadDoc* pDoc = GetDocument();
-	CCadObject* pDrawingObjectList;
+	CBitmap* pOldbm = 0;
+	CDocumentFrontCad* pDoc = GetDocument();
+	CCadObject* pDrawingObjectList = 0;
 	DOUBLEPOINT LLHC;		//upper left hand corner offset
 	CBrush br;
 	MODE mode;
 	static int count;
 
-	LLHC = GetRulerInfo().GetUpperLeft();
-	GetClientRect(&rectClient);
-	memDC.CreateCompatibleDC(pDC);
-	memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
-	pOldbm = memDC.SelectObject(&memDCbitmap);
-	pDrawingObjectList = pDoc->GetDrawing()->GetHead();
-	CScale Scale = GetGrid().GetPixelsPerInch();
-	mode.PaintMode = MODE::ObjectPaintMode::FINAL;
-
-	br.CreateSolidBrush(RGB(0, 0, 0));
-	memDC.FillRect(&rectClient, &br);
-
-	GetGrid().Draw(&memDC, mode, LLHC, Scale, rectClient);
-	while (pDrawingObjectList)
+	if (pDoc)
 	{
-		pDrawingObjectList->Draw(&memDC, mode, LLHC, Scale);
-		pDrawingObjectList = pDrawingObjectList->GetNext();
-	}
-	if (GetObjectTypes().pCadObject)	//is an object being draw?
-	{
-		switch (GetDrawState())
+		if (pDoc->GetDrawing())
 		{
-		case ObjectDrawState::SET_ATTRIBUTES:
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN :
-		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		case ObjectDrawState::PLACE_LBUTTON_DOWN:
-		case ObjectDrawState::PLACE_LBUTTON_UP:
-		case ObjectDrawState::PLACE_AUTO:
-		case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
-		case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
-		case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN:
-		case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP:
-		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
-		case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
-			mode.PaintMode = MODE::ObjectPaintMode::SKETCH;
-			break;
-		case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
-		case ObjectDrawState::ARCSTART_LBUTTON_UP:
-			mode.PaintMode = MODE::ObjectPaintMode::ARCSTART;
-			break;
-		case ObjectDrawState::ARCEND_LBUTTON_DOWN:
-		case ObjectDrawState::ARCEND_LBUTTON_UP:
-			mode.PaintMode = MODE::ObjectPaintMode::ARCEND;
-			break;
-		}
-		GetObjectTypes().pCadObject->Draw(&memDC, mode, LLHC, Scale);
-	}
-//	if (GetMoveObjectes())	//are there any objects being moved?
-//		GetMoveObjectes()->Draw(&memDC, UprLHCorner, Scale);
-//	pDoc->DrawReference(&memDC, Offset, Scale, rectClient);
-	DrawCursor(
-		&memDC, 
-		GetCurrentMousePosition(),
-		&rectClient,
-		LLHC,
-		Scale,
-		RGB(255, 255, 255)
-	);
-	pDC->BitBlt(
-		0, 
-		0, 
-		rectClient.right, 
-		rectClient.bottom, 
-		&memDC, 
-		0, 
-		0, 
-		SRCCOPY
-	);
-	//------------- Cleanup ------------------------
-	memDC.SelectObject(pOldbm);
+			pDrawingObjectList = pDoc->GetDrawing()->GetHead();
+			LLHC = GetRulerInfo().GetUpperLeft();
+			GetClientRect(&rectClient);
+			memDC.CreateCompatibleDC(pDC);
+			memDCbitmap.CreateCompatibleBitmap(pDC, rectClient.Width(), rectClient.Height());
+			pOldbm = memDC.SelectObject(&memDCbitmap);
+			CScale Scale = GetGrid().GetPixelsPerInch();
+			mode.PaintMode = MODE::ObjectPaintMode::FINAL;
 
+			br.CreateSolidBrush(RGB(0, 0, 0));
+			memDC.FillRect(&rectClient, &br);
+
+			GetGrid().Draw(&memDC, mode, LLHC, Scale, rectClient);
+			while (pDrawingObjectList)
+			{
+				pDrawingObjectList->Draw(&memDC, mode, LLHC, Scale);
+				pDrawingObjectList = pDrawingObjectList->GetNext();
+			}
+			if (GetObjectTypes().pCadObject)	//is an object being draw?
+			{
+				switch (GetDrawState())
+				{
+				case ObjectDrawState::SET_ATTRIBUTES:
+				case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
+				case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
+				case ObjectDrawState::PLACE_LBUTTON_DOWN:
+				case ObjectDrawState::PLACE_LBUTTON_UP:
+				case ObjectDrawState::PLACE_AUTO:
+				case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_DOWN:
+				case ObjectDrawState::FIXED_LINE_FIRST_POINT_MOUSE_UP:
+				case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_DOWN:
+				case ObjectDrawState::FIXED_LINE_RIGHTANGLE_MOUSE_UP:
+				case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_DOWN:
+				case ObjectDrawState::FIXED_LINE_SECOND_POINT_MOUSE_UP:
+					mode.PaintMode = MODE::ObjectPaintMode::SKETCH;
+					break;
+				case ObjectDrawState::ARCSTART_LBUTTON_DOWN:
+				case ObjectDrawState::ARCSTART_LBUTTON_UP:
+					mode.PaintMode = MODE::ObjectPaintMode::ARCSTART;
+					break;
+				case ObjectDrawState::ARCEND_LBUTTON_DOWN:
+				case ObjectDrawState::ARCEND_LBUTTON_UP:
+					mode.PaintMode = MODE::ObjectPaintMode::ARCEND;
+					break;
+				}
+				GetObjectTypes().pCadObject->Draw(&memDC, mode, LLHC, Scale);
+			}
+			//	if (GetMoveObjectes())	//are there any objects being moved?
+			//		GetMoveObjectes()->Draw(&memDC, UprLHCorner, Scale);
+			//	pDoc->DrawReference(&memDC, Offset, Scale, rectClient);
+			DrawCursor(
+				&memDC,
+				GetCurrentMousePosition(),
+				&rectClient,
+				LLHC,
+				Scale,
+				RGB(255, 255, 255)
+			);
+			pDC->BitBlt(
+				0,
+				0,
+				rectClient.right,
+				rectClient.bottom,
+				&memDC,
+				0,
+				0,
+				SRCCOPY
+			);
+			//------------- Cleanup ------------------------
+			memDC.SelectObject(pOldbm);
+		}
+	}
 }
 
 // CFrontCadView diagnostics
@@ -290,7 +295,7 @@ BOOL CFrontCadView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		}
 		PostMessageToRulers(RW_ZOOM);
 	}
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	return CChildViewBase::OnMouseWheel(nFlags, zDelta, pt);
 }
 
@@ -353,7 +358,7 @@ void CFrontCadView::OnLButtonDown(UINT nFlags, CPoint point)
 	//  point.......mouse pointer coordinates for this window
 	//------------------------------------------------------
 	DOUBLEPOINT MousePos;
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	CCadObject* pObj = 0;
 
 	m_LeftMouseButtonDown = TRUE;
@@ -446,7 +451,7 @@ void CFrontCadView::OnLButtonUp(UINT nFlags, CPoint point)
 	CCadObject** ppSel, * pObjSel, * pObj;
 	int n;
 	DOUBLEPOINT MousePos;
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 
 	MousePos = ConvertMousePosition(
 		point,
@@ -644,7 +649,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 	///     see MSDN docs for CChildViewBase::OnMouseMove
 	///-----------------------------------------------
 	CString csDB;
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	DOUBLEPOINT OriginCenterPoint;	//center of current origin
 	DOUBLEPOINT pointMousePos;
 	CPoint ptScreen = point;
@@ -738,7 +743,7 @@ void CFrontCadView::OnMouseMove(UINT nFlags, CPoint point)
 void CFrontCadView::OnInitialUpdate()
 {
 	m_pParentFrame = (CFrontCadChildFrame*)GetParentFrame();
-	CFrontCadDoc *pDoc = GetDocument();
+	CDocumentFrontCad *pDoc = GetDocument();
 	CString csOrgName = _T("Default");
 
 	// This will be finished up later when
@@ -845,7 +850,7 @@ void CFrontCadView::OnUpdateDrawArccnter(CCmdUI* pCmdUI)
 void CFrontCadView::OnDrawArc()
 {
 	CCadArc* pArc;
-	CFrontCadDoc* pDoc;
+	CDocumentFrontCad* pDoc;
 	pDoc = GetDocument();
 	if (GetObjectTypes().pCadObject)
 	{
@@ -1158,7 +1163,7 @@ void CFrontCadView::OnUpdateRectFromCenter(CCmdUI* pCmdUI)
 	pCmdUI->Enable(1);
 }
 
-void CFrontCadView::OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI)
+void CFrontCadView::OnUpdateDrawRotatedRectangle(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(1);
 }
@@ -1507,7 +1512,7 @@ void CFrontCadView::OnContextMenu(CWnd* /*pWnd*/, CPoint point)
 	//      pWnd......??
 	//      point.....point where mouse pointer is in screen coordinates
 	//-----------------------------------------------------------
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	CMenu ConTexMenu;
 	CMenu PlaceMenu;
 	CCadObject* pO;
@@ -1812,7 +1817,7 @@ void CFrontCadView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	CCadObject** ppSelList;
 	int n;
 
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	switch (nChar)
 	{
 	case 'R':
@@ -2044,7 +2049,7 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	///		nPos........Position of the scrollbar
 	///		pScrollBar..pointer to the scrollbar object
 	///------------------------------------------------
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	double cY = pDoc->GetDocSize().dCY;
 	int Delta = 0;
 	BOOL Update = TRUE;
@@ -2084,7 +2089,7 @@ void CFrontCadView::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CFrontCadView::DoVScroll(double Yinches, BOOL Absolute, BOOL Update)
 {
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	DOUBLEPOINT LLHC; //Lower left hand corner
 
 	if (Update)
@@ -2129,7 +2134,7 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	///		nPos........Position of the scrollbar
 	///		pScrollBar..pointer to the scrollbar object
 	///------------------------------------------------
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	double dCX = pDoc->GetDocSize().dCX;
 	int Delta = 0;
 	BOOL Update = TRUE;
@@ -2170,7 +2175,7 @@ void CFrontCadView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 void CFrontCadView::DoHScroll(double Xinches, BOOL Absolute, BOOL Update)
 {
 	DOUBLEPOINT LLHC;
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 
 	if (Update)
 	{
@@ -2216,7 +2221,7 @@ void CFrontCadView::UpdateScrollbarInfo(DOUBLEPOINT LLHC)
 	// Returns Nothing
 	// Update Upper Left Hand Corner
 	//---------------------------------------------------------------------
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	double HScrollMax = 0.0;
 	CDoubleSize DocSize = pDoc->GetDocSize();
 	double ScrollArea;
@@ -2395,7 +2400,7 @@ void CFrontCadView::ZoomIn(DOUBLEPOINT point)
 	CScale CurrentScale, NextScale;
 	DOUBLEPOINT pointNewLLHC;
 	DOUBLEPOINT ptCurrentLLHC;
-	CFrontCadDoc* pDoc;
+	CDocumentFrontCad* pDoc;
 	CPoint p;
 
 	ptCurrentLLHC = GetRulerInfo().GetUpperLeft();
@@ -2438,7 +2443,7 @@ void CFrontCadView::ZoomOut(DOUBLEPOINT point)
 	CScale CurrentScale, NextScale;
 	DOUBLEPOINT pointNewLLHC;
 	DOUBLEPOINT ptLLHC = GetRulerInfo().GetUpperLeft();
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	CPoint p;
 
 	CurrentScale = GetGrid().GetPixelsPerInch();
@@ -2616,7 +2621,7 @@ afx_msg LRESULT CFrontCadView::OnFromToolbarMessage(WPARAM SubMessage, LPARAM Da
 {
 	ToolBarMsg submsg = ToolBarMsg(SubMessage);
 	CCadOrigin* pCORG = 0;
-	CFrontCadDoc* pDoc = GetDocument();
+	CDocumentFrontCad* pDoc = GetDocument();
 	CString csName;
 	
 	switch (submsg)
@@ -2839,7 +2844,7 @@ CCadObject* CFrontCadView::SnapToObject(
 	CCadObject* pResult = NULL;
 	UINT Id;
 	CCadObject* ppObjectList[8];
-	CFrontCadDoc* pDoc;
+	CDocumentFrontCad* pDoc;
 	int NumberOfObjects;
 	CPoint pointMouse;
 	CScale PixelsPerInch;

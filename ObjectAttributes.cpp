@@ -43,21 +43,18 @@ void SArcAttributes::SaveSettings(SArcAttributes* pAttrib)
 
 void SArcAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SArcAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SArcAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
-	// Parse
+	// ParseParse
 	//	This Method parses the ascii script
 	//	that makes up the data for the object
 	//	attributes
@@ -70,17 +67,17 @@ int SArcAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARC, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_ARC);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -88,15 +85,14 @@ int SArcAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //----- Arc Center Attributes --------
@@ -140,17 +136,14 @@ void SArcCenterAttributes::SaveSettings(SArcCenterAttributes* pAttrib)
 
 void SArcCenterAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SArcCenterAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SArcCenterAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -167,17 +160,17 @@ int SArcCenterAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARCCENTER, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_ARCCENTER);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -185,15 +178,14 @@ int SArcCenterAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //--------------- Arrow Attributes ----------
@@ -273,17 +265,14 @@ void SArrowAttributes::SaveSettings(SArrowAttributes* pAttrib)
 
 void SArrowAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SArrowAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SArrowAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -300,17 +289,17 @@ int SArrowAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ARROW, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_ARROW);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -318,38 +307,35 @@ int SArrowAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //------------- Bitmap Attributes -----------------
 
-int SBitmapAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SBitmapAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_BITMAP, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_BITMAP);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -357,21 +343,19 @@ int SBitmapAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 void SBitmapAttributes::Save(
 	CFile* pcfFile, 
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 
@@ -501,17 +485,14 @@ void SCadDimAttributes::SaveSettings(SCadDimAttributes* pAttrib)
 
 void SCadDimAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SCadDimAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SCadDimAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -528,17 +509,17 @@ int SCadDimAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_DIMENSION, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_DIMENSION);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -546,15 +527,14 @@ int SCadDimAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //-------------- Ellipse Attributes -----------------
@@ -604,17 +584,14 @@ void SEllipseAttributes::SaveSettings(SEllipseAttributes* pAttrib)
 
 void SEllipseAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SEllipseAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SEllipseAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -631,17 +608,17 @@ int SEllipseAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ELLIPSE, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_ELLIPSE);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-			switch (Token)
+			switch (pParser->GetLookaHead())
 		{
-			case TOKEN_LINE_WIDTH:
+			case Token::LINE_WIDTH:
 				break;
-			case TOKEN_LINE_COLOR:
+			case Token::LINE_COLOR:
 				break;;
-			case TOKEN_SELECTED_COLOR:
+			case Token::SELECTED_COLOR:
 				break;
 			default:
 			//--------------------------------------
@@ -649,15 +626,14 @@ int SEllipseAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //------------ Line Attributes -----------------------
@@ -712,17 +688,14 @@ void SLineAttributes::SaveSettings(SLineAttributes* pAttrib)
 
 void SLineAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SLineAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SLineAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -739,17 +712,17 @@ int SLineAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_LINE, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_LINE);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -757,15 +730,14 @@ int SLineAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //------------ Origin Attributes ---------------------
@@ -815,17 +787,14 @@ void SOriginAttributes::SaveSettings(SOriginAttributes* pAttrib)
 
 void SOriginAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SOriginAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SOriginAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -842,17 +811,17 @@ int SOriginAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_ORIGIN, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_ORIGIN);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -860,15 +829,14 @@ int SOriginAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //---------- Polygon Attributes -------------------
@@ -917,17 +885,14 @@ void SPolyAttributes::SaveSettings(SPolyAttributes* pAttrib)
 
 void SPolyAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SPolyAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SPolyAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -944,17 +909,17 @@ int SPolyAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_POLYGON, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_POLYGON);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -962,15 +927,14 @@ int SPolyAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //--------- Rectangle Attributes ------------------
@@ -1022,17 +986,14 @@ void SRectAttributes::SaveSettings(SRectAttributes* pAttrib)
 
 void SRectAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SRectAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRectAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -1049,17 +1010,17 @@ int SRectAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RECT, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_RECT);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1067,15 +1028,14 @@ int SRectAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //----- Rounded Rectangle Attributes --------------
@@ -1132,17 +1092,14 @@ void SRoundedRectAttributes::SaveSettings(SRoundedRectAttributes* pAttrib)
 
 void SRoundedRectAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SRoundedRectAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRoundedRectAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	//----------------------------------------
@@ -1159,17 +1116,17 @@ int SRoundedRectAttributes::Parse(
 	//---------------------------------------
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RNDRECT, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_RNDRECT);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1177,31 +1134,27 @@ int SRoundedRectAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //----------- Text Attributes ---------------------
 
-int Parse(
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void Parse(
+	CParser* pParser	// pointer to parser
 )
 {
-	return Token;
 }
 
 void STextAttributes::Save(
 	CFile* pcfFile, 
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 	char* IndentString = new char[256];
@@ -1214,46 +1167,46 @@ void STextAttributes::Save(
 	csOut.Format(
 		_T("%hs%hs(\n"),
 		IndentString,
-		CFileParser::TokenLookup(TOKEN_ATTRIB_TEXT)
+		CLexer::TokenLookup(Token::ATTRIB_TEXT)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveString(s, 64, TOKEN_FONT_NAME, m_csFontName)
+		CParser::SaveStringS(s, 64, Token::FONT_NAME, m_csFontName)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveColor(s, 64, TOKEN_TEXT_COLOR, m_colorText)
+		CParser::SaveColorS(s, 64, Token::TEXT_COLOR, m_colorText)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveColor(s, 64, TOKEN_BACKGROUND_COLOR, m_colorBK)
+		CParser::SaveColorS(s, 64, Token::BACKGROUND_COLOR, m_colorBK)
 	);
 	csOut.Format( _T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveDoubleValue(s, 64, TOKEN_FONTHEIGHT, m_fontHeight)
+		CParser::SaveDoubleValueS(s, 64, Token::FONTHEIGHT, m_fontHeight)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveDoubleValue(s, 64, TOKEN_FONTWIDTH, m_fontWidth)
+		CParser::SaveDoubleValueS(s, 64, Token::FONTWIDTH, m_fontWidth)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, TOKEN_FONT_FORMAT, m_Format)
+		CParser::SaveUINTValueS(s, 64, Token::FONT_FORMAT, m_Format)
 	);
 	csOut.Format(
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, TOKEN_BK_TRANSPARENT, m_Transparent)
+		CParser::SaveUINTValueS(s, 64, Token::BK_TRANSPARENT, m_Transparent)
 	);
 	csOut.Format( 
 		_T("%hs%hs\n"),
 		IndentString2,
-		CFileParser::SaveUINTValue(s, 64, TOKEN_FONT_WEIGHT, m_fontWeight)
+		CParser::SaveUINTValueS(s, 64, Token::FONT_WEIGHT, m_fontWeight)
 	);
 	csOut.Format(
 		_T("%hs)\n"),
@@ -1359,25 +1312,23 @@ void SRectHoleAttributes::SaveSettings(SRectHoleAttributes* pAttrib)
 	GETAPP.WriteProfileStringW(_T("RECTHOLE"), _T("WIDTH"), csString);
 }
 
-int SRectHoleAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRectHoleAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERECT, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_HOLERECT);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1385,15 +1336,14 @@ int SRectHoleAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //-------------- Round Hole ---------------------------
@@ -1441,25 +1391,23 @@ void SRoundHoleAttributes::SaveSettings(SRoundHoleAttributes* pAttrib)
 	GETAPP.WriteProfileStringW(_T("ROUNDHOLE"), _T("RADIUS"), csString);
 }
 
-int SRoundHoleAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRoundHoleAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERND, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_HOLERND);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1467,15 +1415,14 @@ int SRoundHoleAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //-------- Round with 1 flat Hole ---------------------
@@ -1532,32 +1479,29 @@ void SRndHole1FlatAttributes::SaveSettings(SRndHole1FlatAttributes* pAttrib)
 
 void SRndHole1FlatAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SRndHole1FlatAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRndHole1FlatAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_HOLERND1F, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_HOLERND1F);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1565,15 +1509,14 @@ int SRndHole1FlatAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 //---------Round with 2 flats Hole --------------------
 
@@ -1631,32 +1574,29 @@ void SRndHole2FlatAttributes::SaveSettings(SRndHole2FlatAttributes* pAttrib)
 
 void SRndHole2FlatAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flagsr
+	int Indent
 )
 {
 
 }
 
-int SRndHole2FlatAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRndHole2FlatAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile,TOKEN_ATTRIB_HOLERND2F, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect(Token::ATTRIB_HOLERND2F);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1664,47 +1604,43 @@ int SRndHole2FlatAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 //------------------- Grid Attributes ---------------------------------
 
 void SGridAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SGridAttributes::Parse(
-	CFile* pcfInFile, 
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SGridAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_GRID, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_GRID);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1712,15 +1648,14 @@ int SGridAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 void SGridAttributes::LoadSettings(SGridAttributes* pAttrib)
@@ -1794,32 +1729,29 @@ void SGridAttributes::SaveSettings(SGridAttributes* pAttrib)
 
 void SRulerAttributes::Save(
 	CFile* pcfFile,				//File to print to
-	int Indent,				//Indent in spaces from left margin 
-	int flags
+	int Indent
 )
 {
 
 }
 
-int SRulerAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SRulerAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_RULERS, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_RULERS);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_WIDTH:
+		case Token::LINE_WIDTH:
 			break;
-		case TOKEN_LINE_COLOR:
+		case Token::LINE_COLOR:
 			break;;
-		case TOKEN_SELECTED_COLOR:
+		case Token::SELECTED_COLOR:
 			break;
 		default:
 			//--------------------------------------
@@ -1827,15 +1759,14 @@ int SRulerAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 void SRulerAttributes::LoadSettings(SRulerAttributes* pAttrib)
@@ -1904,10 +1835,11 @@ void SRulerAttributes::SaveSettings(SRulerAttributes* pAttrib)
 
 void SPointAttributes::Save(
 	CFile* pcfFile, 
-	int Indent, 
-	int flags
+	int Indent
 ) 
 {
+	char* pBuff = new char[2048];
+	int n;
 	char* pIndent = new char[128];
 	char* pIndent2 = new char[128];
 	char* s1 = new char[64];
@@ -1915,54 +1847,59 @@ void SPointAttributes::Save(
 	char* s3 = new char[64];
 	CString csOut;
 
-	csOut.Format( 
-		_T("%hs%hs{\n"),
+	n = sprintf_s( 
+		pBuff,
+		2048,
+		"%s%s{\n",
 		GETAPP.IndentString(pIndent, 128,Indent,' '),
-		CFileParser::TokenLookup(TOKEN_ATTRIB_POINT)
+		CLexer::TokenLookup(Token::ATTRIB_POINT)
 	);
+	pcfFile->Write(pBuff,n);
 	GETAPP.IndentString(pIndent2, 128, Indent + 2, ' ');
-	csOut.Format( 
-		_T("%hs%hs\n%hs%hs\n%hs%hs\n%hs}\n"),
+	n = sprintf_s(
+		pBuff,
+		2048,
+		"%s%s\n%s%s\n%s%s\n%s}\n",
 		pIndent2,
-		CFileParser::SaveColor(s1,64,TOKEN_LINE_COLOR, m_colorLine),
+		CParser::SaveColorS(s1,64,Token::LINE_COLOR, m_colorLine),
 		pIndent2,
-		CFileParser::SaveColor(s2,64,TOKEN_SELECTED_COLOR,m_colorSelected),
+		CParser::SaveColorS(s2,64,Token::SELECTED_COLOR,m_colorSelected),
 		pIndent2,
-		CFileParser::SaveIntValue(s3, 64, TOKEN_SELECTED_UNITS, m_SelectedObjectUnits),
+		CParser::SaveIntValueS(s3, 64, Token::SELECTED_UNITS, m_SelectedObjectUnits),
 		pIndent
 	);
+	pcfFile->Write(pBuff, n);
 	delete[] s3;
 	delete[] s2;
 	delete[] s1;
 	delete[] pIndent2;
 	delete[] pIndent;
+	delete[] pBuff;
 }
 
-int SPointAttributes::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser	// pointer to parser
+void SPointAttributes::Parse(
+	CParser* pParser	// pointer to parser
 )
 {
 	BOOL Loop = TRUE;
 
-	Token = pParser->Expect(pcfInFile, TOKEN_ATTRIB_POINT, Token);
-	Token = pParser->Expect(pcfInFile, int('{'), Token);
+	pParser->Expect( Token::ATTRIB_POINT);
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (Token)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LINE_COLOR:
-			Token = pParser->Color(pcfInFile, Token, m_colorLine, Token);
+		case Token::LINE_COLOR:
+			pParser->Color(Token::LINE_COLOR, m_colorLine);
 			break;
-		case TOKEN_SELECTED_COLOR:
-			Token = pParser->Color(pcfInFile, Token, m_colorSelected, Token);
+		case Token::SELECTED_COLOR:
+			pParser->Color(Token::SELECTED_COLOR, m_colorSelected);
 			break;
-		case TOKEN_SELECTED_UNITS:
-			Token = pParser->IntValue(pcfInFile, Token, m_SelectedObjectUnits, Token);
+		case Token::SELECTED_UNITS:
+			pParser->IntValue(Token::SELECTED_UNITS, m_SelectedObjectUnits);
 			break;
-		case int('}'):
-			Token = pParser->Expect(pcfInFile, int('}'), Token);
+		case Token('}'):
+			pParser->Expect( Token('}') );
 			Loop = FALSE;
 			break;
 		default:
@@ -1971,15 +1908,14 @@ int SPointAttributes::Parse(
 			//--------------------------------------
 			Exception.ErrorString.Format(
 				_T("Error::Line %d  Column %d\nUnExpected Token: %hs\n"),
-				pParser->GetLine(),
-				pParser->GetCol(),
-				pParser->TokenLookup(Token)
+				pParser->GetLexer()->GetLine(),
+				pParser->GetLexer()->GetCol(),
+				CLexer::TokenLookup(pParser->GetLookaHead())
 			);
 			throw(Exception);
 			break;
 		}
 	}
-	return Token;
 }
 
 void SPointAttributes::LoadSettings(SPointAttributes* pAttrib)

@@ -197,8 +197,8 @@ public:
 	//---------------------------------------------
 	// Manage objects in document
 	//---------------------------------------------
-	CFrontCadDoc* GetDocument() {
-		return (CFrontCadDoc*)CChildViewBase::GetDocument();
+	CDocumentFrontCad* GetDocument() {
+		return (CDocumentFrontCad*)CChildViewBase::GetDocument();
 	}
 	CDoubleSize GetDocSize() { 
 		return GetDocument()->GetDocSize();
@@ -248,7 +248,7 @@ public:
 	afx_msg void OnUpdateRectFromCenter(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRectangleFromCenter();
 	afx_msg void OnDrawRotatedRectangle();
-	afx_msg	void OnUpdateDrawRotatedrectangle(CCmdUI* pCmdUI);
+	afx_msg	void OnUpdateDrawRotatedRectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRoundedRectangle();
 	afx_msg void OnUpdateDrawRoundedrectangle(CCmdUI* pCmdUI);
 	afx_msg void OnDrawRoundhole();

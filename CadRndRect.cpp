@@ -41,6 +41,10 @@ BOOL CCadRndRect::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadRndRect::UpdateEnclosure()
+{
+}
+
 void CCadRndRect::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -58,8 +62,7 @@ void CCadRndRect::Move(CDoubleSize Diff)
 
 void CCadRndRect::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -248,11 +251,9 @@ CDoubleSize CCadRndRect::GetSize()
 	return CDoubleSize(CX,CY);
 }
 
-int CCadRndRect::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadRndRect::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -268,7 +269,6 @@ int CCadRndRect::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadRndRect::CopyAttributesTo(SRoundedRectAttributes* pAttrib)

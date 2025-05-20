@@ -3,7 +3,7 @@
 
 CCadEllipse::CCadEllipse():CCadObject(ObjectType::ELIPSE)
 {
-	GetName().Format(_T("Ellipse_%d"), ++m_ElipseCount);
+	GetName().Format(_T("Ellipse_%d"), ++m_EllipseCount);
 	if (NeedsAttributes())
 	{
 		ClearNeedsAttributes();
@@ -28,14 +28,18 @@ BOOL CCadEllipse::Create(CCadObject* pParent, SubTypes type)
 	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::CENTERPOINT);
 	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARC_RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARC_RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
+}
+
+void CCadEllipse::UpdateEnclosure()
+{
 }
 
 void CCadEllipse::Move(CDoubleSize Diff)
@@ -55,8 +59,7 @@ void CCadEllipse::Move(CDoubleSize Diff)
 
 void CCadEllipse::Save(
 	CFile* pcfFile,
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 	//--------------------------------------------------
@@ -91,8 +94,8 @@ void CCadEllipse::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 	if (m_RenderEnable)
 	{
 		printf("Draw\n");
-		ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
-		ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
+		ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		Lw = GETAPP.RoundDoubleToInt(Scale.dSX * GetLineWidth());
 		if (Lw < 1) Lw = 1;
 
@@ -147,8 +150,8 @@ BOOL CCadEllipse::PointInThisObject(DOUBLEPOINT point)
 	double a, b;
 	CADObjectTypes ObjP1, ObjP2, ObjCenter;
 
-	ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
-	ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+	ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
+	ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 	ObjCenter.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 	a = ObjP1.pCadPoint->GetX() - ObjCenter.pCadPoint->GetX();
 	b = ObjP1.pCadPoint->GetY() - ObjCenter.pCadPoint->GetY();
@@ -261,15 +264,13 @@ CDoubleSize CCadEllipse::GetSize()
 	//--------------------------------------------------
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	return Obj.pCadRect->GetSize();
 }
 
-int CCadEllipse::Parse(
-	CFile* pcfInFile,
-	int Token,
-	CFileParser* pParser,
-	int TypeToken
+void CCadEllipse::Parse(
+	CParser* pParser,
+	Token TypeToken
 )
 {
 	//--------------------------------------------
@@ -286,7 +287,6 @@ int CCadEllipse::Parse(
 	//	returns lookahead token on success, or
 	//			throws an exception
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadEllipse::CopyAttributesTo(SEllipseAttributes *pAttrib)
@@ -370,9 +370,9 @@ ObjectDrawState CCadEllipse::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP;
 		break;
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		Obj.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("Ellipse:Place Second Point Defining Shape"));
@@ -381,10 +381,10 @@ ObjectDrawState CCadEllipse::ProcessDrawMode(ObjectDrawState DrawState)
 		DrawState = ObjectDrawState::PLACE_LBUTTON_UP;
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		pP2 = Obj.pCadPoint;
 		Obj.pCadPoint->SetPoint(MousePos);
-		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
+		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
 		pP1 = Obj.pCadPoint;
 		Obj.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		Obj.pCadPoint->SetPoint(GETAPP.CalcCenter(pP1, pP2));
@@ -423,8 +423,8 @@ ObjectDrawState CCadEllipse::MouseMove(ObjectDrawState DrawState)
 		case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_DOWN:
 			break;
 		case ObjectDrawState::PLACE_LBUTTON_DOWN:
-			Obj1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
-			Obj2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+			Obj1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
+			Obj2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 			ObjCenter.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 			Obj2.pCadPoint->SetPoint(MousePos);
 			ObjCenter.pCadPoint->SetPoint(GETAPP.CalcCenter(Obj1.pCadPoint, Obj2.pCadPoint));

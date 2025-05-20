@@ -23,6 +23,10 @@ CCadDimension::~CCadDimension()
 {
 }
 
+void CCadDimension::UpdateEnclosure()
+{
+}
+
 void CCadDimension::Move(CDoubleSize Diff)
 {
 	//--------------------------------------------------
@@ -38,7 +42,10 @@ void CCadDimension::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadDimension::Save(CFile* pcfFile, int Indent, int flags)
+void CCadDimension::Save(
+	CFile* pcfFile, 
+	int Indent
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -189,11 +196,9 @@ void CCadDimension::CopyAttributes(CCadObject* pToObj)
 	((CCadDimension*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
-int CCadDimension::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken // Token type to save object as
+void CCadDimension::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken // Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -209,7 +214,6 @@ int CCadDimension::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadDimension::CopyAttributesFrom(SCadDimAttributes *pAttrib)

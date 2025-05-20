@@ -29,7 +29,7 @@ class CFrontCadApp : public CWinApp
 	//-------------------------------------
 	CString m_csPopUpMenuClass;
 	//----------------------------------
-	//	The Clip Bopard
+	//	The Clip Board
 	//----------------------------------
 	CClipboard m_ClipBoard;
 	//-----------------------------------
@@ -79,8 +79,8 @@ public:
 	// Math Methods
 	//-----------------------------------------
 	BOOL QuadradicEquation(double a, double b, double c, double& X1, double& X2);
-	double GetPi() { return Pi; }
-	double ArcTan(double X, double Y);
+	double GetPi() const { return Pi; }
+	double ArcTan(double X, double Y) const;
 	double ArcSin(double X, double Y);
 	BOOL IsPositive(double X) {
 		BOOL rV = FALSE;

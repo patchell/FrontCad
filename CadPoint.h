@@ -19,14 +19,15 @@ public:
 	CCadPoint(DOUBLEPOINT dp, SubTypes Sub, UINT SubSub);
 	~CCadPoint();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual int GetDefaultToken() { return TOKEN_POINT; }
+	virtual void UpdateEnclosure();
+	virtual Token GetDefaultToken() { return Token::POINT; }
 	void SetID(int ID) { m_PointID = ID; }
-	int GetID() { return m_PointID; }
+	int GetID()const  { return m_PointID; }
 	virtual CString& GetObjDescription();
 	virtual CString& GetTypeString();
 	void SetX(double x) { dX = x; }
-	double GetX() { return dX; }
-	double GetY() { return dY; }
+	double GetX() const { return dX; }
+	double GetY() const { return dY; }
 	void SetY(double y) { dY = y; }
 	DOUBLEPOINT GetPoint() const { 
 		return {dX,dY};
@@ -48,7 +49,6 @@ public:
 	//------------------------------------
 	BOOL IsPointOnTarget(DOUBLEPOINT point);
 	virtual void Move(CDoubleSize Diff);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
@@ -102,16 +102,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods
@@ -159,8 +156,8 @@ public:
 	// Pointy Things to do with lines
 	//----------------------------------
 	CCadPoint* Reflect(CCadPoint* pReflect, UINT mode);
-	UINT Slope(double *pSlope, CCadPoint* pPoint);
-	UINT Slope(double* pSlope, DOUBLEPOINT point);
+	UINT Slope(double *pSlope, CCadPoint* pPoint) const;
+	UINT Slope(double* pSlope, DOUBLEPOINT point) const;
 	UINT OrthogonalSlope(double *Slope, CCadPoint *pPoint);
 	UINT LineIs(DOUBLEPOINT OtherPoint);
 	double YIntercept(double m);

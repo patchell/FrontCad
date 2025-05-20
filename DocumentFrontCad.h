@@ -1,15 +1,15 @@
 #pragma once
 
-// CFrontCadDoc document
-
-class CFrontCadDoc : public CBaseDocument
+class CDocumentFrontCad : public CBaseDocument
 {
 	CDoubleSize m_DocSize;
 	CDoubleSize m_PaperSize;
-	DECLARE_DYNCREATE(CFrontCadDoc)
+	CLexerFrontCad* m_pLexer;
+	DECLARE_DYNCREATE(CDocumentFrontCad)
 public:
-	CFrontCadDoc();
-	virtual ~CFrontCadDoc();
+	CDocumentFrontCad();
+	virtual ~CDocumentFrontCad();
+	BOOL Create(CArchive& ar);
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject* pExcludeObject,
@@ -18,15 +18,7 @@ public:
 		UINT nKinds		//kinds of object to select
 	);
 	virtual void SetDirty(UINT flag);
-#ifndef _WIN32_WCE
 	virtual void Serialize(CArchive& ar);   // overridden for document i/o
-#endif
-#ifdef _DEBUG
-	virtual void AssertValid() const;
-#ifndef _WIN32_WCE
-	virtual void Dump(CDumpContext& dc) const;
-#endif
-#endif
 	CCadDrawing* GetDrawing() {
 		return (CCadDrawing*)CBaseDocument::GetDocObject();
 	}
@@ -41,8 +33,8 @@ public:
 	CDoubleSize GetPaperSize() { return m_PaperSize; }
 protected:
 	virtual BOOL OnNewDocument();
-
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnModifySwitchreference();
 };
+

@@ -46,6 +46,24 @@ BOOL CCadPolygon::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadPolygon::UpdateEnclosure()
+{
+}
+
+void CCadPolygon::AddVertices(int VertexCount, CCadObject::SubTypes SubType)
+{
+	int i;
+	CCadPoint* pPoint;
+
+	for (i = 0; i < VertexCount; ++i)
+	{
+		pPoint = new CCadPoint;
+		pPoint->Create(this, SubType);
+		pPoint->SetSubSubType(i + 1);
+		AddObjectAtTail(pPoint);
+	}
+}
+
 void CCadPolygon::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -63,8 +81,7 @@ void CCadPolygon::Move(CDoubleSize Diff)
 
 void CCadPolygon::Save(
 	CFile* pcfFile,
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -83,8 +100,8 @@ void CCadPolygon::Save(
 	csOut.Format( _T("%hs %hs %hs %d"), 
 		 "junk", "junk","junk",5
 //		GETAPP.IndentString(IndentString, 256, Indent, ' '),
-//		CFileParser::TokenLookup(TOKEN_POLY),
-//		CFileParser::TokenLookup(TOKEN_VERTEX),
+//		CLexer::TokenLookup(Token::POLY),
+//		CLexer::TokenLookup(Token::VERTEX),
 //		GetNumVertices()
 	);
 
@@ -96,9 +113,9 @@ void CCadPolygon::Save(
 			CCadObject::SubTypes::VERTEX,
 			i + 1
 		);
-		pPoint->Save(pcfFile, Indent + 1, flags);
+		pPoint->Save(pcfFile, Indent + 2);
 	}
-	m_Attrib.Save(pcfFile, Indent + 1, flags);
+	m_Attrib.Save(pcfFile, Indent + 1);
 	delete[] IndentString;
 }
 
@@ -389,11 +406,9 @@ CDoubleSize CCadPolygon::GetSize()
 	return size;
 }
 
-int CCadPolygon::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadPolygon::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -409,7 +424,6 @@ int CCadPolygon::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 ObjectDrawState CCadPolygon::ProcessDrawMode(ObjectDrawState DrawState)

@@ -117,6 +117,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -235,24 +236,30 @@
     <ClInclude Include="DlgSnapSelector.h" />
     <ClInclude Include="DlgSquareHoleProp.h" />
     <ClInclude Include="DlgTextProperties.h" />
+    <ClInclude Include="DocumentFrontCad.h" />
     <ClInclude Include="DoubleSize.h" />
+    <ClInclude Include="EdaObject.h" />
     <ClInclude Include="EditDecimal.h" />
     <ClInclude Include="EditText.h" />
     <ClInclude Include="Exception.h" />
-    <ClInclude Include="FileParser.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="FrontCad.h" />
     <ClInclude Include="FrontCadChildFrame.h" />
-    <ClInclude Include="FrontCadDoc.h" />
     <ClInclude Include="FrontCadView.h" />
     <ClInclude Include="FrontCadDefines.h" />
     <ClInclude Include="Grid.h" />
+    <ClInclude Include="Lexer.h" />
+    <ClInclude Include="LexerFrontCad.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="MyBitmap.h" />
     <ClInclude Include="MyEvent.h" />
     <ClInclude Include="MyToolBarSplitter.h" />
     <ClInclude Include="MyToolBarView.h" />
     <ClInclude Include="ObjectAttributs.h" />
+    <ClInclude Include="Parser.h" />
+    <ClInclude Include="ParserFrontCad.h" />
+    <ClInclude Include="ParserFrontCadLib.h" />
+    <ClInclude Include="PcbObject.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Primitives.h" />
     <ClInclude Include="Resource.h" />
@@ -261,6 +268,20 @@
     <ClInclude Include="RulerSplitterWindow.h" />
     <ClInclude Include="RulerView.h" />
     <ClInclude Include="Scale.h" />
+    <ClInclude Include="SchBus.h" />
+    <ClInclude Include="SchBusEntry.h" />
+    <ClInclude Include="SchGlobalLabel.h" />
+    <ClInclude Include="SchHierarchalLabel.h" />
+    <ClInclude Include="SchJunction.h" />
+    <ClInclude Include="SchLabel.h" />
+    <ClInclude Include="SchNoConnect.h" />
+    <ClInclude Include="SchObject.h" />
+    <ClInclude Include="SchSheet.h" />
+    <ClInclude Include="SchSheetPin.h" />
+    <ClInclude Include="SchSheetSchematic.h" />
+    <ClInclude Include="SchSheetSymbol.h" />
+    <ClInclude Include="SchSymbol.h" />
+    <ClInclude Include="SchWire.h" />
     <ClInclude Include="StaticBitmap.h" />
     <ClInclude Include="StaticDouble.h" />
     <ClInclude Include="StaticPreview.h" />
@@ -317,21 +338,27 @@
     <ClCompile Include="DlgSnapSelector.cpp" />
     <ClCompile Include="DlgSquareHoleProp.cpp" />
     <ClCompile Include="DlgTextProperties.cpp" />
+    <ClCompile Include="DocumentFrontCad.cpp" />
     <ClCompile Include="DoubleSize.cpp" />
+    <ClCompile Include="EdaObject.cpp" />
     <ClCompile Include="EditDecimal.cpp" />
     <ClCompile Include="EditText.cpp" />
-    <ClCompile Include="FileParser.cpp" />
     <ClCompile Include="FrontCad.cpp" />
     <ClCompile Include="FrontCadChildFrame.cpp" />
-    <ClCompile Include="FrontCadDoc.cpp" />
     <ClCompile Include="FrontCadView.cpp" />
     <ClCompile Include="Grid.cpp" />
+    <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="LexerFrontCad.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="MyBitmap.cpp" />
     <ClCompile Include="MyEvent.cpp" />
     <ClCompile Include="MyToolBarSplitter.cpp" />
     <ClCompile Include="MyToolBarView.cpp" />
     <ClCompile Include="ObjectAttributes.cpp" />
+    <ClCompile Include="Parser.cpp" />
+    <ClCompile Include="ParserFrontCad.cpp" />
+    <ClCompile Include="ParserFrontCadLib.cpp" />
+    <ClCompile Include="PcbObject.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -343,6 +370,20 @@
     <ClCompile Include="RulerSplitterWindow.cpp" />
     <ClCompile Include="RulerView.cpp" />
     <ClCompile Include="Scale.cpp" />
+    <ClCompile Include="SchBus.cpp" />
+    <ClCompile Include="SchBusEntry.cpp" />
+    <ClCompile Include="SchGlobalLabel.cpp" />
+    <ClCompile Include="SchHierarchalLabel.cpp" />
+    <ClCompile Include="SchJunction.cpp" />
+    <ClCompile Include="SchLabel.cpp" />
+    <ClCompile Include="SchNoConnect.cpp" />
+    <ClCompile Include="SchObject.cpp" />
+    <ClCompile Include="SchSheet.cpp" />
+    <ClCompile Include="SchSheetPin.cpp" />
+    <ClCompile Include="SchSheetSchematic.cpp" />
+    <ClCompile Include="SchSheetSymbol.cpp" />
+    <ClCompile Include="SchSymbol.cpp" />
+    <ClCompile Include="SchWire.cpp" />
     <ClCompile Include="StaticBitmap.cpp" />
     <ClCompile Include="StaticDouble.cpp" />
     <ClCompile Include="StaticPreview.cpp" />
@@ -355,6 +396,7 @@
     <None Include="FrontCad.reg" />
     <None Include="README.md" />
     <None Include="res\FrontCad.rc2" />
+    <None Include="Test.fpc" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="FrontCad.rc" />

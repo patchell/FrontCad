@@ -6,22 +6,19 @@ public:
 	CCadLibrary();
 	virtual ~CCadLibrary();
 	BOOL Create();
-	virtual int GetDefaultToken() { return TOKEN_LIBFILE; }
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
+	virtual void UpdateEnclosure();
+	virtual Token GetDefaultToken() { return Token::LIBFILE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods

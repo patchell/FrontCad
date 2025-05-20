@@ -92,5 +92,11 @@ void CDlgNewDrawing::OnOK()
 
 void CDlgNewDrawing::OnBnClickedButtonOpenExisting()
 {
-	// TODO: Add your control notification handler code here
+	m_PaperSizeX = m_Edit_PaperSizeW.GetDoubleValue();
+	m_PaperSizeY = m_Edit_PaperSizeH.GetDoubleValue();
+	m_DrawingSizeX = m_Edit_DrawingSizeW.GetDoubleValue();
+	m_DrawingSizeY = m_Edit_DrawingSizeH.GetDoubleValue();
+	m_Edit_DrawingName.GetWindowTextW(m_csDocName);
+	GETAPP.OnFileOpen();
+	CDialogEx::OnOK();
 }

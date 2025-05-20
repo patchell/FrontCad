@@ -130,7 +130,7 @@ BOOL CFrontCadApp::InitInstance()
 	//-------------------------------------------------------------
 	CMultiDocTemplate* pDocTemplate;
 	pDocTemplate = new CMultiDocTemplate(IDR_FrontCadTYPE,
-		RUNTIME_CLASS(CFrontCadDoc),
+		RUNTIME_CLASS(CDocumentFrontCad),
 		RUNTIME_CLASS(CFrontCadChildFrame), // custom MDI child frame
 		RUNTIME_CLASS(CFrontCadView));
 	if (!pDocTemplate)
@@ -401,7 +401,7 @@ char * CFrontCadApp::IndentString(
 
 	int i;
 
-	if (destSize >= count)
+	if (destSize < (count - 1))
 		MessageBoxW(
 			NULL,
 			_T("Indent String"),
@@ -979,7 +979,7 @@ BOOL CFrontCadApp::QuadradicEquation(double a, double b, double c, double& X1, d
 	return rv;
 }
 
-double CFrontCadApp::ArcTan(double X, double Y)
+double CFrontCadApp::ArcTan(double X, double Y) const
 {
 	///------------------------------------
 	/// ArcTan
@@ -1206,8 +1206,8 @@ double CFrontCadApp::ArcSin(double X, double Y)
 
 
 void CFrontCadApp::OnFileOpen()
-{
-
+{	
+	CWinApp::OnFileOpen();
 }
 
 //-----------------------------------------------------------

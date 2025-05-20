@@ -17,10 +17,10 @@ public:
 	CCadBitmap();
 	virtual ~CCadBitmap();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual int GetDefaultToken() { return TOKEN_BITMAP; }
+	virtual void UpdateEnclosure();
+	virtual Token GetDefaultToken() { return Token::BITMAP; }
 	virtual void Move(CDoubleSize Diff);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
@@ -43,16 +43,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods

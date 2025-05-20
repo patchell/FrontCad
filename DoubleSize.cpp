@@ -10,14 +10,11 @@ CDoubleSize::CDoubleSize(CSize szSize)
     dCY = InchesY;
 }
 
-int CDoubleSize::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CDoubleSize::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
-     return Token;
 }
 
 double CDoubleSize::Angle(BOOL DegreesMode)

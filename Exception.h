@@ -8,7 +8,7 @@ enum class ExceptionType {
 
 struct SException {
 	ExceptionType Type;
-	int badToken;
+	Token badToken;
 	CString ErrorString;
 	int MaxStringLen = MAX_EXCEPTION_STRING_LEN;
 };

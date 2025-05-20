@@ -20,10 +20,10 @@ public:
 	CCadText();
 	virtual ~CCadText();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type);
-	virtual int GetDefaultToken() { return TOKEN_TEXT; }
+	virtual void UpdateEnclosure();
+	virtual Token GetDefaultToken() { return Token::TEXT; }
 	virtual void Move(CDoubleSize Diff);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
@@ -41,16 +41,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods
@@ -67,7 +64,7 @@ public:
 		m_csText = csText;
 //		Rotate(m_Angle, m_rectSelect);
 	}
-	void GetText(CString& csText) { csText = m_csText; }
+	void GetText(CString& csText) const { csText = m_csText; }
 	CString& GetText() { return m_csText; }
 	void SetAngle(double Angle) {
 		m_Angle = Angle;

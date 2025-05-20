@@ -9,96 +9,97 @@
 #ifndef PCH_H
 #define PCH_H
 
-enum {
-	TOKEN_DEFAULT = -2,
-	TOKEN_EOFToken = -1,
-	TOKEN_BASE_OBJ,
-	TOKEN_MATCHED,
-	TOKEN_NUMINT = 256,
-	TOKEN_NUMDOUBLE,
-	TOKEN_STRING,			//1
+enum class Token{
+	DEFAULT = -2,
+	EOFToken = -1,
+	BASE_OBJ,
+	MATCHED,
+	NUMINT = 256,
+	NUMDOUBLE,
+	STRING,			//1
 	//--------------------------------
 	// Drawing Objects
 	//--------------------------------
-	TOKEN_ARC,				//2
-	TOKEN_ARC_CENTER,		//3
-	TOKEN_ARROW,
-	TOKEN_BITMAP,
-	TOKEN_CIRCLE,			//4
-	TOKEN_DIMENSION,
-	TOKEN_RECT,				//5
-	TOKEN_RNDRECT,			//6
-	TOKEN_POLY,				//7
-	TOKEN_LINE,				//9
-	TOKEN_HOLERND,			//10
-	TOKEN_HOLERECT,			//11
-	TOKEN_HOLE_1FLAT,		//12
-	TOKEN_HOLE_2FLAT,		//13
-	TOKEN_LIBPART,			//14
-	TOKEN_ORG,	//token for origin object
-	TOKEN_POINT,
-	TOKEN_PRINTRECT,
-	TOKEN_TEXT,				//15
-	TOKEN_VERTEX_POINT,
-	TOKEN_START_POINT,
-	TOKEN_END_POINT,
+	ARC,				//2
+	ARC_CENTER,		//3
+	ARROW,
+	BITMAP,
+	CIRCLE,			//4
+	DIMENSION,
+	RECT,				//5
+	RNDRECT,			//6
+	POLY,				//7
+	LINE,				//9
+	HOLERND,			//10
+	HOLERECT,			//11
+	HOLE_1FLAT,		//12
+	HOLE_2FLAT,		//13
+	LIBPART,			//14
+	ORG,	//token for origin object
+	POINT,
+	PRINTRECT,
+	TEXT,				//15
+	VERTEX_POINT,
+	START_POINT,
+	END_POINT,
 	//colors
-	TOKEN_BK_TRANSPARENT,
-	TOKEN_BACKGROUND_COLOR,	//17
-	TOKEN_LINE_COLOR,
-	TOKEN_TEXT_COLOR,
-	TOKEN_FILL_COLOR,
-	TOKEN_SELECTED_COLOR,
-	TOKEN_RED,
-	TOKEN_GREEN,
-	TOKEN_BLUE,
+	BK_TRANSPARENT,
+	BACKGROUND_COLOR,	//17
+	LINE_COLOR,
+	TEXT_COLOR,
+	FILL_COLOR,
+	SELECTED_COLOR,
+	RED,
+	GREEN,
+	BLUE,
 	//-------
-	TOKEN_FONT,
-	TOKEN_FONT_WEIGHT,
-	TOKEN_FONTHEIGHT,
-	TOKEN_FONTWIDTH,
-	TOKEN_FONT_FORMAT,
-	TOKEN_FONT_NAME,
+	FONT,
+	FONT_WEIGHT,
+	FONTHEIGHT,
+	FONTWIDTH,
+	FONT_FORMAT,
+	FONT_NAME,
 	//--------------------
-	TOKEN_RADIUS,
-	TOKEN_FLATDIST,
-	TOKEN_VERTEX,
-	TOKEN_RECTWIDTH,
-	TOKEN_RECTHIEGHT,
-	TOKEN_ANGLE,
-	TOKEN_REFERENCE,
-	TOKEN_FILENAME,
-	TOKEN_LENGTH,
-	TOKEN_SIZE,
-	TOKEN_SCALE,
-	TOKEN_LINE_WIDTH,
-	TOKEN_ARROW_LENGTH,
-	TOKEN_ARROW_WIDTH,
-	TOKEN_SELECTED_UNITS,
+	RADIUS,
+	FLATDIST,
+	VERTEX,
+	RECTWIDTH,
+	RECTHIEGHT,
+	ANGLE,
+	REFERENCE,
+	FILENAME,
+	LENGTH,
+	SIZE,
+	SCALE,
+	LINE_WIDTH,
+	ARROW_LENGTH,
+	ARROW_WIDTH,
+	SELECTED_UNITS,
 	//-------------------
-	TOKEN_DRAWFILE,
-	TOKEN_LIBFILE,
+	DRAWFILE,
+	LIBFILE,
 	// --- Attributes ---
-	TOKEN_ATTRIB_ARC,
-	TOKEN_ATTRIB_ARCCENTER,
-	TOKEN_ATTRIB_ARROW,
-	TOKEN_ATTRIB_BITMAP,
-	TOKEN_ATTRIB_DIMENSION,
-	TOKEN_ATTRIB_ELLIPSE,
-	TOKEN_ATTRIB_GRID,
-	TOKEN_ATTRIB_HOLERECT,
-	TOKEN_ATTRIB_HOLERND1F,
-	TOKEN_ATTRIB_HOLERND2F,
-	TOKEN_ATTRIB_HOLERND,
-	TOKEN_ATTRIB_LINE,
-	TOKEN_ATTRIB_ORIGIN,
-	TOKEN_ATTRIB_POINT,
-	TOKEN_ATTRIB_POLYGON,
-	TOKEN_ATTRIB_RECT,
-	TOKEN_ATTRIB_RNDRECT,
-	TOKEN_ATTRIB_RULERS,
-	TOKEN_ATTRIB_TEXT,
-	TOKEN_ERRORToken
+	ATTRIB_ARC,
+	ATTRIB_ARCCENTER,
+	ATTRIB_ARROW,
+	ATTRIB_BITMAP,
+	ATTRIB_DIMENSION,
+	ATTRIB_ELLIPSE,
+	ATTRIB_GRID,
+	ATTRIB_HOLERECT,
+	ATTRIB_HOLERND1F,
+	ATTRIB_HOLERND2F,
+	ATTRIB_HOLERND,
+	ATTRIB_LINE,
+	ATTRIB_ORIGIN,
+	ATTRIB_POINT,
+	ATTRIB_POLYGON,
+	ATTRIB_RECT,
+	ATTRIB_RNDRECT,
+	ATTRIB_RULERS,
+	ATTRIB_TEXT,
+	ERRORToken,
+	ENDOFTOKENS
 };
 
 
@@ -131,6 +132,16 @@ enum {
 #include "MainFrm.h"
 //-------------- Drawing Objects ------------------
 #include "CadObject.h"
+
+#include "Lexer.h"	//lexer base class
+#include "LexerFrontCad.h"
+#include "Parser.h"
+#include "ParserFrontCad.h"
+#include "ParserFrontCadLib.h"
+
+#include "EdaObject.h"
+#include "SchObject.h"
+#include "PcbObject.h"
 #include "Clipboard.h"
 #include "CadPoint.h"
 #include "CadArc.h"
@@ -152,8 +163,20 @@ enum {
 #include "CadLibPart.h"
 #include "CadLibrary.h"
 #include "CadDrawing.h"
-
-#include "FileParser.h"
+//-----------------------------
+#include "SchWire.h"
+#include "SchBus.h"
+#include "SchJunction.h"
+#include "SchBusEntry.h"
+#include "SchLabel.h"
+#include "SchSymbol.h"
+#include "SchSheetSymbol.h"
+#include "SchSheetSchematic.h"
+#include "SchNoConnect.h"
+#include "SchGlobalLabel.h"
+#include "SchHierarchalLabel.h"
+#include "SchSheet.h"
+#include "SchSheetPin.h"
 
 #include "Frontcad.h"
 
@@ -195,7 +218,7 @@ enum {
 #include "ChildFrameBase.h"
 #include "FrontCadChildFrame.h"
 #include "BaseDocument.h"
-#include "FrontCadDoc.h"
+#include "DocumentFrontCad.h"
 #include "ChildViewBase.h"
 #include "FrontCadView.h"
 #include "FrontCadChildFrame.h"

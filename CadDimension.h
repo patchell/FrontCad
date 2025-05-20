@@ -13,11 +13,11 @@ class CCadDimension:public CCadObject
 public:
 	CCadDimension();
 	virtual ~CCadDimension();
+	virtual void UpdateEnclosure();
 	virtual void OnCreate();
-	virtual int GetDefaultToken() { return TOKEN_DIMENSION; }
+	virtual Token GetDefaultToken() { return Token::DIMENSION; }
 	virtual void Move(CDoubleSize Diff);
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual BOOL PointInObjectAndSelect(
@@ -37,16 +37,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods
@@ -96,10 +93,10 @@ public:
 	virtual void Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale);
 	//---------------------------------------------
 	void SetSlope(double m) { m_Slope = m; }
-	double GetSlope() { return m_Slope; }
+	double GetSlope() const { return m_Slope; }
 	void SetYIntercept(double b) { m_yIntercept = b; }
 	double GetYIntercept() { return m_yIntercept; }
 	void SetLineType(UINT lt) { m_LineType = lt; }
-	UINT GetLineType() { return m_LineType; }
+	UINT GetLineType() const { return m_LineType; }
 };
 

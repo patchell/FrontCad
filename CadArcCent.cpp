@@ -34,14 +34,18 @@ BOOL CCadArcCent::Create(CCadObject* pParent, SubTypes type)
 	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ENDPOINT);
 	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARC_RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(1);
 	AddObjectAtTail(Obj.pCadObject);
 	Obj.pCadPoint = new CCadPoint;
-	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
+	Obj.pCadPoint->Create(pParent, CCadObject::SubTypes::ARC_RECTSHAPE);
 	Obj.pCadPoint->SetSubSubType(2);
 	AddObjectAtTail(Obj.pCadObject);
 	return TRUE;
+}
+
+void CCadArcCent::UpdateEnclosure()
+{
 }
 
 void CCadArcCent::Move(CDoubleSize Diff)
@@ -61,8 +65,7 @@ void CCadArcCent::Move(CDoubleSize Diff)
 
 void CCadArcCent::Save(
 	CFile* pcfFile,
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 	//--------------------------------------------------
@@ -79,13 +82,13 @@ void CCadArcCent::Save(
 
 	csOut.Format( _T("%hs%hs(\n"),
 		GETAPP.IndentString(s, 256, Indent,' '),
-		CFileParser::TokenLookup(TOKEN_ARC_CENTER)
+		CLexer::TokenLookup(Token::ARC_CENTER)
 	);
-//	m_rectShape.Save(pO, TOKEN_SHAPE, Indent + 1, flags);
-//	GetCenter()->Save(pO, TOKEN_CENTER, Indent + 1, flags);
-//	GetStartPoint().Save(pO, TOKEN_START, Indent + 1, flags);
-//	GetEndPoint().Save(pO, TOKEN_END, Indent + 1, flags);
-	GetAttributes().Save(pcfFile, Indent + 2, flags);
+//	m_rectShape.Save(pO, Token::SHAPE, Indent + 1, flags);
+//	GetCenter()->Save(pO, Token::CENTER, Indent + 1, flags);
+//	GetStartPoint().Save(pO, Token::START, Indent + 1, flags);
+//	GetEndPoint().Save(pO, Token::END, Indent + 1, flags);
+	GetAttributes().Save(pcfFile, Indent + 2);
 	delete[] s;
 	delete[] TempString;
 }
@@ -111,8 +114,8 @@ void CCadArcCent::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 
 	if (IsRenderEnabled())
 	{
-		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
-		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
+		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		PS.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::STARTPOINT, 0);
 		PE.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ENDPOINT, 0);
@@ -202,10 +205,10 @@ BOOL CCadArcCent::PointInThisObject(DOUBLEPOINT point)
 	// do a rough test to cull
 	// this object out
 	//------------------------------
-	P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
-	P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+	P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
+	P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 	PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
-	Rect.Create(NULL, CCadObject::SubTypes::RECTSHAPE);
+	Rect.Create(NULL, CCadObject::SubTypes::ARC_RECTSHAPE);
 	Rect.SetRect(P1.pCadPoint, P2.pCadPoint);
 	if (Rect.PointInThisObject(point))
 	{
@@ -353,11 +356,9 @@ void CCadArcCent::CopyAttributes(CCadObject* pToObj)
 	((CCadArcCent*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
-int CCadArcCent::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadArcCent::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken		// Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -373,7 +374,6 @@ int CCadArcCent::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadArcCent::CopyAttributesTo(SArcCenterAttributes *pAttrib)
@@ -459,9 +459,9 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 	case ObjectDrawState::WAITFORMOUSE_DOWN_LBUTTON_UP:
 		PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
 		PC.pCadPoint->SetPoint(MousePos);
-		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
+		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
 		P1.pCadPoint->SetPoint(MousePos);
-		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		P2.pCadPoint->SetPoint(MousePos);
 		DrawState = ObjectDrawState::PLACE_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC CENTERED:Place Corner of Circle Shape"));
@@ -471,9 +471,9 @@ ObjectDrawState CCadArcCent::ProcessDrawMode(ObjectDrawState DrawState)
 		break;
 	case ObjectDrawState::PLACE_LBUTTON_UP:
 		PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
-		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
+		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
 		P1.pCadPoint->SetPoint(MousePos);
-		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		P2.pCadPoint->SetPoint(CalculateP2(PC.pCadPoint,P1.pCadPoint));
 		DrawState = ObjectDrawState::ARCSTART_LBUTTON_DOWN;
 		GETAPP.UpdateStatusBar(_T("ARC CENTERED:Locate Start of Arc"));
@@ -527,9 +527,9 @@ ObjectDrawState CCadArcCent::MouseMove(ObjectDrawState DrawState)
 	{
 	case ObjectDrawState::PLACE_LBUTTON_DOWN:
 		PC.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::CENTERPOINT, 0);
-		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 1);
+		P1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 1);
 		P1.pCadPoint->SetPoint(MousePos);
-		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::RECTSHAPE, 2);
+		P2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::ARC_RECTSHAPE, 2);
 		P2.pCadPoint->SetPoint(CalculateP2(PC.pCadPoint, P1.pCadPoint));
 		break;
 	case ObjectDrawState::ARCSTART_LBUTTON_DOWN:

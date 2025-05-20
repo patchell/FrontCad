@@ -13,54 +13,54 @@ BOOL CCadLibrary::Create()
 	return 0;
 }
 
+void CCadLibrary::UpdateEnclosure()
+{
+}
+
 BOOL CCadLibrary::IsPointEnclosed(DOUBLEPOINT p)
 {
 	return 0;
 }
 
-int CCadLibrary::Parse(
-	CFile* pcfInFile,
-	int LookAHeadToken,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken // Token type to save object as
+void CCadLibrary::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken // Token type to save object as
 )
 {
 	BOOL Loop = TRUE;
 	CString csStr;
 	CCadLibPart* pPart = 0;
 
-	LookAHeadToken = pParser->Expect(pcfInFile, TOKEN_LIBFILE, LookAHeadToken);
-	LookAHeadToken = pParser->Expect(pcfInFile, int('('), LookAHeadToken);
-	csStr = CString(pParser->GetLexBuff());
+	pParser->Expect( Token::LIBFILE);
+	pParser->Expect( Token('('));
+	csStr = CString(pParser->GetLexer()->GetLexBuffer());
 	SetName(csStr);
-	LookAHeadToken = pParser->Expect(pcfInFile, TOKEN_STRING, LookAHeadToken);
-	LookAHeadToken = pParser->Expect(pcfInFile, int(')'), LookAHeadToken);
-	LookAHeadToken = pParser->Expect(pcfInFile, int('{'), LookAHeadToken);
+	pParser->Expect( Token::STRING);
+	pParser->Expect( Token(')'));
+	pParser->Expect( Token('{'));
 	while (Loop)
 	{
-		switch (LookAHeadToken)
+		switch (pParser->GetLookaHead())
 		{
-		case TOKEN_LIBPART:
+		case Token::LIBPART:
 			pPart = new CCadLibPart;
 			pPart->Create(this,CCadObject::SubTypes::DEFAULT);
-			LookAHeadToken = pPart->Parse(pcfInFile, LookAHeadToken, pParser);
+			pPart->Parse(pParser);
 			AddObjectAtTail(pPart);
 			break;
-		case int('}'):
-			LookAHeadToken = pParser->Expect(pcfInFile, int('}'), LookAHeadToken);
+		case Token('}'):
+			pParser->Expect( Token('}'));
 			Loop = FALSE;
 			break;
 		default:
 			break;
 		}
 	}
-	return LookAHeadToken;
 }
 
 void CCadLibrary::Save(
 	CFile* pcfFile,
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 }

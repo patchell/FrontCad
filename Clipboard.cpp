@@ -8,6 +8,10 @@ CClipboard::~CClipboard()
 {
 }
 
+void CClipboard::UpdateEnclosure()
+{
+}
+
 void CClipboard::RemoveAndDestroyALL()
 {
 	CCadObject* pObj;

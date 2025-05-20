@@ -67,6 +67,10 @@ BOOL CCadRect::Create(CCadObject* pParent, CCadObject::SubTypes Type)
 	return TRUE;
 }
 
+void CCadRect::UpdateEnclosure()
+{
+}
+
 //----------------------------------------------------
 // Set Rectangle Coordinates
 //----------------------------------------------------
@@ -309,8 +313,7 @@ void CCadRect::Move(CDoubleSize Diff)
 
 void CCadRect::Save(
 	CFile* pcfFile,
-	int Indent, 
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -329,17 +332,17 @@ void CCadRect::Save(
 	csOut.Format( 
 		_T("%hs%hs(\n"),
 		(GETAPP.IndentString(psIndent, 256, Indent, ' ')),
-		(CFileParser::TokenLookup(TOKEN_RECT))
+		(CLexer::TokenLookup(Token::RECT))
 	);
 	csOut.Format( 
 		_T("%hs%hs(\n"),
 		psIndent,
-		CFileParser::TokenLookup(TOKEN_RECT)
+		CLexer::TokenLookup(Token::RECT)
 	);
 	while (Obj.pCadObject)
 	{
 		if (Obj.pCadObject->GetType() == ObjectType::POINT)
-			Obj.pCadPoint->Save(pcfFile, Indent + 1, flags);
+			Obj.pCadPoint->Save(pcfFile, Indent + 1);
 		Obj.pCadObject = Obj.pCadObject->GetNext();
 	}
 	csOut.Format( 
@@ -350,8 +353,7 @@ void CCadRect::Save(
 
 	GetAttributes().Save(
 		pcfFile,
-		Indent + 2, 
-		flags
+		Indent + 2
 	);
 	csOut.Format( 
 		_T("%hs}\n"),
@@ -782,11 +784,9 @@ void CCadRect::SetHeight(double Height)
 	Obj.pCadPoint->SetY(Yref + Height);
 }
 
-int CCadRect::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadRect::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken		// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -802,12 +802,11 @@ int CCadRect::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pParser->Expect(pcfInFile, Token, TOKEN_RECT);
-	Token = pParser->Expect(pcfInFile, Token, int('('));
-//	Token = ???.CadRect(TOKEN_RECT, *this, Token);
-	Token = GetAttributes().Parse(pcfInFile, Token, pParser);
-	Token = pParser->Expect(pcfInFile, Token, int(')') );
-	return Token;
+	pParser->Expect(Token::RECT);
+	pParser->Expect(Token('('));
+//	Token = ???.CadRect(Token::RECT, *this, Token);
+	GetAttributes().Parse(pParser);
+	pParser->Expect(Token(')') );
 }
 
 void CCadRect::CopyAttributesTo(SRectAttributes *pAttrib)

@@ -1,6 +1,6 @@
 #pragma once
 
-class CFileParser;
+class CParser;
 
 constexpr auto DOUBLESIZE_RADIANS = FALSE;
 constexpr auto DOUBLESIZE_DEGREES = TRUE;;
@@ -56,11 +56,9 @@ public:
 		Result = CDoubleSize(dCX / x, dCY / x);
 		return Result;
 	}
-	int Parse(
-		CFile* pcfFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	void Parse(
+		CParser *pParser,
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	double Magnitude() {
 		return sqrt(dCX * dCX + dCY * dCY);

@@ -72,6 +72,10 @@ BOOL CCadPoint::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadPoint::UpdateEnclosure()
+{
+}
+
 CString& CCadPoint::GetObjDescription()
 {
 	GetDescription().Format(_T("Point(%6.3lf,%6.3lf)"), dX,dY);
@@ -322,17 +326,17 @@ CPoint CCadPoint::ToPixelPointWithRotation(
 	return CPoint(CCadPoint(dx,dy).ToPixelPoint(LLHC,Scale));
 }
 
-int CCadPoint::Parse(
-	CFile* pcfInFile,
-	int Token,
-	CFileParser* pParser, 
-	int TypeToken
+void CCadPoint::Parse(
+	CParser* pParser,
+	Token TypeToken
 )
 {
-	return Token;
 }
 
-void CCadPoint::Save(CFile* pcfFile, int Indent, int flags)
+void CCadPoint::Save(
+	CFile* pcfFile, 
+	int Indent
+)
 {
 	char* pcBuffer = new char[1024];
 	char* pcIndent = new char[256];
@@ -342,17 +346,24 @@ void CCadPoint::Save(CFile* pcfFile, int Indent, int flags)
 	int n;
 
 	GETAPP.IndentString(pcIndent, 256, Indent, ' ');
-	n = sprintf_s(pcBuffer, 1024,
+	n = sprintf_s(
+		pcBuffer, 
+		1024,
 		"%hs%hs(%hs,%hs,%hs:%d){\n",
 		pcIndent,
-		CFileParser::TokenLookup(TOKEN_POINT),
-		CFileParser::SaveDoubleValue(pS1,64,dX),	//X coordinate
-		CFileParser::SaveDoubleValue(pS2,64,dY),	//Y coordinate
+		CLexer::TokenLookup(Token::POINT),
+		CParser::SaveDoubleValue(pS1,64,dX),	//X coordinate
+		CParser::SaveDoubleValue(pS2,64,dY),	//Y coordinate
 		GetSubTypeString(pS3, GetSubType()),
 		GetSubSubType()
 	);
 	pcfFile->Write(pcBuffer, n);
+	GetAttributes().Save(pcfFile, Indent + 1);
 	delete[] pcBuffer;
+	delete[] pcIndent;
+	delete[]pS1;
+	delete[]pS2;
+	delete[]pS3;
 }
 
 void CCadPoint::CopyAttributesTo(SPointAttributes* pAttrb)
@@ -589,7 +600,7 @@ CCadPoint* CCadPoint::Reflect(CCadPoint* pReflect, UINT mode)
 	return this;
 }
 
-UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
+UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint) const
 {
 	//-----------------------------------
 	// Get the slope of the line defined
@@ -612,7 +623,7 @@ UINT CCadPoint::Slope(double *pSlope, CCadPoint* pPoint)
 	return SlopeType;
 }
 
-UINT CCadPoint::Slope(double* pSlope, DOUBLEPOINT point)
+UINT CCadPoint::Slope(double* pSlope, DOUBLEPOINT point) const
 {
 	//-----------------------------------
 	// Get the slope of the line defined

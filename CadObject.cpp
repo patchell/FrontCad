@@ -540,7 +540,7 @@ CCadObject* CCadObject::DeleteObject(CCadObject* pObj)
 	return pObjNext;			// Return the next object
 }
 
-BOOL CCadObject::IsSameType(ObjectType Type)
+BOOL CCadObject::IsSameType(ObjectType Type) const
 {
 	BOOL rV = FALSE;
 
@@ -628,17 +628,19 @@ int CCadObject::GetTotalNumberOfSelectedItems()
 
 CString& CCadObject::SubTypeTable::LookupSubType(SubTypes SType)
 {
-	int i;
+	int i, SubTypeIndex = 0;
+	;
 	BOOL Loop = TRUE;
 
 	for (i = 0; Loop && SubTypeStringsLUT[i].m_SubType > SubTypes::NONE; ++i)
 	{
 		if (SType == SubTypeStringsLUT[i].m_SubType)
 		{
+			SubTypeIndex = i;
 			Loop = FALSE;
 		}
 	}
-	return SubTypeStringsLUT[i].m_csName;
+	return SubTypeStringsLUT[SubTypeIndex].m_csName;
 }
 
 char* CCadObject::SubTypeTable::LookupSubType(char* s, int n, SubTypes SType)

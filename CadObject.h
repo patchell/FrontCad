@@ -40,6 +40,23 @@ public:
 		ROUNDEDRECT,
 		TEXT,
 		CLIPBOARD,
+		//---------------------------
+		// EDA-SCH Types
+		//---------------------------
+		SCH_WIRE,	//
+		SCH_BUS,	//
+		SCH_JUNCTION,	//
+		SCH_BUS_ENTRY,	//
+		SCH_LABEL,		//
+		SCH_SYMBOL,		//
+		SCH_SHEET_SYMBOL,	//
+		SCH_SHEET_SYMBOL_SCHEMATIC,	//
+		SCH_NO_CONNECT,		//
+		SCH_GLOBAL_LABEL,	//
+		SCH_HIERARCHAL_LABEL,	//
+		SCH_SHEET,	//
+		SCH_SHEET_PIN,	//
+		//-------------------------------
 		ANY
 	};
 private:
@@ -90,7 +107,7 @@ public:
 		LINE_FIXED_LEN_NEAREST_OBJECT,
 		ENCLOSING_SHAPE,
 		//--- Arc/Ellipse ---
-		RECTSHAPE,		//5
+		ARC_RECTSHAPE,		//5
 		STARTPOINT,		//6
 		ENDPOINT,			//7
 		//--- Arrow ---
@@ -118,6 +135,9 @@ public:
 		VERTEX,			//26
 		RIGHTANGLE_VERTEX,	//27
 		REFERENCE_POINT,		//28
+		//--------------------------------
+		POLY_ENCLOSE_OBJ,		//29
+		//---------------------------------
 		END_OF_SUBTYPES
 	};
 private:
@@ -146,7 +166,7 @@ private:
 		{SubTypes::LINE_FIXED_LEN_NEAREST_OBJECT,_T("LINE_FIXED_LEN_NEAREST_OBJECT")},
 		{SubTypes::ENCLOSING_SHAPE,_T("ENCLOSING_SHAPE")},
 		//--- Arc/Ellipse ---
-		{SubTypes::RECTSHAPE,_T("RECTSHAPE")},		//5
+		{SubTypes::ARC_RECTSHAPE,_T("ARC_RECTSHAPE")},		//5
 		{SubTypes::STARTPOINT,_T("STARTPOINT")},		//6
 		{SubTypes::ENDPOINT,_T("ENDPOINT")},			//7
 		//--- Arrow ---
@@ -174,6 +194,7 @@ private:
 		{SubTypes::VERTEX,_T("VERTEX")},			//26
 		{SubTypes::RIGHTANGLE_VERTEX,_T("RIGHTANGLE_VERTEX")},	//27
 		{SubTypes::REFERENCE_POINT,_T("REFERENCE_POINT")},	//28
+		{SubTypes::POLY_ENCLOSE_OBJ,_T("POLY_ENCLOSE_OBJ")},
 		{SubTypes::NONE,_T("")}
 	};
 	//--------------------------------------
@@ -224,6 +245,7 @@ public:
 		int flag
 	);
 	//-----------------------------------------------------
+	virtual void UpdateEnclosure() = 0;	
 	virtual DOUBLEPOINT GetRef() { return m_Ref; }
 	virtual void SetRef(DOUBLEPOINT refpoint) { m_Ref = refpoint; }
 	virtual void SelectAll(UINT ObjectKind);
@@ -234,16 +256,18 @@ public:
 	virtual CCadObject* GetParent() const { return m_pParentObject; }
 	virtual void SetOrigin(CCadObject* pOrg) { m_pOrigin = pOrg; }
 	virtual CCadObject* GetOrigin() { return m_pOrigin; }
-	UINT GetId() { return m_Id; }
-	ObjectType GetType() { return m_Type; }
+	UINT GetId() const { return m_Id; }
+	ObjectType GetType() const { return m_Type; }
 	void SetType(ObjectType type) { m_Type = type; }
-	SubTypes GetSubType() { return m_SubType; }
+	SubTypes GetSubType() const {
+		return m_SubType; 
+	}
 	void SetSubType(SubTypes subtype) { m_SubType = subtype; }
-	UINT GetSubSubType() { return m_SubSubType; }
+	UINT GetSubSubType() const { return m_SubSubType; }
 	void SetSubSubType(UINT SST) { m_SubSubType = SST; }
 	ObjectDrawState GetCurrentDrawState() { return m_CurrentDrawState; }
 	void SetCurrentDrawState(ObjectDrawState State) { m_CurrentDrawState = State; }
-	BOOL AttributesAreValid() {
+	BOOL AttributesAreValid() const {
 		return m_bAttributesValid;
 	}
 	void SetAttributesValid() { m_bAttributesValid = TRUE; }
@@ -257,17 +281,13 @@ public:
 	//------------------------------------
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent, 
-		int flags = 0
+		int Indent
 	) {}
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,
-		CFileParser* pParser,
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	)
 	{
-		return Token;
 	}
 	//-----------------------------------------
 	// Draw The Drawing
@@ -276,10 +296,9 @@ public:
 	//------------------------------------------
 	// Get things about the object
 	//------------------------------------------
-	virtual int GetDefaultToken() { return TOKEN_BASE_OBJ; }
+	virtual Token GetDefaultToken() { return Token::BASE_OBJ; }
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p) = 0;
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual int PointInObjectAndSelect(
 		DOUBLEPOINT p,
 		CCadObject* pExcludeObject,
@@ -354,7 +373,7 @@ public:
 	virtual CCadObject* RemoveObjectFromTail();
 	virtual void RemoveAndDestroyAll();
 	virtual CCadObject* DeleteObject(CCadObject* pObj);
-	BOOL IsSameType(ObjectType Type);
+	BOOL IsSameType(ObjectType Type) const;
 	BOOL IsSameSubType(SubTypes SubType);
 	BOOL IsSameSubSubType(UINT SubSubType);
 	virtual CCadObject* FindObject(ObjectType Type, SubTypes SubType, UINT SubSubType);

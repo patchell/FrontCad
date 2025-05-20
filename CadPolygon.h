@@ -16,10 +16,11 @@ public:
 	CCadPolygon();
 	virtual ~CCadPolygon();
 	virtual BOOL Create(CCadObject* pParent, SubTypes type = CCadObject::SubTypes::DEFAULT);
-	virtual int GetDefaultToken() { return TOKEN_POLY; }
+	virtual void UpdateEnclosure();
+	void AddVertices(int VertexCount, CCadObject::SubTypes SubType);
+	virtual Token GetDefaultToken() { return Token::POLY; }
 	virtual void Move(CDoubleSize Diff);
 	BOOL GetPoints(DOUBLEPOINT** pPoints);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return TRUE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual BOOL PointInThisObject(DOUBLEPOINT point);
 	virtual int PointInObjectAndSelect(
@@ -51,16 +52,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods

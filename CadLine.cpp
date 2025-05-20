@@ -31,7 +31,7 @@ CCadLine::~CCadLine()
 BOOL CCadLine::Create(CCadObject* pParent, SubTypes type)
 {
 	CCadPoint* pPoint;
-	CCadRect* pRect;
+	CCadPolygon* pPolygon;
 
 	CCadObject::Create(pParent, type);
 	if (pParent == NULL)
@@ -44,9 +44,10 @@ BOOL CCadLine::Create(CCadObject* pParent, SubTypes type)
 	pPoint->Create(pParent, CCadObject::SubTypes::VERTEX);
 	pPoint->SetSubSubType(2);
 	AddObjectAtTail(pPoint);
-	pRect = new CCadRect;
-	pRect->Create(pParent, CCadObject::SubTypes::RECTSHAPE);
-	AddObjectAtTail(pRect);
+	pPolygon = new CCadPolygon;
+	pPolygon->Create(pParent, CCadObject::SubTypes::POLY_ENCLOSE_OBJ);
+	pPolygon->AddVertices(4, CCadObject::SubTypes::POLY_ENCLOSE_OBJ);
+	AddObjectAtTail(pPolygon);
 	if (type == SubTypes::LINE_FIXED_LEN_HYPOTENUS)
 	{
 		pPoint = new CCadPoint;
@@ -55,6 +56,23 @@ BOOL CCadLine::Create(CCadObject* pParent, SubTypes type)
 	}
 	m_Length = 0.0;
 	return TRUE;
+}
+
+void CCadLine::UpdateEnclosure()
+{
+	CCadPolygon* pPoly;
+	double Slope = 0.0, OrthogonalSlope = 0.0;
+	CCadPoint* P1, * P2;
+	CCadPoint E[4];	// enclosing points
+
+	pPoly = (CCadPolygon*)FindObject(CCadObject::ObjectType::POLYGON, CCadObject::SubTypes::ENCLOSING_SHAPE, 0);
+	if (pPoly)
+	{
+		P1 = (CCadPoint*)FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
+		P2 = (CCadPoint*)FindObject(CCadObject::ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
+		P1->Slope(&Slope, P2);
+		P1->OrthogonalSlope(&OrthogonalSlope, P2);
+	}
 }
 
 void CCadLine::Move(CDoubleSize Diff)
@@ -75,8 +93,7 @@ void CCadLine::Move(CDoubleSize Diff)
 
 void CCadLine::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -88,12 +105,35 @@ void CCadLine::Save(
 	// return value:none
 	//--------------------------------------------------
 	char* pIndent = new char[256];
+	char* s1 = new char[256];
+	char* s2 = new char[2556];
+	CCadObject* pObjectToSave;
+	CString csOut;
+	int n;
 
 	GETAPP.IndentString(pIndent, 256, Indent, ' ');
-	FindObject(ObjectType::POINT,SubTypes::VERTEX,1)->Save(pcfFile,TOKEN_POINT,Indent);
-	FindObject(ObjectType::POINT, SubTypes::VERTEX, 2)->Save(pcfFile, TOKEN_POINT, Indent);
-	FindObject(ObjectType::RECT, SubTypes::RECTSHAPE,0)->Save(pcfFile, TOKEN_RECT, Indent);
-	GetAttributes().Save(pcfFile, Indent + 2, flags);
+	n = sprintf_s(
+		s1,
+		256,
+		"%s%s(%s,%d){\n",
+		pIndent,
+		CLexer::TokenLookup(Token::LINE),
+		CCadObject::GetSubTypeString(s2,GetSubType()),
+		GetSubSubType()
+	);
+	pcfFile->Write(s1, n);
+	pObjectToSave = FindObject(ObjectType::POINT, SubTypes::VERTEX, 1);
+	if (pObjectToSave)
+		pObjectToSave->Save(pcfFile,Indent);
+	pObjectToSave = FindObject(ObjectType::POINT, SubTypes::VERTEX, 2);
+	if (pObjectToSave)
+		pObjectToSave->Save(pcfFile, Indent);
+	pObjectToSave = FindObject(ObjectType::RECT, SubTypes::ARC_RECTSHAPE, 0);
+	if (pObjectToSave)
+		pObjectToSave->Save(pcfFile, Indent);
+	GetAttributes().Save(pcfFile, Indent + 2);
+	n = sprintf_s(s1, 256, "%s}\n", pIndent);
+	pcfFile->Write(s1, n);
 	delete[] pIndent;
 }
 
@@ -178,7 +218,9 @@ void CCadLine::Draw(CDC* pDC, MODE mode, DOUBLEPOINT& LLHC, CScale& Scale)
 
 BOOL CCadLine::IsPointEnclosed(DOUBLEPOINT p)
 {
-	return 0;
+	BOOL rV = FALSE;;
+
+	return rV;
 }
 
 BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
@@ -186,7 +228,7 @@ BOOL CCadLine::PointInThisObject(DOUBLEPOINT point)
 	BOOL rV = FALSE;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -333,11 +375,9 @@ CDoubleSize CCadLine::GetSize()
 	return CDoubleSize(fabs(P1.dX - P2.dX), fabs(P1.dY - P2.dY));
 }
 
-int CCadLine::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken // Token type to save object as
+void CCadLine::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken // Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -353,14 +393,13 @@ int CCadLine::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	Token = pParser->Expect(pcfInFile, Token, TypeToken);
-	Token = pParser->Expect(pcfInFile, Token, int('('));
-//	Token = pLex->Point(TOKEN_POINT, m_Line.GetPoint(LinePoint::P1), Token);
-	Token = pParser->Expect(pcfInFile, Token, int(','));
-//	Token = pLex->Point(TOKEN_POINT, m_Line.GetPoint(LinePoint::P2), Token);
-	Token = pParser->Expect(pcfInFile, Token, int(')'));
-	Token = GetAttributes().Parse(pcfInFile, Token, pParser);
-	return Token;
+	pParser->Expect(TypeToken);
+	pParser->Expect(Token('('));
+//	pLex->Point(Token::POINT, m_Line.GetPoint(LinePoint::P1), Token);
+	pParser->Expect(Token(','));
+//	pLex->Point(Token::POINT, m_Line.GetPoint(LinePoint::P2), Token);
+	pParser->Expect(Token(')'));
+	GetAttributes().Parse(pParser);
 }
 
 void CCadLine::CopyAttributesTo(SLineAttributes*pAttrib)
@@ -875,7 +914,7 @@ void CCadLine::ProcessZoom(CScale& InchesPerPixel)
 	// Get the objects that define the
 	// Enclosing rectangle
 	//--------------------------------------
-	ObjRect.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	ObjRect.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	ObjP1.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 1);
 	ObjP2.pCadObject = FindObject(ObjectType::POINT, CCadObject::SubTypes::VERTEX, 2);
 	//-------------------------------------

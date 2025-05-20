@@ -3,18 +3,18 @@
 
 
 // CDlgSelectOrigin dialog
-class CFrontCadDoc;
+class CDocumentFrontCad;
 
 class CDlgSelectOrigin : public CDialog
 {
-	CFrontCadDoc* m_pDoc;
+	CDocumentFrontCad* m_pDoc;
 
 	DECLARE_DYNAMIC(CDlgSelectOrigin)
 
 public:
 	CDlgSelectOrigin(CWnd* pParent = nullptr);   // standard constructor
 	virtual ~CDlgSelectOrigin();
-	void SetDoc(CFrontCadDoc* pDoc) { m_pDoc = pDoc; }
+	void SetDoc(CDocumentFrontCad* pDoc) { m_pDoc = pDoc; }
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_DIALOG_CHANGE_REFERENCE_ORIGIN };

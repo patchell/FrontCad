@@ -30,6 +30,10 @@ BOOL CCadOrigin::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadOrigin::UpdateEnclosure()
+{
+}
+
 void CCadOrigin::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -55,8 +59,7 @@ DOUBLEPOINT CCadOrigin::GetCenterPoint()
 
 void CCadOrigin::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -243,11 +246,9 @@ void CCadOrigin::CopyAttributes(CCadObject* pToObj)
 	((CCadOrigin*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
-int CCadOrigin::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadOrigin::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -263,7 +264,6 @@ int CCadOrigin::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadOrigin::CopyAttributesTo(SOriginAttributes* pAttrib)

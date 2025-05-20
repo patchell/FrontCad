@@ -38,6 +38,10 @@ BOOL CCadBitmap::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadBitmap::UpdateEnclosure()
+{
+}
+
 void CCadBitmap::Move(CDoubleSize Diff)
 {
 	//--------------------------------------------------
@@ -53,7 +57,10 @@ void CCadBitmap::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadBitmap::Save(CFile * pcfFile, int Indent, int flags)
+void CCadBitmap::Save(
+	CFile * pcfFile, 
+	int Indent
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -141,7 +148,7 @@ BOOL CCadBitmap::PointInThisObject(DOUBLEPOINT point)
 	BOOL rV;
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	rV = Obj.pCadRect->PointInThisObject(point);
 	return rV;
 }
@@ -251,16 +258,14 @@ CDoubleSize CCadBitmap::GetSize()
 	//--------------------------------------------------
 	CADObjectTypes Obj;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 
 	return Obj.pCadRect->GetSize();
 }
 
-int CCadBitmap::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadBitmap::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -276,7 +281,6 @@ int CCadBitmap::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadBitmap::CopyAttributesTo(SBitmapAttributes*pAttrib)
@@ -435,7 +439,7 @@ void CCadBitmap::RestoreAspectRatio()
 	CADObjectTypes Obj;
 	double AspectRatioBM;
 
-	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::RECTSHAPE, 0);
+	Obj.pCadObject = FindObject(ObjectType::RECT, CCadObject::SubTypes::ARC_RECTSHAPE, 0);
 	AspectRatioBM = GetAttributes().m_BitmapSize.dCY / GetAttributes().m_BitmapSize.dCX;
 	Obj.pCadRect->SetHeight(AspectRatioBM * Obj.pCadRect->GetWidth());
 	GetAttributes().m_MaintainAspectRatio = TRUE;

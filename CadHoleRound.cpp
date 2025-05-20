@@ -30,6 +30,10 @@ BOOL CCadHoleRound::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadHoleRound::UpdateEnclosure()
+{
+}
+
 void CCadHoleRound::Move(CDoubleSize Diff)
 {
 	//---------------------------------------------------
@@ -47,8 +51,7 @@ void CCadHoleRound::Move(CDoubleSize Diff)
 
 void CCadHoleRound::Save(
 	CFile* pcfFile,
-	int Indent,
-	int flags
+	int Indent
 )
 {
 	//---------------------------------------------------
@@ -225,11 +228,9 @@ void CCadHoleRound::CopyAttributes(CCadObject* pToObj)
 	((CCadHoleRound*)pToObj)->CopyAttributesFrom(GetPtrToAttributes());
 }
 
-int CCadHoleRound::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadHoleRound::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//---------------------------------------------------
@@ -246,7 +247,6 @@ int CCadHoleRound::Parse(
 	//	returns lookahead token on success, or
 	//			negative value on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadHoleRound::CopyAttributesTo(SRoundHoleAttributes *pAttrib)

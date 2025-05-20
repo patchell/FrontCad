@@ -42,6 +42,10 @@ BOOL CCadArrow::Create(CCadObject* pParent, SubTypes type)
 	return TRUE;
 }
 
+void CCadArrow::UpdateEnclosure()
+{
+}
+
 void CCadArrow::Move(CDoubleSize Diff)
 {
 	//--------------------------------------------------
@@ -57,7 +61,10 @@ void CCadArrow::Move(CDoubleSize Diff)
 	CCadObject::Move(Diff);
 }
 
-void CCadArrow::Save(CFile* pcfFile, int Indent, int flags)
+void CCadArrow::Save(
+	CFile* pcfFile, 
+	int Indent
+)
 {
 	//--------------------------------------------------
 	// Save
@@ -264,11 +271,9 @@ CDoubleSize CCadArrow::GetSize()
 }
 
 
-int CCadArrow::Parse(
-	CFile* pcfInFile,
-	int Token,	// Lookahead Token
-	CFileParser* pParser,	// pointer to parser
-	int TypeToken// Token type to save object as
+void CCadArrow::Parse(
+	CParser* pParser,	// pointer to parser
+	Token TypeToken// Token type to save object as
 )
 {
 	//--------------------------------------------------
@@ -285,7 +290,6 @@ int CCadArrow::Parse(
 	//	returns lookahead token on success, or
 	//			throws exception on error
 	//--------------------------------------------------
-	return Token;
 }
 
 void CCadArrow::CopyAttributesTo(SArrowAttributes *pAttrib)

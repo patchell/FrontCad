@@ -1,23 +1,33 @@
-// FrontCadDoc.cpp : implementation file
-//
-
 #include "pch.h"
 
-// CFrontCadDoc
 
-IMPLEMENT_DYNCREATE(CFrontCadDoc, CBaseDocument)
+IMPLEMENT_DYNCREATE(CDocumentFrontCad, CBaseDocument)
 
-CFrontCadDoc::CFrontCadDoc()
+
+BEGIN_MESSAGE_MAP(CDocumentFrontCad, CBaseDocument)
+	ON_COMMAND(ID_MODIFY_SWITCHREFERENCE, &CDocumentFrontCad::OnModifySwitchreference)
+END_MESSAGE_MAP()
+
+
+CDocumentFrontCad::CDocumentFrontCad()
 {
+	m_pLexer = 0;
 	m_DocSize = CDoubleSize(DOCUMENT_DRAWING_X, DOCUMENT_DRAWING_Y);
 	m_PaperSize = CDoubleSize(DOCUMENT_PAPER_X, DOCUMENT_PAPER_Y);
 }
 
-CFrontCadDoc::~CFrontCadDoc()
+CDocumentFrontCad::~CDocumentFrontCad()
 {
 }
 
-BOOL CFrontCadDoc::OnNewDocument()
+BOOL CDocumentFrontCad::Create(CArchive& ar)
+{
+	BOOL rV = TRUE;
+
+	return rV;
+}
+
+BOOL CDocumentFrontCad::OnNewDocument()
 {
 	static int NewFileCount = 0;
 	CString csName;
@@ -36,7 +46,7 @@ BOOL CFrontCadDoc::OnNewDocument()
 	Dlg.SetDrawingSizeX(m_DocSize.dCX);
 	Dlg.SetDrawingSizeY(m_DocSize.dCY);
 
-	Id = Dlg.DoModal();
+	Id = (INT_PTR)Dlg.DoModal();
 	if (IDOK == Id)
 	{
 		rV = TRUE;
@@ -51,64 +61,42 @@ BOOL CFrontCadDoc::OnNewDocument()
 	return rV;
 }
 
-
-BEGIN_MESSAGE_MAP(CFrontCadDoc, CBaseDocument)
-	ON_COMMAND(ID_MODIFY_SWITCHREFERENCE, &CFrontCadDoc::OnModifySwitchreference)
-END_MESSAGE_MAP()
-
-
-// CFrontCadDoc diagnostics
-
-#ifdef _DEBUG
-void CFrontCadDoc::AssertValid() const
+void CDocumentFrontCad::Serialize(CArchive& ar)
 {
-	CBaseDocument::AssertValid();
-}
-
-#ifndef _WIN32_WCE
-void CFrontCadDoc::Dump(CDumpContext& dc) const
-{
-	CBaseDocument::Dump(dc);
-}
-#endif
-#endif //_DEBUG
-
-#ifndef _WIN32_WCE
-// CFrontCadDoc serialization
-
-void CFrontCadDoc::Serialize(CArchive& ar)
-{
-	CFile* file;
+	CFile* pFile = 0;
 	CString csFname;
+	UINT FileSize = 0;
 
 	printf("Serialize\n");
 
 	if (ar.IsStoring())
 	{
-		file = ar.GetFile();
-		csFname = file->GetFilePath();
+		pFile = ar.GetFile();
+		csFname = pFile->GetFilePath();
 		SetFileName(csFname);
 		MessageBoxW(NULL, csFname, _T("Save"), MB_OK);
-		GetDrawing()->Save(file, 0, 0);
+		GetDrawing()->Save(pFile, 0);
 	}
 	else
 	{
 		//-----------------------------
 		// Open Input file
 		//-----------------------------
-		CFileParser Parser;
+		CParserFrontCad* pParser = 0;
+		CCadDrawing* pCadDrawing = 0;
 
-		file = ar.GetFile();
-		MessageBoxW(NULL, file->GetFilePath(), _T("Load"), MB_OK);
-		CString FileName;
-//		Parser.Create(FileName);
+		pCadDrawing = new CCadDrawing;
+		pCadDrawing->Create(NULL, CCadObject::SubTypes::NONE);
+		csFname = ar.GetFile()->GetFilePath();
+		SetFileName(csFname);
+		pParser = new CParserFrontCad;
+		pParser->Create(ar);
+		pParser->Parse(GetDrawing());
 	}
 }
-#endif
 
-
-// CFrontCadDoc commands
-int CFrontCadDoc::PointInObjectAndSelect(
+// CDocumentFrontCad commands
+int CDocumentFrontCad::PointInObjectAndSelect(
 	DOUBLEPOINT p,
 	CCadObject* pExcludeObject,
 	CCadObject** ppSelList,
@@ -145,12 +133,12 @@ int CFrontCadDoc::PointInObjectAndSelect(
 	return index;
 }
 
-void CFrontCadDoc::SetDirty(UINT flag)
+void CDocumentFrontCad::SetDirty(UINT flag)
 {
 }
 
 
-void CFrontCadDoc::OnModifySwitchreference()
+void CDocumentFrontCad::OnModifySwitchreference()
 {
 	// TODO: Add your command handler code here
 }

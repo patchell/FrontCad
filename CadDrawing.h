@@ -9,12 +9,12 @@
 #define CADDRAWUBG_CHECKSEL_FLAG_SEL	2
 
 
-class CFileParser;
+class CParser;
 class CCadPrintRect;
 
 class CCadDrawing : public CCadObject  
 {
-	friend CFileParser;
+	friend class CParser;
 	COLORREF m_BkColor;
 public:
 	CCadDrawing();
@@ -23,17 +23,15 @@ public:
 		CCadObject* pParent, 
 		SubTypes type
 	);
+	virtual void UpdateEnclosure();
 	CCadLibPart * CreatePartFromSelected(CString& csName);
-	virtual int GetDefaultToken() { return TOKEN_DRAWFILE; }
+	virtual Token GetDefaultToken() { return Token::DRAWFILE; }
 	int CheckSelected(DOUBLEPOINT p,CCadObject **ppSelList,int n,int flag= CADDRAWUBG_CHECKSEL_FLAG_ALL);
 	void Print(CDC *pDC,MODE mode,DOUBLEPOINT ULHC,CScale Scale);
-	virtual BOOL IsEnclosedShapeIntrinsic() { return FALSE; }
 	virtual BOOL IsPointEnclosed(DOUBLEPOINT p);
 	virtual void Draw(CDC *pDC,MODE mode, DOUBLEPOINT ULHC,CScale Scale);
-	int DrawObjects(
-		CFile* pcfFile,
-		int LookAHeadToken, 
-		CFileParser* pParser, 
+	void ParseDrawObjects(
+		CParser* pParser,
 		CCadObject* pParent
 	);
 	void SetBkColor(COLORREF c){m_BkColor = c;}
@@ -42,16 +40,13 @@ public:
 	//--------------------------------------------
 	// Parse (LoaD) and Save Methods
 	//--------------------------------------------
-	virtual int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser,	// pointer to parser
-		int TypeToken = TOKEN_DEFAULT // Token type to save object as
+	virtual void Parse(
+		CParser* pParser,	// pointer to parser
+		Token TypeToken = Token::DEFAULT // Token type to save object as
 	);
 	virtual void Save(
 		CFile* cfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	//--------------------------------------------
 	// Copy Object Methods

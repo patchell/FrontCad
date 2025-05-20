@@ -1,6 +1,7 @@
 #pragma once
 
 class CLexer;
+class CParser;
 //------------- Arc Attributes -----------------
 
 struct SArcAttributes
@@ -23,15 +24,12 @@ struct SArcAttributes
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
-	);
+	void Parse(
+		CParser* pParser	// pointer to parser
+);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SArcAttributes* pAttrb);
 	static void SaveSettings(SArcAttributes* pAttrb);
@@ -59,15 +57,12 @@ struct SArcCenterAttributes
 		pAttributes->m_colorLine = m_colorLine;
 		pAttributes->m_colorSelected = m_colorSelected;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SArcCenterAttributes* pAttrb);
 	static void SaveSettings(SArcCenterAttributes* pAttrb);
@@ -114,15 +109,12 @@ struct SArrowAttributes {
 		for (int i = 0; i < 4; ++i)
 			pAttributes->m_aArrowShape[i] = m_aArrowShape[i];
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SArrowAttributes* pAttrb);
 	static void SaveSettings(SArrowAttributes* pAttrb);
@@ -144,15 +136,12 @@ struct SBitmapAttributes {
 		pAttrib->m_MaintainAspectRatio = m_MaintainAspectRatio;
 		pAttrib->m_BitmapSize = m_BitmapSize;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SBitmapAttributes* pAttrb);
 	static void SaveSettings(SBitmapAttributes* pAttrb);
@@ -216,15 +205,12 @@ struct SCadDimAttributes {
 			sizeof(DOUBLEPOINT) * 4
 		);
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SCadDimAttributes* pAttrb);
 	static void SaveSettings(SCadDimAttributes* pAttrb);
@@ -260,15 +246,12 @@ struct SEllipseAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
-	);
+	void Parse(
+		CParser* pParser	// pointer to parser
+		);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SEllipseAttributes* pAttrb);
 	static void SaveSettings(SEllipseAttributes* pAttrb);
@@ -311,15 +294,12 @@ struct SLineAttributes {
 		pAttributes->m_P2_SNAP_POINT = m_P2_SNAP_POINT;
 		pAttributes->m_P2_FIXED_LEN_SNAP_LINE = m_P2_FIXED_LEN_SNAP_LINE;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SLineAttributes* pAttrib);
 	static void SaveSettings(SLineAttributes* pAttrib);
@@ -350,15 +330,12 @@ struct SOriginAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_Radius = m_Radius;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SOriginAttributes* pAttrb);
 	static void SaveSettings(SOriginAttributes* pAttrb);
@@ -393,15 +370,12 @@ struct SPolyAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SPolyAttributes* pAttrib);
 	static void SaveSettings(SPolyAttributes* pAttrib);
@@ -435,15 +409,12 @@ struct SRectAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_TransparentFill = m_TransparentFill;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRectAttributes* pAttrb);
 	static void SaveSettings(SRectAttributes* pAttrb);
@@ -482,15 +453,12 @@ struct SRoundedRectAttributes {
 		pAttributes->m_TransparentFill = m_TransparentFill;
 		pAttributes->m_dszCornerRadius = m_dszCornerRadius;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRoundedRectAttributes* pAttrb);
 	static void SaveSettings(SRoundedRectAttributes* pAttrb);
@@ -540,15 +508,12 @@ struct STextAttributes {
 		pAttributes->m_Transparent = m_Transparent;
 		pAttributes->m_fontWeight = m_fontWeight;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(STextAttributes* pAttrb);
 	static void SaveSettings(STextAttributes* pAttrb);
@@ -583,15 +548,12 @@ struct SRectHoleAttributes {
 		pAttributes->m_HoleHeight = m_HoleHeight;
 		pAttributes->m_HoleWidth = m_HoleWidth;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRectHoleAttributes* pAttrb);
 	static void SaveSettings(SRectHoleAttributes* pAttrb);
@@ -621,15 +583,12 @@ struct SRoundHoleAttributes {
 		pAttributes->m_LineWidth = m_LineWidth;
 		pAttributes->m_HoleRadius = m_HoleRadius;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile,
-		int Indent,
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRoundHoleAttributes* pAttrb);
 	static void SaveSettings(SRoundHoleAttributes* pAttrb);
@@ -663,15 +622,12 @@ struct SRndHole1FlatAttributes {
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRndHole1FlatAttributes* pAttrb);
 	static void SaveSettings(SRndHole1FlatAttributes* pAttrb);
@@ -707,15 +663,12 @@ struct SRndHole2FlatAttributes
 		pAttributes->m_HoleRadius = m_HoleRadius;
 		pAttributes->m_FlatDistanceFromCenter = m_FlatDistanceFromCenter;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRndHole2FlatAttributes* pAttrb);
 	static void SaveSettings(SRndHole2FlatAttributes* pAttrb);
@@ -764,15 +717,12 @@ struct SGridAttributes {
 		pAttributes->m_SnapGridSpacing = m_SnapGridSpacing;
 		pAttributes->m_MajorGridSpacing = m_MajorGridSpacing;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SGridAttributes* pAttrb);
 	static void SaveSettings(SGridAttributes* pAttrb);
@@ -851,15 +801,12 @@ struct SRulerAttributes {
 		pAttributes->m_colorText = m_colorText;
 		pAttributes->m_colorCorner = m_colorCorner;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
+	void Parse(
+		CParser* pParser	// pointer to parser
 	);
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SRulerAttributes* pAttrb);
 	static void SaveSettings(SRulerAttributes* pAttrb);
@@ -890,15 +837,12 @@ struct SPointAttributes
 		pAttrib->m_colorSelected = m_colorSelected;
 		pAttrib->m_SelectedObjectUnits = m_SelectedObjectUnits;
 	}
-	int Parse(
-		CFile* pcfInFile,
-		int Token,	// Lookahead Token
-		CFileParser* pParser	// pointer to parser
-	);
+	void Parse(
+		CParser* pParser	// pointer to parser
+	) ;
 	void Save(
 		CFile* pcfFile, 
-		int Indent, 
-		int flags
+		int Indent
 	);
 	static void LoadSettings(SPointAttributes* pAttrb);
 	static void SaveSettings(SPointAttributes* pAttrb);

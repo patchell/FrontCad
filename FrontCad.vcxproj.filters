@@ -21,6 +21,10 @@
       <UniqueIdentifier>{8f29f553-fd3c-438c-a795-d6bdc09a267c}</UniqueIdentifier>
       <Extensions>exe;</Extensions>
     </Filter>
+    <Filter Include="DrawingFiles">
+      <UniqueIdentifier>{b220662f-a5b5-4b40-8d0f-f18e46381faf}</UniqueIdentifier>
+      <Extensions>fpc</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FrontCad.h">
@@ -33,9 +37,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MainFrm.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FrontCadDoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FrontCadView.h">
@@ -248,9 +249,6 @@
     <ClInclude Include="DlgSnapSelector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FileParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CadLibPart.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -263,15 +261,78 @@
     <ClInclude Include="Exception.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SchObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EdaObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PcbObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchWire.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchBus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchJunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchBusEntry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchLabel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchSymbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchSheetSymbol.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchSheetSchematic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchNoConnect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchGlobalLabel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchHierarchalLabel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchSheet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SchSheetPin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lexer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LexerFrontCad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserFrontCad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DocumentFrontCad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserFrontCadLib.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="FrontCad.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MainFrm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FrontCadDoc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FrontCadView.cpp">
@@ -475,9 +536,6 @@
     <ClCompile Include="DlgSnapSelector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FileParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CadLibPart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -485,6 +543,72 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CadDrawing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EdaObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PcbObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchWire.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchBus.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchJunction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchBusEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchSymbol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchSheetSymbol.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchSheetSchematic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchNoConnect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchGlobalLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchHierarchalLabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchSheet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SchSheetPin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LexerFrontCad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Parser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserFrontCad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DocumentFrontCad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserFrontCadLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -498,6 +622,9 @@
     </None>
     <None Include="bin\FrontCad.exe">
       <Filter>bin</Filter>
+    </None>
+    <None Include="Test.fpc">
+      <Filter>DrawingFiles</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
